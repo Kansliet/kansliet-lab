@@ -1,6 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Select } from "@/components/ui/select";
+import { Footer } from "@/components/footer";
 
 export default function HomePage() {
   return (
@@ -8,7 +12,7 @@ export default function HomePage() {
       <header className="border-b-brutal">
         <div className="container-kansliet">
           <div className="flex h-16 items-center justify-between">
-            <h1 className="text-caps text-xl font-light tracking-wider">
+            <h1 className="text-caps text-lg font-light tracking-wider">
               KANSLIET
             </h1>
             <nav className="flex gap-8">
@@ -37,12 +41,12 @@ export default function HomePage() {
 
       <section className="border-b-brutal py-24">
         <div className="container-kansliet">
-          <h2 className="text-caps mb-8 text-5xl font-light leading-tight tracking-tight">
+          <h2 className="text-caps mb-8 text-lg font-light leading-tight tracking-tight">
             BRUTALIST
             <br />
             BASEPLATE
           </h2>
-          <p className="text-normal-case max-w-2xl text-lg font-light leading-relaxed mb-8">
+          <p className="text-normal-case max-w-2xl text-base font-light mb-8">
             A state-of-the-art foundation for building modern web applications.
             Clean, industrial, and uncompromisingly functional.
           </p>
@@ -55,10 +59,9 @@ export default function HomePage() {
 
       <section className="border-b-brutal py-20">
         <div className="container-kansliet">
-          <h3 className="text-caps mb-12 text-2xl font-light tracking-wide">
+          <h3 className="text-caps mb-12 text-lg font-light tracking-wide">
             COMPONENTS
           </h3>
-
           <div className="space-y-12">
             <div>
               <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
@@ -83,6 +86,42 @@ export default function HomePage() {
 
             <div>
               <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
+                TEXTAREA
+              </h4>
+              <div className="max-w-md">
+                <Textarea placeholder="ENTER MESSAGE" rows={4} />
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
+                SELECT
+              </h4>
+              <div className="max-w-md">
+                <Select>
+                  <option value="">SELECT OPTION</option>
+                  <option value="1">OPTION ONE</option>
+                  <option value="2">OPTION TWO</option>
+                  <option value="3">OPTION THREE</option>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
+                BADGES
+              </h4>
+              <div className="flex flex-wrap gap-3">
+                <Badge>DEFAULT</Badge>
+                <Badge variant="solid">SOLID</Badge>
+                <Badge variant="outline">OUTLINE</Badge>
+                <Badge>INDUSTRIAL DESIGN</Badge>
+                <Badge>2025</Badge>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
                 CARDS
               </h4>
               <div className="grid gap-6 md:grid-cols-2 max-w-4xl">
@@ -91,7 +130,7 @@ export default function HomePage() {
                     <CardTitle>CARD HEADER</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-normal-case text-sm font-light leading-relaxed">
+                    <p className="text-normal-case text-base font-light">
                       Card content goes here. This demonstrates the brutalist
                       aesthetic with sharp edges and high contrast borders.
                     </p>
@@ -102,7 +141,7 @@ export default function HomePage() {
                     <CardTitle>INVERTED CARD</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-normal-case text-sm font-light leading-relaxed">
+                    <p className="text-normal-case text-base font-light">
                       Cards can be inverted for emphasis and visual hierarchy
                       within the brutalist design system.
                     </p>
@@ -113,6 +152,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 }
