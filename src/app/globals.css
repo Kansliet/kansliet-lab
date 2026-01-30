@@ -35,7 +35,7 @@
 
 @layer base {
   body {
-    @apply bg-background text-foreground font-mono antialiased;
+    @apply bg-background text-foreground antialiased;
   }
 
   button,
