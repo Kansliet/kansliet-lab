@@ -4,40 +4,31 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/select";
+import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import {
+  Grid,
+  GridItem,
+  GridItemImage,
+  GridItemContent,
+  GridItemTitle,
+  GridItemMeta,
+} from "@/components/ui/grid";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b-brutal">
-        <div className="container-kansliet">
-          <div className="flex h-16 items-center justify-between">
-            <h1 className="text-caps text-lg font-light tracking-wider">
-              KANSLIET
-            </h1>
-            <nav className="flex gap-8">
-              <a
-                href="#"
-                className="text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-60"
-              >
-                WORK
-              </a>
-              <a
-                href="#"
-                className="text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-60"
-              >
-                ABOUT
-              </a>
-              <a
-                href="#"
-                className="text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-60"
-              >
-                CONTACT
-              </a>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <section className="border-b-brutal py-24">
         <div className="container-kansliet">
@@ -148,6 +139,116 @@ export default function HomePage() {
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            <div>
+              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
+                GRID SYSTEM
+              </h4>
+              <Grid cols={3} gap={4}>
+                <GridItem>
+                  <GridItemImage>
+                    <div className="flex h-full items-center justify-center bg-foreground/5">
+                      <span className="text-caps text-sm opacity-40">
+                        IMAGE
+                      </span>
+                    </div>
+                  </GridItemImage>
+                  <GridItemContent>
+                    <GridItemTitle>PRODUCT 01</GridItemTitle>
+                    <GridItemMeta>Industrial Design, 2025</GridItemMeta>
+                  </GridItemContent>
+                </GridItem>
+                <GridItem>
+                  <GridItemImage>
+                    <div className="flex h-full items-center justify-center bg-foreground/5">
+                      <span className="text-caps text-sm opacity-40">
+                        IMAGE
+                      </span>
+                    </div>
+                  </GridItemImage>
+                  <GridItemContent>
+                    <GridItemTitle>PRODUCT 02</GridItemTitle>
+                    <GridItemMeta>Spatial Design, 2024</GridItemMeta>
+                  </GridItemContent>
+                </GridItem>
+                <GridItem>
+                  <GridItemImage>
+                    <div className="flex h-full items-center justify-center bg-foreground/5">
+                      <span className="text-caps text-sm opacity-40">
+                        IMAGE
+                      </span>
+                    </div>
+                  </GridItemImage>
+                  <GridItemContent>
+                    <GridItemTitle>PRODUCT 03</GridItemTitle>
+                    <GridItemMeta>Identity Design, 2023</GridItemMeta>
+                  </GridItemContent>
+                </GridItem>
+              </Grid>
+            </div>
+
+            <div>
+              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
+                TABS
+              </h4>
+              <Tabs defaultValue="specs">
+                <TabsList>
+                  <TabsTrigger value="specs">SPECIFICATIONS</TabsTrigger>
+                  <TabsTrigger value="features">FEATURES</TabsTrigger>
+                  <TabsTrigger value="support">SUPPORT</TabsTrigger>
+                </TabsList>
+                <TabsContent value="specs">
+                  <p className="text-normal-case text-base font-light">
+                    Technical specifications and product details go here.
+                  </p>
+                </TabsContent>
+                <TabsContent value="features">
+                  <p className="text-normal-case text-base font-light">
+                    Key features and capabilities are listed here.
+                  </p>
+                </TabsContent>
+                <TabsContent value="support">
+                  <p className="text-normal-case text-base font-light">
+                    Support documentation and resources available here.
+                  </p>
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            <div>
+              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
+                DIALOG
+              </h4>
+              <Dialog>
+                <DialogTrigger className="border-brutal bg-foreground text-background px-8 py-3 text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-80">
+                  OPEN DIALOG
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>PRODUCT DETAILS</DialogTitle>
+                    <DialogDescription>
+                      View complete specifications and information about this
+                      product.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <p className="text-normal-case text-base font-light">
+                      Detailed product information goes here. This modal can
+                      contain images, specifications, pricing, and any other
+                      relevant details.
+                    </p>
+                  </div>
+                  <div className="mt-6 flex justify-end gap-4">
+                    <DialogClose className="border-brutal bg-background text-foreground px-8 py-3 text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-80">
+                      CLOSE
+                    </DialogClose>
+                    <button className="border-brutal bg-foreground text-background px-8 py-3 text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-80">
+                      ADD TO CART
+                    </button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
