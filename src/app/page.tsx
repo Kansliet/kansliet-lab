@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/select";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { Carousel } from "@/components/ui/carousel";
 import {
   Grid,
   GridItem,
@@ -108,6 +109,19 @@ export default function HomePage() {
                 <Badge variant="outline">OUTLINE</Badge>
                 <Badge>INDUSTRIAL DESIGN</Badge>
                 <Badge>2025</Badge>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
+                CAROUSEL
+              </h4>
+              <div className="max-w-4xl">
+                <Carousel
+                  images={["IMAGE 01", "IMAGE 02", "IMAGE 03", "IMAGE 04"]}
+                  autoplay={true}
+                  interval={3000}
+                />
               </div>
             </div>
 

@@ -12,7 +12,7 @@ export function Header() {
             KANSLIET
           </Link>
           <nav className="flex gap-8">
-            <Link href="/work" variant="nav">
+            <Link href="/projects" variant="nav">
               WORK
             </Link>
             <Link href="/studio" variant="nav">

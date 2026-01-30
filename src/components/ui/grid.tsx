@@ -1,4 +1,5 @@
 import * as React from "react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 interface GridProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -58,7 +59,7 @@ const GridItem = React.forwardRef<HTMLDivElement, GridItemProps>(
     );
 
     if (href) {
-      return <a href={href}>{content}</a>;
+      return <Link href={href}>{content}</Link>;
     }
 
     return content;
