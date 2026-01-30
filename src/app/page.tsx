@@ -1,272 +1,54 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Select } from "@/components/ui/select";
+import Image from "next/image";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
-import { Carousel } from "@/components/ui/carousel";
-import {
-  Grid,
-  GridItem,
-  GridItemImage,
-  GridItemContent,
-  GridItemTitle,
-  GridItemMeta,
-} from "@/components/ui/grid";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from "@/components/ui/dialog";
+import ImageTrail, { ImageTrailItem } from "@/components/fancy-image-trail";
+import { trailImages } from "@/data/trail-images";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
 
-      <section className="border-b-brutal py-24">
-        <div className="container-kansliet">
-          <h2 className="text-caps mb-8 text-lg font-light leading-tight tracking-tight">
-            BRUTALIST
-            <br />
-            BASEPLATE
-          </h2>
-          <p className="text-normal-case max-w-2xl text-base font-light mb-8">
-            A state-of-the-art foundation for building modern web applications.
-            Clean, industrial, and uncompromisingly functional.
-          </p>
-          <div className="flex gap-4">
-            <Button>GET STARTED</Button>
-            <Button variant="secondary">LEARN MORE</Button>
+      <div className="flex-1 relative">
+        <div className="absolute inset-0">
+          <ImageTrail
+            keyframes={{
+              scale: [0, 1.2, 1.2, 0],
+              opacity: [0, 1, 1, 0],
+              rotate: [-5, 5],
+            }}
+            keyframesOptions={{ duration: 1 }}
+            repeatChildren={5}
+            baseZIndex={-50}
+            className="h-full w-full"
+          >
+            {trailImages.map((image, index) => (
+              <ImageTrailItem key={index}>
+                <div className="relative w-32 h-40">
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    className="object-cover"
+                    sizes="128px"
+                    unoptimized
+                  />
+                </div>
+              </ImageTrailItem>
+            ))}
+          </ImageTrail>
+        </div>
+
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+          <div className="container-kansliet text-center">
+            <h1 className="text-caps text-5xl font-light leading-tight tracking-tight">
+              KANSLIET
+              <br />
+              DESIGN COMPANY
+            </h1>
           </div>
         </div>
-      </section>
-
-      <section className="border-b-brutal py-20">
-        <div className="container-kansliet">
-          <h3 className="text-caps mb-12 text-lg font-light tracking-wide">
-            COMPONENTS
-          </h3>
-          <div className="space-y-12">
-            <div>
-              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
-                BUTTONS
-              </h4>
-              <div className="flex flex-wrap gap-4">
-                <Button variant="primary">PRIMARY</Button>
-                <Button variant="secondary">SECONDARY</Button>
-                <Button variant="ghost">GHOST</Button>
-                <Button variant="link">LINK</Button>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
-                INPUT
-              </h4>
-              <div className="max-w-md">
-                <Input type="text" placeholder="ENTER TEXT" />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
-                TEXTAREA
-              </h4>
-              <div className="max-w-md">
-                <Textarea placeholder="ENTER MESSAGE" rows={4} />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
-                SELECT
-              </h4>
-              <div className="max-w-md">
-                <Select>
-                  <option value="">SELECT OPTION</option>
-                  <option value="1">OPTION ONE</option>
-                  <option value="2">OPTION TWO</option>
-                  <option value="3">OPTION THREE</option>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
-                BADGES
-              </h4>
-              <div className="flex flex-wrap gap-3">
-                <Badge>DEFAULT</Badge>
-                <Badge variant="solid">SOLID</Badge>
-                <Badge variant="outline">OUTLINE</Badge>
-                <Badge>INDUSTRIAL DESIGN</Badge>
-                <Badge>2025</Badge>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
-                CAROUSEL
-              </h4>
-              <div className="max-w-4xl">
-                <Carousel
-                  images={["IMAGE 01", "IMAGE 02", "IMAGE 03", "IMAGE 04"]}
-                  autoplay={true}
-                  interval={3000}
-                />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
-                CARDS
-              </h4>
-              <div className="grid gap-6 md:grid-cols-2 max-w-4xl">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>CARD HEADER</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-normal-case text-base font-light">
-                      Card content goes here. This demonstrates the brutalist
-                      aesthetic with sharp edges and high contrast borders.
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-foreground text-background">
-                  <CardHeader className="border-b-2 border-background">
-                    <CardTitle>INVERTED CARD</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-normal-case text-base font-light">
-                      Cards can be inverted for emphasis and visual hierarchy
-                      within the brutalist design system.
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
-                GRID SYSTEM
-              </h4>
-              <Grid cols={3} gap={4}>
-                <GridItem>
-                  <GridItemImage>
-                    <div className="flex h-full items-center justify-center bg-foreground/5">
-                      <span className="text-caps text-sm opacity-40">
-                        IMAGE
-                      </span>
-                    </div>
-                  </GridItemImage>
-                  <GridItemContent>
-                    <GridItemTitle>PRODUCT 01</GridItemTitle>
-                    <GridItemMeta>Industrial Design, 2025</GridItemMeta>
-                  </GridItemContent>
-                </GridItem>
-                <GridItem>
-                  <GridItemImage>
-                    <div className="flex h-full items-center justify-center bg-foreground/5">
-                      <span className="text-caps text-sm opacity-40">
-                        IMAGE
-                      </span>
-                    </div>
-                  </GridItemImage>
-                  <GridItemContent>
-                    <GridItemTitle>PRODUCT 02</GridItemTitle>
-                    <GridItemMeta>Spatial Design, 2024</GridItemMeta>
-                  </GridItemContent>
-                </GridItem>
-                <GridItem>
-                  <GridItemImage>
-                    <div className="flex h-full items-center justify-center bg-foreground/5">
-                      <span className="text-caps text-sm opacity-40">
-                        IMAGE
-                      </span>
-                    </div>
-                  </GridItemImage>
-                  <GridItemContent>
-                    <GridItemTitle>PRODUCT 03</GridItemTitle>
-                    <GridItemMeta>Identity Design, 2023</GridItemMeta>
-                  </GridItemContent>
-                </GridItem>
-              </Grid>
-            </div>
-
-            <div>
-              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
-                TABS
-              </h4>
-              <Tabs defaultValue="specs">
-                <TabsList>
-                  <TabsTrigger value="specs">SPECIFICATIONS</TabsTrigger>
-                  <TabsTrigger value="features">FEATURES</TabsTrigger>
-                  <TabsTrigger value="support">SUPPORT</TabsTrigger>
-                </TabsList>
-                <TabsContent value="specs">
-                  <p className="text-normal-case text-base font-light">
-                    Technical specifications and product details go here.
-                  </p>
-                </TabsContent>
-                <TabsContent value="features">
-                  <p className="text-normal-case text-base font-light">
-                    Key features and capabilities are listed here.
-                  </p>
-                </TabsContent>
-                <TabsContent value="support">
-                  <p className="text-normal-case text-base font-light">
-                    Support documentation and resources available here.
-                  </p>
-                </TabsContent>
-              </Tabs>
-            </div>
-
-            <div>
-              <h4 className="text-caps mb-6 text-sm font-normal tracking-wider">
-                DIALOG
-              </h4>
-              <Dialog>
-                <DialogTrigger className="border-brutal bg-foreground text-background px-8 py-3 text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-80">
-                  OPEN DIALOG
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>PRODUCT DETAILS</DialogTitle>
-                    <DialogDescription>
-                      View complete specifications and information about this
-                      product.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <p className="text-normal-case text-base font-light">
-                      Detailed product information goes here. This modal can
-                      contain images, specifications, pricing, and any other
-                      relevant details.
-                    </p>
-                  </div>
-                  <div className="mt-6 flex justify-end gap-4">
-                    <DialogClose className="border-brutal bg-background text-foreground px-8 py-3 text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-80">
-                      CLOSE
-                    </DialogClose>
-                    <button className="border-brutal bg-foreground text-background px-8 py-3 text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-80">
-                      ADD TO CART
-                    </button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
 
       <Footer />
     </div>

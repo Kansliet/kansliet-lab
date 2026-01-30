@@ -21,6 +21,9 @@ export function Header() {
             <Link href="/contact" variant="nav">
               CONTACT
             </Link>
+            <Link href="/catalog" variant="nav">
+              CATALOG
+            </Link>
           </nav>
         </div>
       </div>
