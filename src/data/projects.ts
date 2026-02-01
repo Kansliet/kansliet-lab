@@ -1,11 +1,27 @@
-export const projects = [
+export interface Project {
+  id: string;
+  title: string;
+  category: string;
+  year: string;
+  tagline: string;
+  description: string[];
+  tags: string[];
+  images: Array<{ src: string; alt: string }>;
+  specs: Array<{ label: string; value: string }>;
+}
+
+export const projects: Project[] = [
   {
     id: "laminar-01",
     title: "LAMINAR-01",
     category: "Industrial Design",
     year: "2025",
-    description:
-      "A brutalist approach to industrial product design with focus on functional aesthetics and material honesty. The project explores the intersection of form and function through careful material selection and manufacturing processes.",
+    tagline:
+      "A brutalist approach to industrial product design with focus on functional aesthetics and material honesty.",
+    description: [
+      "The project explores the intersection of form and function through careful material selection and manufacturing processes.",
+      "Each component is designed with attention to structural integrity and visual clarity, creating a cohesive system that emphasizes honesty in construction.",
+    ],
     tags: ["PRODUCT", "INDUSTRIAL", "MINIMAL"],
     images: [
       {
@@ -32,8 +48,12 @@ export const projects = [
     title: "WAFFRIES",
     category: "Interior Design",
     year: "2023",
-    description:
-      "Restaurant interior combining brutalist architecture with warm, inviting spaces for casual dining. The design creates a balance between raw concrete surfaces and comfortable seating arrangements.",
+    tagline:
+      "Restaurant interior combining brutalist architecture with warm, inviting spaces for casual dining.",
+    description: [
+      "The design creates a balance between raw concrete surfaces and comfortable seating arrangements.",
+      "Strategic lighting and material choices transform industrial elements into a welcoming hospitality environment.",
+    ],
     tags: ["INTERIOR", "HOSPITALITY", "SPATIAL"],
     images: [
       { src: "/images/placeholder.jpg", alt: "Waffries - Interior 1" },
@@ -51,8 +71,12 @@ export const projects = [
     title: "KÄLLSTORP",
     category: "Spatial Design",
     year: "2022",
-    description:
-      "Residential space design emphasizing natural light and material texture within a constrained footprint. The project demonstrates how compact spaces can feel expansive through strategic design decisions.",
+    tagline:
+      "Residential space design emphasizing natural light and material texture within a constrained footprint.",
+    description: [
+      "The project demonstrates how compact spaces can feel expansive through strategic design decisions.",
+      "Careful attention to proportions and material transitions creates a sense of openness despite the limited square footage.",
+    ],
     tags: ["RESIDENTIAL", "SPATIAL", "ARCHITECTURE"],
     images: [
       { src: "/images/placeholder.jpg", alt: "Källstorp - Space 1" },
@@ -69,8 +93,13 @@ export const projects = [
     title: "SMEG X NESPRESSO",
     category: "Product Design",
     year: "2024",
-    description:
-      "Collaboration between iconic brands merging retro aesthetics with modern coffee technology. The design maintains SMEG's distinctive style while integrating Nespresso's brewing system.",
+    tagline:
+      "A visual and functional exercise in restraint, merging SMEG's retro-futurist DNA with Nespresso's compact, system-based logic.",
+    description: [
+      "This collaborative effort involved developing concept directions and product visualization for a proposed partnership between SMEG and Nespresso.",
+      "Kansliet's role was to support the industrial design process with early-stage concept refinement, material studies, and visual narratives. The goal was to help both brands explore how their identities might co-exist in a shared product expression, one that felt intuitive, premium, and unmistakably designed.",
+      "Renderings were produced for internal alignment and external pitching, balancing technical realism with emotional tone. The design work emphasized tactile surfaces, minimal interfaces, and an object language that could live comfortably in both brands' ecosystems.",
+    ],
     tags: ["PRODUCT", "COLLABORATION", "APPLIANCE"],
     images: [
       { src: "/images/placeholder.jpg", alt: "SMEG Nespresso - Product" },
@@ -87,8 +116,12 @@ export const projects = [
     title: "FRANK & STEIN",
     category: "Brand Identity",
     year: "2021",
-    description:
-      "Complete brand identity for a modern beer brewery. The identity system includes logo, packaging, interior signage, and digital presence with a focus on bold typography and minimal color palette.",
+    tagline:
+      "Complete brand identity for a modern beer brewery with a focus on bold typography and minimal color palette.",
+    description: [
+      "The identity system includes logo, packaging, interior signage, and digital presence.",
+      "Each touchpoint maintains consistency while adapting to different scales and applications, from bottle labels to large-format wall graphics.",
+    ],
     tags: ["IDENTITY", "BRANDING", "PACKAGING"],
     images: [
       { src: "/images/placeholder.jpg", alt: "Frank & Stein - Identity" },
@@ -105,8 +138,12 @@ export const projects = [
     title: "NOTHING",
     category: "Industrial Design",
     year: "2024",
-    description:
-      "Consumer electronics design focusing on transparency and honesty in materials. The project challenges conventional approaches to tech product design through visible components and minimal ornamentation.",
+    tagline:
+      "Consumer electronics design focusing on transparency and honesty in materials.",
+    description: [
+      "The project challenges conventional approaches to tech product design through visible components and minimal ornamentation.",
+      "By exposing the internal architecture, the design celebrates the engineering and craftsmanship that typically remains hidden in consumer electronics.",
+    ],
     tags: ["ELECTRONICS", "INDUSTRIAL", "TRANSPARENCY"],
     images: [
       { src: "/images/placeholder.jpg", alt: "Nothing - Product" },

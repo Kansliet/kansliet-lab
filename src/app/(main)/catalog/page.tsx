@@ -1,11 +1,10 @@
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/select";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
 import {
   Grid,
   GridItem,
@@ -25,13 +24,14 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Carousel } from "@/components/ui/carousel";
-import Image from "next/image";
 
 export default function CatalogPage() {
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
+  if (process.env.NODE_ENV !== "development") {
+    redirect("/");
+  }
 
+  return (
+    <div className="flex-1 bg-background flex flex-col">
       <section className="border-b-brutal py-24">
         <div className="container-kansliet">
           <h2 className="text-caps mb-8 text-lg font-light leading-tight tracking-tight">
@@ -146,9 +146,7 @@ export default function CatalogPage() {
                 <GridItem>
                   <GridItemImage>
                     <div className="flex h-full items-center justify-center bg-foreground/5">
-                      <span className="text-caps text-sm opacity-40">
-                        IMAGE
-                      </span>
+                      <span className="text-caps text-sm opacity-40">IMAGE</span>
                     </div>
                   </GridItemImage>
                   <GridItemContent>
@@ -159,9 +157,7 @@ export default function CatalogPage() {
                 <GridItem>
                   <GridItemImage>
                     <div className="flex h-full items-center justify-center bg-foreground/5">
-                      <span className="text-caps text-sm opacity-40">
-                        IMAGE
-                      </span>
+                      <span className="text-caps text-sm opacity-40">IMAGE</span>
                     </div>
                   </GridItemImage>
                   <GridItemContent>
@@ -172,9 +168,7 @@ export default function CatalogPage() {
                 <GridItem>
                   <GridItemImage>
                     <div className="flex h-full items-center justify-center bg-foreground/5">
-                      <span className="text-caps text-sm opacity-40">
-                        IMAGE
-                      </span>
+                      <span className="text-caps text-sm opacity-40">IMAGE</span>
                     </div>
                   </GridItemImage>
                   <GridItemContent>
@@ -261,8 +255,6 @@ export default function CatalogPage() {
           </div>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 }

@@ -1,5 +1,3 @@
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
 import {
   Grid,
   GridItem,
@@ -14,9 +12,7 @@ import { projects } from "@/data/projects";
 export default function ProjectsPage() {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-
-      <section className="border-b-brutal py-20">
+      <section className="py-20">
         <div className="container-kansliet">
           <h1 className="text-caps mb-12 text-lg font-light tracking-wide">
             PROJECTS
@@ -28,16 +24,8 @@ export default function ProjectsPage() {
                 <GridItemImage>
                   {project.images[0] ? (
                     <Image
-                      src={
-                        typeof project.images[0] === "string"
-                          ? project.images[0]
-                          : project.images[0].src
-                      }
-                      alt={
-                        typeof project.images[0] === "string"
-                          ? project.title
-                          : project.images[0].alt
-                      }
+                      src={project.images[0].src}
+                      alt={project.images[0].alt}
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, (max-width: 1400px) 33vw, 400px"
@@ -61,8 +49,6 @@ export default function ProjectsPage() {
           </Grid>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 }

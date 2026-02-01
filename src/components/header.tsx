@@ -1,30 +1,23 @@
-import { Link } from "@/components/ui/link";
+import Link from "next/link";
+import Image from "next/image";
+import { FullscreenMenu } from "@/components/fullscreen-menu";
 
 export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b-brutal bg-background">
       <div className="container-kansliet">
         <div className="flex h-16 items-center justify-between">
-          <Link
-            href="/"
-            className="text-caps text-lg font-light tracking-wider hover:opacity-100"
-          >
-            KANSLIET
+          <Link href="/" className="hover:opacity-60 transition-opacity">
+            <Image
+              src="/kansliet-logo-navbar-web.svg"
+              alt="Kansliet"
+              width={250}
+              height={0}
+              style={{ height: "auto" }}
+              priority
+            />
           </Link>
-          <nav className="flex gap-8">
-            <Link href="/projects" variant="nav">
-              WORK
-            </Link>
-            <Link href="/studio" variant="nav">
-              STUDIO
-            </Link>
-            <Link href="/contact" variant="nav">
-              CONTACT
-            </Link>
-            <Link href="/catalog" variant="nav">
-              CATALOG
-            </Link>
-          </nav>
+          <FullscreenMenu />
         </div>
       </div>
     </header>

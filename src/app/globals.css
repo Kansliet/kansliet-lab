@@ -7,6 +7,10 @@
   --color-foreground: var(--color-signal);
   --color-border: var(--color-signal);
 
+  --zIndex-100: 100;
+  --zIndex-200: 200;
+  --zIndex-201: 201;
+
   --font-family-mono: "Martian Mono", ui-monospace, monospace;
 
   --font-size-sm: 0.55rem;
@@ -26,11 +30,60 @@
   --spacing-10: 2.5rem;
   --spacing-12: 3rem;
   --spacing-16: 4rem;
-
-  --max-width-container: 1400px;
 }
 
 @layer base {
+  html {
+    overflow-y: scroll;
+  }
+
+  /* Text selection color */
+  ::selection {
+    background-color: var(--color-signal);
+    color: var(--color-white);
+  }
+
+  ::-moz-selection {
+    background-color: var(--color-signal);
+    color: var(--color-white);
+  }
+
+  /* Custom scrollbar - Chrome/Safari/Edge */
+  ::-webkit-scrollbar {
+    width: 12px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-white);
+    margin: 0;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-signal);
+    border-radius: 0;
+    border: none;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-signal);
+  }
+
+  ::-webkit-scrollbar-button {
+    height: 0;
+    width: 0;
+    display: none;
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: var(--color-white);
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-signal) var(--color-white);
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-size: var(--font-size-base);
@@ -51,11 +104,15 @@
 @layer utilities {
   .container-kansliet {
     width: 100%;
-    max-width: var(--max-width-container);
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: var(--spacing-6);
-    padding-right: var(--spacing-6);
+    padding-left: var(--spacing-8);
+    padding-right: var(--spacing-8);
+  }
+
+  @media (min-width: 768px) {
+    .container-kansliet {
+      padding-left: var(--spacing-16);
+      padding-right: var(--spacing-16);
+    }
   }
 
   .text-caps {
@@ -96,5 +153,21 @@
 
   .border-t-brutal {
     border-top: 1px solid var(--color-border);
+  }
+
+  .animate-rotate-ping-pong {
+    animation: rotate-ping-pong 8s linear infinite;
+  }
+}
+
+@keyframes rotate-ping-pong {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(360deg);
+  }
+  100% {
+    transform: rotate(0deg);
   }
 }
