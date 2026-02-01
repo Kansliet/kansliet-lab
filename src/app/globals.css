@@ -105,18 +105,26 @@
 }
 
 @layer utilities {
+  /* --- UPDATED CONTAINER SPACING --- */
   .container-kansliet {
     width: 100%;
-    padding-left: var(--spacing-8);
-    padding-right: var(--spacing-8);
+    max-width: 1536px; /* 2XL Standard Max Width */
+    margin-left: auto;
+    margin-right: auto;
+
+    /* Mobile: 12px padding */
+    padding-left: var(--spacing-3);
+    padding-right: var(--spacing-3);
   }
 
   @media (min-width: 768px) {
     .container-kansliet {
-      padding-left: var(--spacing-16);
-      padding-right: var(--spacing-16);
+      /* Desktop: 24px padding */
+      padding-left: var(--spacing-6);
+      padding-right: var(--spacing-6);
     }
   }
+  /* -------------------------------- */
 
   .text-caps {
     text-transform: uppercase;
@@ -167,6 +175,11 @@
     animation: rotate-ping-pong 8s linear infinite;
   }
 
+  /* NEW ANIMATION UTILITY */
+  .animate-spin-slow {
+    animation: spin 12s linear infinite;
+  }
+
   .dossier-stamp {
     position: absolute;
     font-family: var(--font-family-mono);
@@ -190,5 +203,15 @@
   }
   100% {
     transform: rotate(0deg);
+  }
+}
+
+/* NEW KEYFRAME FOR FOOTER LOGO */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }

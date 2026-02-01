@@ -13,14 +13,9 @@ export async function generateMetadata({
   const project = projects.find((p) => p.id === id);
 
   if (!project) {
-    return {
-      title: "KANSLIET (NOT FOUND)",
-    };
+    return { title: "KANSLIET (NOT FOUND)" };
   }
-
-  return {
-    title: `KANSLIET (${project.title})`,
-  };
+  return { title: `KANSLIET (${project.title})` };
 }
 
 export default async function ProjectPage({
@@ -45,22 +40,24 @@ export default async function ProjectPage({
   return (
     <div className="flex-1 bg-background flex flex-col lg:flex-row min-h-0 w-full relative">
       {/* Left: Image carousel */}
-      <aside className="w-full lg:w-1/2 lg:sticky lg:top-0 lg:self-start lg:h-screen shrink-0">
+      {/* Mobile: 50vh height / Desktop: Full screen sticky */}
+      <aside className="w-full h-[50vh] lg:w-1/2 lg:sticky lg:top-0 lg:self-start lg:h-screen shrink-0">
         <ProjectCarousel images={project.images} projectTitle={project.title} />
       </aside>
 
       {/* Right: Project info */}
-      <div className="flex-1 flex flex-col min-w-0 py-12 lg:py-20 min-h-0">
+      <div className="flex-1 flex flex-col min-w-0 py-10 lg:py-20 min-h-0">
         <div className="container-kansliet flex flex-col">
           {/* Top Row: Page Num + Title + Category */}
-          <div className="flex flex-col gap-8 mb-20">
+          <div className="flex flex-col gap-6 lg:gap-8 mb-10 lg:mb-20">
             <p className="text-dossier text-caps tracking-wider opacity-60 tabular-nums">
               P. {String(pageNum).padStart(2, "0")} /{" "}
               {String(totalPages).padStart(2, "0")}
             </p>
 
             <div className="flex flex-col lg:flex-row lg:items-baseline lg:justify-between gap-6">
-              <h1 className="text-4xl uppercase tracking-tight font-normal">
+              {/* Mobile: text-3xl / Desktop: text-4xl */}
+              <h1 className="text-3xl lg:text-4xl uppercase tracking-tight font-normal">
                 {project.title}
               </h1>
 
@@ -76,7 +73,7 @@ export default async function ProjectPage({
           </div>
 
           {/* Middle: Year Line */}
-          <div className="border-b-brutal pb-10 mb-10">
+          <div className="border-b-brutal pb-8 lg:pb-10 mb-8 lg:mb-10">
             <div className="flex items-baseline gap-4">
               <span className="text-dossier text-caps tracking-widest opacity-50">
                 YEAR
@@ -89,7 +86,7 @@ export default async function ProjectPage({
 
           {/* Bottom Specs Grid */}
           {project.specs.length > 0 && (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 border-b-brutal pb-10 mb-10">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 border-b-brutal pb-8 lg:pb-10 mb-8 lg:mb-10">
               {project.specs
                 .filter((spec) => spec.label !== "YEAR")
                 .map((spec) => (
@@ -105,15 +102,15 @@ export default async function ProjectPage({
             </div>
           )}
 
-          {/* Tagline - CHANGED TO UPPERCASE */}
-          <div className="mb-10">
-            <h2 className="uppercase tracking-wide text-2xl lg:text-3xl font-light leading-tight max-w-xl">
+          {/* Tagline */}
+          <div className="mb-8 lg:mb-10">
+            <h2 className="uppercase tracking-wide text-xl lg:text-3xl font-light leading-tight max-w-xl">
               {project.tagline}
             </h2>
           </div>
 
           {/* Description */}
-          <div className="mb-12 max-w-xl space-y-6">
+          <div className="mb-10 lg:mb-12 max-w-xl space-y-6">
             {project.description.map((paragraph: string, index: number) => (
               <p
                 key={index}
@@ -125,7 +122,7 @@ export default async function ProjectPage({
           </div>
 
           {/* Prev/Next */}
-          <div className="pt-12 border-t-brutal flex items-center justify-between mt-auto">
+          <div className="pt-10 lg:pt-12 border-t-brutal flex items-center justify-between mt-auto">
             {prevProject ? (
               <Link
                 href={`/works/${prevProject.id}`}
@@ -151,10 +148,4 @@ export default async function ProjectPage({
       </div>
     </div>
   );
-}
-
-export async function generateStaticParams() {
-  return projects.map((project) => ({
-    id: project.id,
-  }));
 }

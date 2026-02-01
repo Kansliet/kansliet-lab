@@ -1,12 +1,22 @@
+"use client";
+
 import Image from "next/image";
 import ImageTrail, { ImageTrailItem } from "@/components/fancy-image-trail";
 import { trailImages } from "@/data/trail-images";
 import { projects } from "@/data/projects";
 import Link from "next/link";
+import { useState } from "react";
+import { CursorFollower } from "@/components/cursor-follower";
 
 export default function HomePage() {
+  const [isHovering, setIsHovering] = useState(false);
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* The Cursor Follower Component */}
+      <CursorFollower isVisible={isHovering} />
+
+      {/* Hero Section (Unchanged) */}
       <div className="flex-1 relative">
         <div className="absolute inset-0">
           <ImageTrail
@@ -48,7 +58,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Projects List Section */}
+      {/* Projects List Section - UPDATED WITH CURSOR EFFECT */}
       <section className="relative z-10 border-t-brutal bg-background py-12">
         <div className="container-kansliet">
           <div className="space-y-0">
@@ -56,7 +66,9 @@ export default function HomePage() {
               <Link
                 key={project.id}
                 href={`/works/${project.id}`}
-                className="group flex items-center justify-between py-4 border-b-brutal hover:bg-foreground hover:text-background transition-colors"
+                className="group flex items-center justify-between py-4 border-b-brutal hover:bg-foreground hover:text-background transition-colors lg:cursor-none" // Added lg:cursor-none
+                onMouseEnter={() => setIsHovering(true)}
+                onMouseLeave={() => setIsHovering(false)}
               >
                 <span className="text-caps text-sm font-light tracking-wider px-4">
                   {project.title}

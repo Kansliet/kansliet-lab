@@ -1,4 +1,5 @@
 import { Link } from "@/components/ui/link";
+import Image from "next/image";
 
 export function Footer() {
   return (
@@ -36,9 +37,12 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom Section: The "Dossier" Fine Print - UPDATED SIZE */}
-        <div className="border-t border-signal/10 pt-6 mt-2">
-          {/* Change text-[10px] to text-[8px] */}
+        {/* Bottom Section: 
+            - Mobile: Flex Column, Left Aligned (Text top, Logo bottom left)
+            - Desktop: Flex Row, Justified Between (Text left, Logo right)
+        */}
+        <div className="border-t border-signal/10 pt-6 mt-2 flex flex-col items-start gap-8 lg:flex-row lg:justify-between lg:items-end lg:gap-6">
+          {/* Left: Fine Print */}
           <div className="max-w-3xl space-y-1.5 select-none text-[8px] font-mono uppercase tracking-widest leading-none opacity-40">
             <p>AUTHORIZED BY KANSLIET (DESIGN COMPANY), SWEDEN.</p>
             <p>
@@ -54,6 +58,20 @@ export function Footer() {
               ALL ELEMENTS CONTAINED HERE ARE PART OF A LARGER STRUCTURE WHICH
               MAY OR MAY NOT EXIST.
             </p>
+          </div>
+
+          {/* Right: Rotating Logo 
+              - Mobile: Falls to the bottom, aligned left (because of items-start)
+              - Desktop: Pushed to the right (because of justify-between)
+          */}
+          <div className="shrink-0">
+            <Image
+              src="/kansliet-logo-footer_1.svg"
+              alt=""
+              width={40}
+              height={40}
+              className="w-10 h-10 animate-spin-slow block"
+            />
           </div>
         </div>
       </div>

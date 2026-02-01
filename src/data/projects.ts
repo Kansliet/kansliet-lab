@@ -58,7 +58,7 @@ export const projects: Project[] = [
     tags: ["INTERIOR", "BRANDING", "HOSPITALITY", "DUBAI"],
     images: [
       {
-        src: "/images/projects/waffries/icon.jpg",
+        src: "/images/projects/waffries/waffries.webp",
         alt: "Vector illustration of waffle icon in isometric style on solid orange background",
       },
       {
