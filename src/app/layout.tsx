@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Martian_Mono } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google"; // <--- 1. IMPORT ADDED
 import "./globals.css";
 import { CookieBanner } from "@/components/cookie-banner";
+import { DossierStrip } from "@/components/dossier-strip";
 
 const martianMono = Martian_Mono({
   subsets: ["latin"],
@@ -12,7 +14,7 @@ const martianMono = Martian_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://kansliet.co"),
   title: {
-    default: "Kansliet - Industrial Design Studio",
+    default: "KANSLIET (DESIGN COMPANY)",
     template: "%s | Kansliet",
   },
   description:
@@ -31,7 +33,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://kansliet.co",
-    title: "Kansliet - Industrial Design Studio",
+    title: "KANSLIET (DESIGN COMPANY)",
     description:
       "Swedish design company specializing in industrial, spatial, and identity design",
     siteName: "Kansliet",
@@ -46,7 +48,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Kansliet - Industrial Design Studio",
+    title: "KANSLIET (DESIGN COMPANY)",
     description:
       "Swedish design company specializing in industrial, spatial, and identity design",
     images: ["/og-image.jpg"],
@@ -62,6 +64,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  icons: {
+    icon: "/kansliet-favicon.png", // Ensure this matches your file in public/
+  },
 };
 
 export default function RootLayout({
@@ -72,8 +77,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={martianMono.className}>
       <body className="flex flex-col min-h-screen">
-        {children}
+        <div className="sticky top-0 z-202 shrink-0 h-8 bg-background [--dossier-strip-height:2rem]">
+          <DossierStrip />
+        </div>
+        <div className="flex flex-col flex-1 min-h-0">{children}</div>
         <CookieBanner />
+
+        {/* 2. COMPONENT ADDED HERE */}
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
       </body>
     </html>
   );

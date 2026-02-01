@@ -10,9 +10,11 @@
   --zIndex-100: 100;
   --zIndex-200: 200;
   --zIndex-201: 201;
+  --zIndex-202: 202;
 
   --font-family-mono: "Martian Mono", ui-monospace, monospace;
 
+  --font-size-xs: 0.5rem;
   --font-size-sm: 0.55rem;
   --font-size-base: 0.6875rem;
   --font-size-lg: 1.11rem;
@@ -35,6 +37,7 @@
 @layer base {
   html {
     overflow-y: scroll;
+    --dossier-strip-height: 2rem;
   }
 
   /* Text selection color */
@@ -128,6 +131,11 @@
     letter-spacing: normal;
   }
 
+  .text-dossier {
+    font-size: var(--font-size-xs);
+    line-height: 1.35;
+  }
+
   .text-sm {
     font-size: var(--font-size-sm);
     line-height: 1.35;
@@ -157,6 +165,19 @@
 
   .animate-rotate-ping-pong {
     animation: rotate-ping-pong 8s linear infinite;
+  }
+
+  .dossier-stamp {
+    position: absolute;
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    opacity: 0.35;
+    transform: rotate(-12deg);
+    pointer-events: none;
+    border: 1px solid currentColor;
+    padding: 0.25rem 0.5rem;
   }
 }
 

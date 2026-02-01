@@ -1,0 +1,160 @@
+import { projects } from "@/data/projects";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ProjectCarousel } from "./project-carousel";
+import type { Metadata } from "next";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const project = projects.find((p) => p.id === id);
+
+  if (!project) {
+    return {
+      title: "KANSLIET (NOT FOUND)",
+    };
+  }
+
+  return {
+    title: `KANSLIET (${project.title})`,
+  };
+}
+
+export default async function ProjectPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const project = projects.find((p) => p.id === id);
+  const currentIndex = projects.findIndex((p) => p.id === id);
+  const prevProject = currentIndex > 0 ? projects[currentIndex - 1] : null;
+  const nextProject =
+    currentIndex < projects.length - 1 ? projects[currentIndex + 1] : null;
+
+  if (!project) {
+    notFound();
+  }
+
+  const pageNum = currentIndex + 1;
+  const totalPages = projects.length;
+
+  return (
+    <div className="flex-1 bg-background flex flex-col lg:flex-row min-h-0 w-full relative">
+      {/* Left: Image carousel */}
+      <aside className="w-full lg:w-1/2 lg:sticky lg:top-0 lg:self-start lg:h-screen shrink-0">
+        <ProjectCarousel images={project.images} projectTitle={project.title} />
+      </aside>
+
+      {/* Right: Project info */}
+      <div className="flex-1 flex flex-col min-w-0 py-12 lg:py-20 min-h-0">
+        <div className="container-kansliet flex flex-col">
+          {/* Top Row: Page Num + Title + Category */}
+          <div className="flex flex-col gap-8 mb-20">
+            <p className="text-dossier text-caps tracking-wider opacity-60 tabular-nums">
+              P. {String(pageNum).padStart(2, "0")} /{" "}
+              {String(totalPages).padStart(2, "0")}
+            </p>
+
+            <div className="flex flex-col lg:flex-row lg:items-baseline lg:justify-between gap-6">
+              <h1 className="text-4xl uppercase tracking-tight font-normal">
+                {project.title}
+              </h1>
+
+              <div className="flex items-baseline gap-4">
+                <span className="text-dossier text-caps tracking-widest opacity-50">
+                  CATEGORY
+                </span>
+                <span className="text-caps text-sm font-light tracking-wider uppercase">
+                  {project.category}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Middle: Year Line */}
+          <div className="border-b-brutal pb-10 mb-10">
+            <div className="flex items-baseline gap-4">
+              <span className="text-dossier text-caps tracking-widest opacity-50">
+                YEAR
+              </span>
+              <span className="text-caps text-sm font-light tracking-wider uppercase">
+                {project.year}
+              </span>
+            </div>
+          </div>
+
+          {/* Bottom Specs Grid */}
+          {project.specs.length > 0 && (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 border-b-brutal pb-10 mb-10">
+              {project.specs
+                .filter((spec) => spec.label !== "YEAR")
+                .map((spec) => (
+                  <div key={spec.label} className="flex items-baseline gap-3">
+                    <span className="text-dossier text-caps tracking-widest opacity-50 shrink-0">
+                      {spec.label}
+                    </span>
+                    <span className="text-caps text-sm font-light tracking-wider uppercase truncate">
+                      {spec.value}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {/* Tagline - CHANGED TO UPPERCASE */}
+          <div className="mb-10">
+            <h2 className="uppercase tracking-wide text-2xl lg:text-3xl font-light leading-tight max-w-xl">
+              {project.tagline}
+            </h2>
+          </div>
+
+          {/* Description */}
+          <div className="mb-12 max-w-xl space-y-6">
+            {project.description.map((paragraph: string, index: number) => (
+              <p
+                key={index}
+                className="text-normal-case text-base font-light leading-relaxed"
+              >
+                {paragraph}
+              </p>
+            ))}
+          </div>
+
+          {/* Prev/Next */}
+          <div className="pt-12 border-t-brutal flex items-center justify-between mt-auto">
+            {prevProject ? (
+              <Link
+                href={`/works/${prevProject.id}`}
+                className="text-caps text-sm font-light tracking-wider hover:opacity-60 transition-opacity"
+              >
+                ← PREVIOUS
+              </Link>
+            ) : (
+              <span aria-hidden />
+            )}
+            {nextProject ? (
+              <Link
+                href={`/works/${nextProject.id}`}
+                className="text-caps text-sm font-light tracking-wider hover:opacity-60 transition-opacity"
+              >
+                NEXT →
+              </Link>
+            ) : (
+              <span aria-hidden />
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export async function generateStaticParams() {
+  return projects.map((project) => ({
+    id: project.id,
+  }));
+}

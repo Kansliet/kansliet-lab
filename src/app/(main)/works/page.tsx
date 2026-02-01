@@ -20,7 +20,7 @@ export default function ProjectsPage() {
 
           <Grid cols={3} gap={6}>
             {projects.map((project) => (
-              <GridItem key={project.id} href={`/projects/${project.id}`}>
+              <GridItem key={project.id} href={`/works/${project.id}`}>
                 <GridItemImage>
                   {project.images[0] ? (
                     <Image

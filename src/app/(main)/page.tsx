@@ -55,7 +55,7 @@ export default function HomePage() {
             {projects.map((project) => (
               <Link
                 key={project.id}
-                href={`/projects/${project.id}`}
+                href={`/works/${project.id}`}
                 className="group flex items-center justify-between py-4 border-b-brutal hover:bg-foreground hover:text-background transition-colors"
               >
                 <span className="text-caps text-sm font-light tracking-wider px-4">
