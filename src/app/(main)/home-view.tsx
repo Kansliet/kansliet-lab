@@ -52,7 +52,7 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
   const listInView = useInView(listRef, { once: true, amount: 0.15 });
   const reduceMotion = useReducedMotion();
 
-  const handleHeroMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+  const handleHeroMouseMove = (e: MouseEvent<Element>) => {
     const el = titleRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
