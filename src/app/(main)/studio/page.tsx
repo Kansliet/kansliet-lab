@@ -36,7 +36,7 @@ export default function StudioPage() {
         <div className="grid gap-12 lg:grid-cols-2">
           {/* About Section */}
           <div>
-            <h2 className="text-dossier text-caps tracking-widest opacity-50 mb-6">
+            <h2 className="dossier-label mb-6">
               ABOUT KANSLIET
             </h2>
             <div className="text-normal-case space-y-4 text-base font-light leading-relaxed">
@@ -62,7 +62,7 @@ export default function StudioPage() {
           {/* Services & Location */}
           <div className="space-y-12">
             <div>
-              <h2 className="text-dossier text-caps tracking-widest opacity-50 mb-6">
+              <h2 className="dossier-label mb-6">
                 SERVICES
               </h2>
               <div className="space-y-3">
@@ -94,7 +94,7 @@ export default function StudioPage() {
             </div>
 
             <div>
-              <h2 className="text-dossier text-caps tracking-widest opacity-50 mb-6">
+              <h2 className="dossier-label mb-6">
                 LOCATION
               </h2>
               <p className="text-normal-case text-base font-light">SWEDEN</p>
@@ -104,7 +104,7 @@ export default function StudioPage() {
 
         {/* Clients Section */}
         <div className="mt-16 lg:mt-20 pt-16 lg:pt-20 border-t-brutal">
-          <h2 className="text-dossier text-caps tracking-widest opacity-50 mb-10">
+          <h2 className="dossier-label mb-10">
             SELECTED CLIENTS
           </h2>
 

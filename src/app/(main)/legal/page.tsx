@@ -14,7 +14,7 @@ export default function LegalPage() {
         </h1>
         <div className="space-y-10 text-normal-case text-base font-light leading-relaxed">
           <section>
-            <h2 className="text-caps text-sm font-normal tracking-wider mb-4">
+            <h2 className="dossier-label mb-4">
               COOKIES
             </h2>
             <p>
@@ -25,7 +25,7 @@ export default function LegalPage() {
             </p>
           </section>
           <section>
-            <h2 className="text-caps text-sm font-normal tracking-wider mb-4">
+            <h2 className="dossier-label mb-4">
               CONTACT
             </h2>
             <p>

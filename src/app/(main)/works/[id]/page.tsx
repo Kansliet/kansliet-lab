@@ -64,7 +64,7 @@ export default async function ProjectPage({
         <div className="container-kansliet flex flex-col">
           {/* Top Row: Page Num + Title + Category */}
           <div className="flex flex-col gap-6 lg:gap-8 mb-10 lg:mb-20">
-            <p className="text-dossier text-caps tracking-wider opacity-60 tabular-nums">
+            <p className="dossier-label tabular-nums">
               P. {String(pageNum).padStart(2, "0")} /{" "}
               {String(totalPages).padStart(2, "0")}
             </p>
@@ -76,7 +76,7 @@ export default async function ProjectPage({
               </h1>
 
               <div className="flex items-baseline gap-4">
-                <span className="text-dossier text-caps tracking-widest opacity-50">
+                <span className="dossier-label">
                   CATEGORY
                 </span>
                 <span className="text-caps text-sm font-light tracking-wider uppercase">
@@ -89,7 +89,7 @@ export default async function ProjectPage({
           {/* Middle: Year Line */}
           <div className="border-b-brutal pb-8 lg:pb-10 mb-8 lg:mb-10">
             <div className="flex items-baseline gap-4">
-              <span className="text-dossier text-caps tracking-widest opacity-50">
+              <span className="dossier-label">
                 YEAR
               </span>
               <span className="text-caps text-sm font-light tracking-wider uppercase">
@@ -105,7 +105,7 @@ export default async function ProjectPage({
                 .filter((spec) => spec.label !== "YEAR")
                 .map((spec) => (
                   <div key={spec.label} className="flex items-baseline gap-3">
-                    <span className="text-dossier text-caps tracking-widest opacity-50 shrink-0">
+                    <span className="dossier-label shrink-0">
                       {spec.label}
                     </span>
                     <span className="text-caps text-sm font-light tracking-wider uppercase truncate">

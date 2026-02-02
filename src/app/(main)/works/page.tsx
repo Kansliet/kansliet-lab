@@ -17,8 +17,8 @@ export default function ProjectsPage() {
     <div className="min-h-screen bg-background">
       <section className="py-20">
         <div className="container-kansliet">
-          <h1 className="text-caps mb-12 text-lg font-light tracking-wide">
-            PROJECTS
+          <h1 className="dossier-label mb-12">
+            SELECTED WORKS
           </h1>
 
           <Grid cols={3} gap={6}>
@@ -26,6 +26,9 @@ export default function ProjectsPage() {
               <GridItem key={project.id} href={`/works/${project.id}`}>
                 <div className="flex aspect-5/6 flex-col overflow-hidden">
                   <div className="relative min-h-0 flex-1 bg-foreground/5">
+                    <span className="absolute top-2 left-2 text-dossier text-caps tracking-wider opacity-70 font-mono">
+                      REF: {project.id}
+                    </span>
                     {project.images[0] ? (
                       <Image
                         src={project.images[0].src}

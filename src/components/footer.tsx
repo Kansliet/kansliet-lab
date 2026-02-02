@@ -7,7 +7,7 @@ export function Footer() {
       <div className="container-kansliet">
         {/* Top Section: Navigation & Identity */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 py-8">
-          <p className="text-dossier text-caps tracking-wider opacity-60">
+          <p className="dossier-label">
             IDN-2526-K(DC)SYS
           </p>
 

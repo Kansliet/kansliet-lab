@@ -127,6 +127,9 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
         variants={reduceMotion ? listVariantsReduced : listVariants}
       >
         <div className="container-kansliet">
+          <h2 className="dossier-label px-4 mb-4">
+            SELECTED WORKS
+          </h2>
           <ul className="space-y-0 list-none m-0 p-0">
             {projects.map((project) => (
               <motion.li

@@ -42,7 +42,7 @@ export default async function ContactPage({
           <div className="flex flex-col gap-10 lg:gap-16 order-2 lg:order-1">
             {/* Intro Text */}
             <div>
-              <h2 className="text-dossier text-caps tracking-widest opacity-50 mb-4 lg:mb-6">
+              <h2 className="dossier-label mb-4 lg:mb-6">
                 GET IN TOUCH
               </h2>
               {/* Mobile: text-base / Desktop: text-lg */}
@@ -56,7 +56,7 @@ export default async function ContactPage({
             <div className="space-y-6">
               {/* Email Block - Added flex-wrap for safety */}
               <div className="flex flex-wrap items-baseline gap-4">
-                <span className="text-dossier text-caps tracking-widest opacity-50 shrink-0">
+                <span className="dossier-label shrink-0">
                   EMAIL
                 </span>
                 <a
@@ -69,7 +69,7 @@ export default async function ContactPage({
 
               {/* Social Block */}
               <div className="flex items-baseline gap-4">
-                <span className="text-dossier text-caps tracking-widest opacity-50 shrink-0">
+                <span className="dossier-label shrink-0">
                   SOCIAL
                 </span>
                 <div className="flex flex-col gap-1">

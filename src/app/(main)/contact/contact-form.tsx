@@ -44,7 +44,7 @@ export function ContactForm() {
       <div className="group">
         <label
           htmlFor="name"
-          className="text-caps block mb-2 text-sm font-normal tracking-wider opacity-70 group-focus-within:opacity-100 transition-opacity"
+          className="dossier-label block mb-2"
         >
           NAME
         </label>
@@ -61,7 +61,7 @@ export function ContactForm() {
       <div className="group">
         <label
           htmlFor="email"
-          className="text-caps block mb-2 text-sm font-normal tracking-wider opacity-70 group-focus-within:opacity-100 transition-opacity"
+          className="dossier-label block mb-2"
         >
           EMAIL
         </label>
@@ -78,7 +78,7 @@ export function ContactForm() {
       <div className="group">
         <label
           htmlFor="company"
-          className="text-caps block mb-2 text-sm font-normal tracking-wider opacity-70 group-focus-within:opacity-100 transition-opacity"
+          className="dossier-label block mb-2"
         >
           COMPANY (OPTIONAL)
         </label>
@@ -94,7 +94,7 @@ export function ContactForm() {
       <div className="group">
         <label
           htmlFor="message"
-          className="text-caps block mb-2 text-sm font-normal tracking-wider opacity-70 group-focus-within:opacity-100 transition-opacity"
+          className="dossier-label block mb-2"
         >
           MESSAGE
         </label>
