@@ -61,9 +61,12 @@ export function Header() {
 
           {/* Mobile Hamburger Button */}
           <button
+            type="button"
             onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden relative z-50 p-2 -mr-2 text-foreground hover:opacity-60 focus:outline-none"
-            aria-label="Toggle menu"
+            className="lg:hidden relative z-50 p-2 -mr-2 text-foreground hover:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isOpen}
+            aria-controls="mobile-nav"
           >
             <div className="w-6 flex flex-col items-end gap-1.5">
               {/* Line 1 
@@ -100,12 +103,17 @@ export function Header() {
 
           {/* Mobile Overlay Menu */}
           <div
+            id="mobile-nav"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile navigation"
             className={`fixed inset-0 bg-background z-40 flex flex-col justify-center px-6 transition-all duration-300 lg:hidden ${
               isOpen
                 ? "opacity-100 pointer-events-auto"
                 : "opacity-0 pointer-events-none"
             }`}
             style={{ top: "var(--dossier-strip-height, 2rem)" }}
+            hidden={!isOpen}
           >
             <nav className="flex flex-col gap-8 text-center">
               {navLinks.map(({ href, label }) => (

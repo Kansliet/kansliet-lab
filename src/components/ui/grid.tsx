@@ -85,7 +85,14 @@ const GridItemContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, children, ...props }, ref) => (
-  <div ref={ref} className={cn("border-t-brutal p-4", className)} {...props}>
+  <div
+    ref={ref}
+    className={cn(
+      "border-t-brutal bg-background p-4 min-h-[4.5rem] flex flex-col justify-center",
+      className,
+    )}
+    {...props}
+  >
     {children}
   </div>
 ));

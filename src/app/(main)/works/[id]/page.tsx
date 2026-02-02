@@ -13,9 +13,24 @@ export async function generateMetadata({
   const project = projects.find((p) => p.id === id);
 
   if (!project) {
-    return { title: "KANSLIET (NOT FOUND)" };
+    return { title: "Project Not Found" };
   }
-  return { title: `KANSLIET (${project.title})` };
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kansliet.co";
+  const imageUrl = project.images[0]
+    ? new URL(project.images[0].src, baseUrl).href
+    : undefined;
+
+  return {
+    title: project.title,
+    description: project.tagline,
+    openGraph: {
+      title: project.title,
+      description: project.tagline,
+      images: imageUrl
+        ? [{ url: imageUrl, alt: project.images[0].alt }]
+        : undefined,
+    },
+  };
 }
 
 export default async function ProjectPage({
@@ -39,9 +54,8 @@ export default async function ProjectPage({
 
   return (
     <div className="flex-1 bg-background flex flex-col lg:flex-row min-h-0 w-full relative">
-      {/* Left: Image carousel */}
-      {/* Mobile: 50vh height / Desktop: Full screen sticky */}
-      <aside className="w-full h-[50vh] lg:w-1/2 lg:sticky lg:top-0 lg:self-start lg:h-screen shrink-0">
+      {/* Left: Image carousel — same 4:5 aspect on mobile and desktop */}
+      <aside className="w-full lg:w-1/2 shrink-0 aspect-4/5 lg:sticky lg:top-0 lg:self-start">
         <ProjectCarousel images={project.images} projectTitle={project.title} />
       </aside>
 

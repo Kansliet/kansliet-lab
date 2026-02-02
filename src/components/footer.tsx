@@ -17,6 +17,7 @@ export function Footer() {
                 href="https://instagram.com/kansliet.co"
                 variant="nav"
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 INSTAGRAM
               </Link>
@@ -24,6 +25,7 @@ export function Footer() {
                 href="https://www.linkedin.com/company/kansliet"
                 variant="nav"
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 LINKEDIN
               </Link>

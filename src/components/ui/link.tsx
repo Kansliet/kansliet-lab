@@ -24,11 +24,17 @@ export interface LinkProps
     VariantProps<typeof linkVariants> {}
 
 const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ className, variant, ...props }, ref) => {
+  ({ className, variant, target, rel, ...props }, ref) => {
+    const safeRel =
+      target === "_blank"
+        ? rel ?? "noopener noreferrer"
+        : rel;
     return (
       <a
         className={cn(linkVariants({ variant, className }))}
         ref={ref}
+        target={target}
+        rel={safeRel}
         {...props}
       />
     );

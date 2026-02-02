@@ -44,39 +44,6 @@ export const projects: Project[] = [
     ],
   },
   {
-    id: "waffries",
-    title: "WAFFRIES",
-    category: "Interior Design, Brand Identity",
-    year: "2023",
-    tagline:
-      "Visual and spatial design for a QSR concept located in Mall of the Emirates, Dubai.",
-    description: [
-      "Waffries is a quick-service restaurant in Mall of the Emirates in Dubai. Kansliet designed the full identity and interior system, from naming and logotype to spatial layout, signage, and material palette.",
-      "The goal was to build a clear and playful brand that could stand out in a dense retail environment without losing structure or efficiency. Every element was reduced to essentials to support a fast operational flow.",
-      "The interior uses a simple palette and modular layout that keeps the space calm and functional at high volume. Signage and menu systems were designed to work across multiple scales, from storefront visibility to on-counter navigation.",
-    ],
-    tags: ["INTERIOR", "BRANDING", "HOSPITALITY", "DUBAI"],
-    images: [
-      {
-        src: "/images/projects/waffries/waffries.webp",
-        alt: "Vector illustration of waffle icon in isometric style on solid orange background",
-      },
-      {
-        src: "/images/projects/waffries/flatlay.jpg",
-        alt: "Flat lay of branded waffles and dipping sauces arranged in a repeating grid",
-      },
-      {
-        src: "/images/projects/waffries/lifestyle.jpg",
-        alt: "Lifestyle shot of model holding Waffries sign with repeating logo",
-      },
-    ],
-    specs: [
-      { label: "CLIENT", value: "BRAVO CREATIVE PTE LTD" },
-      { label: "YEAR", value: "2023" },
-      { label: "LOCATION", value: "Dubai, UAE" },
-    ],
-  },
-  {
     id: "kallstorp",
     title: "KÄLLSTORP",
     category: "Interior Design",
@@ -90,15 +57,23 @@ export const projects: Project[] = [
     tags: ["INTERIOR", "VISUALIZATION", "RESIDENTIAL", "SUSTAINABLE"],
     images: [
       {
-        src: "/images/projects/kallstorp/kitchen.jpg",
+        src: "/images/projects/kallstorp/Källstorp_Interior_Kitchen_Final.jpg",
         alt: "Open-plan kitchen and dining area in light wood and concrete with custom cabinetry",
       },
       {
-        src: "/images/projects/kallstorp/dining.jpg",
+        src: "/images/projects/kallstorp/Källstorp_Interior_Diningroom_Final.jpg",
         alt: "Dining space with framed artworks and integrated kitchen wall in birch plywood",
       },
       {
-        src: "/images/projects/kallstorp/detail.jpg",
+        src: "/images/projects/kallstorp/Källstorp_Interior_Laundry_Final.jpg",
+        alt: "Detail view of kitchen island and bar seating, with graphic yellow wall poster",
+      },
+      {
+        src: "/images/projects/kallstorp/Källstorp_Interior_Livingoom_Final.jpg",
+        alt: "Detail view of kitchen island and bar seating, with graphic yellow wall poster",
+      },
+      {
+        src: "/images/projects/kallstorp/Källstorp_Interior_Livingroom_Final_2.jpg",
         alt: "Detail view of kitchen island and bar seating, with graphic yellow wall poster",
       },
     ],
@@ -123,21 +98,57 @@ export const projects: Project[] = [
     tags: ["INDUSTRIAL", "PRODUCT", "COLLABORATION", "CONCEPT"],
     images: [
       {
-        src: "/images/projects/smeg-nespresso/hero.jpg",
+        src: "/images/projects/smeg-nespresso/smeg_propeller_final_wide_front_view.jpg",
         alt: "Stacked Smeg x Nespresso concept machine with ceramic cup, minimalist studio backdrop",
       },
       {
-        src: "/images/projects/smeg-nespresso/lineup.jpg",
+        src: "/images/projects/smeg-nespresso/smeg_propeller_final_exploded_motion_4.jpg",
         alt: "Lineup of modular espresso machines showing vertical assembly with matching cups",
       },
       {
-        src: "/images/projects/smeg-nespresso/exploded.jpg",
+        src: "/images/projects/smeg-nespresso/smeg_propeller_final_wide_perspective.jpg",
+        alt: "Exploded view of coffee machine components, emphasizing modular construction",
+      },
+      {
+        src: "/images/projects/smeg-nespresso/smeg_propeller_detail.jpg",
         alt: "Exploded view of coffee machine components, emphasizing modular construction",
       },
     ],
     specs: [
       { label: "CLIENT", value: "CONCEPT" },
       { label: "YEAR", value: "2024" },
+      { label: "ROLE", value: "Industrial Design" },
+    ],
+  },
+  {
+    id: "roppongi",
+    title: "ROPPONGI",
+    category: "Industrial Design",
+    year: "2025",
+    tagline:
+      "Visual and spatial design for a QSR concept located in Mall of the Emirates, Dubai.",
+    description: [
+      "Roppongi is a lighting and spatial design project. Kansliet developed the visual and product direction, from concept to final execution.",
+      "The work explores material, form, and light in a restrained system that can scale across contexts.",
+    ],
+    tags: ["INDUSTRIAL", "LIGHTING", "PRODUCT", "SPATIAL"],
+    images: [
+      {
+        src: "/images/projects/roppongi/roppongi_lamp_view_1_grain.jpg",
+        alt: "Roppongi lamp front view",
+      },
+      {
+        src: "/images/projects/roppongi/roppongi_lamp_view_3_grain.jpg",
+        alt: "Roppongi lamp alternate angle",
+      },
+      {
+        src: "/images/projects/roppongi/roppongi_lamp_view_2_grain.jpg",
+        alt: "Roppongi lamp view with textured surface",
+      },
+    ],
+    specs: [
+      { label: "CLIENT", value: "KANSLIET" },
+      { label: "YEAR", value: "2025" },
       { label: "ROLE", value: "Industrial Design" },
     ],
   },
@@ -155,15 +166,19 @@ export const projects: Project[] = [
     tags: ["INTERIOR", "BRANDING", "HOSPITALITY", "DUBAI"],
     images: [
       {
-        src: "/images/projects/frank-stein/exterior.jpg",
-        alt: "Frank & Stein café exterior with sand toned façade and warm interior lighting in Jumeirah",
-      },
-      {
-        src: "/images/projects/frank-stein/counter.jpg",
+        src: "/images/projects/frank-and-stein/frank_stein_logotype_NEW_0001.jpg",
         alt: "Frank & Stein café counter with signage, muted materials, and staff preparing drinks",
       },
       {
-        src: "/images/projects/frank-stein/bench.jpg",
+        src: "/images/projects/frank-and-stein/frank_stein_NEW_0000.jpg",
+        alt: "Frank & Stein café exterior with sand toned façade and warm interior lighting in Jumeirah",
+      },
+      {
+        src: "/images/projects/frank-and-stein/frank_stein_NEW_0001.jpg",
+        alt: "Three-quarter view of layered plywood bench constructed from repeated slices",
+      },
+      {
+        src: "/images/projects/frank-and-stein/frank_stein_coffee_bag_NEW_0001.jpg",
         alt: "Three-quarter view of layered plywood bench constructed from repeated slices",
       },
     ],
@@ -187,15 +202,19 @@ export const projects: Project[] = [
     tags: ["INDUSTRIAL", "CONCEPT", "TECH", "TRANSPARENCY"],
     images: [
       {
-        src: "/images/projects/nothing/back.jpg",
+        src: "/images/projects/nothing/nothing_2a_detail_top.jpg",
         alt: "Render of Community Edition Nothing Phone concept with translucent back",
       },
       {
-        src: "/images/projects/nothing/camera.jpg",
+        src: "/images/projects/nothing/nothing_2a_back.jpg",
         alt: "Detail view of dual camera housing in raw aluminum frame with micro-textured chamfer",
       },
       {
-        src: "/images/projects/nothing/rear.jpg",
+        src: "/images/projects/nothing/nothing_2a_detail_bottom.jpg",
+        alt: "Rear view of concept phone showing circuit-inspired engraving and translucent paneling",
+      },
+      {
+        src: "/images/projects/nothing/nothing_2a_back_front.jpg",
         alt: "Rear view of concept phone showing circuit-inspired engraving and translucent paneling",
       },
     ],
@@ -219,15 +238,15 @@ export const projects: Project[] = [
     tags: ["3D", "VISUALIZATION", "MARINE", "FASHION"],
     images: [
       {
-        src: "/images/projects/aime-leon-dore/side.jpg",
+        src: "/images/projects/aime-leon-dore/ALD_38-GS_3200x4000_HIRES0000.jpg",
         alt: "Side view render of the Aimé Leon Dore and Technohull speedboat on a white background",
       },
       {
-        src: "/images/projects/aime-leon-dore/water.jpg",
+        src: "/images/projects/aime-leon-dore/_Z727464.jpg",
         alt: "Aimé Leon Dore and Technohull speedboat moving at high speed on open water with a helicopter",
       },
       {
-        src: "/images/projects/aime-leon-dore/elevation.jpg",
+        src: "/images/projects/aime-leon-dore/SU23_Technohull_Boat_and_Graphics_-12.19.jpg",
         alt: "Technical side elevation renders of the Aimé Leon Dore and Technohull speedboat",
       },
     ],
@@ -251,15 +270,15 @@ export const projects: Project[] = [
     tags: ["3D", "VISUALIZATION", "CAMPAIGN", "COMPOSITING"],
     images: [
       {
-        src: "/images/projects/ebay-elton/wardrobe.jpg",
+        src: "/images/projects/ebay-x-elton-john/eBay-Rocket-Man-Resale-Hero-16x9.jpg",
         alt: "Elton John standing in a wardrobe room for the eBay charity sale campaign",
       },
       {
-        src: "/images/projects/ebay-elton/garments.jpg",
+        src: "/images/projects/ebay-x-elton-john/eBay-Rocket-Man-Resale-wardrobe.jpg",
         alt: "Clothing and accessories displayed on a red background for the eBay charity sale campaign",
       },
       {
-        src: "/images/projects/ebay-elton/display.jpg",
+        src: "/images/projects/ebay-x-elton-john/eBay-Rocket-Man-Resale-16x9.jpg",
         alt: "Retail display shelf with illuminated backdrop for the eBay charity sale campaign",
       },
     ],
@@ -282,15 +301,19 @@ export const projects: Project[] = [
     tags: ["PACKAGING", "3D", "VISUALIZATION", "SKINCARE"],
     images: [
       {
-        src: "/images/projects/cannaluxe/outdoors.jpg",
+        src: "/images/projects/cannaluxe/cannaluxe_kansliet_view_1.jpg",
         alt: "Cannaluxe skincare products displayed outdoors with shadowed palm leaves in the background",
       },
       {
-        src: "/images/projects/cannaluxe/lineup.jpg",
+        src: "/images/projects/cannaluxe/cannaluxe_kansliet_view_4.jpg",
         alt: "Cannaluxe skincare bottles arranged on a white background in a straight-line layout",
       },
       {
-        src: "/images/projects/cannaluxe/group.jpg",
+        src: "/images/projects/cannaluxe/cannaluxe_kansliet_view_5.jpg",
+        alt: "Cannaluxe skincare products arranged together on a light background",
+      },
+      {
+        src: "/images/projects/cannaluxe/cannaluxe_kansliet_view_3.jpg",
         alt: "Cannaluxe skincare products arranged together on a light background",
       },
     ],

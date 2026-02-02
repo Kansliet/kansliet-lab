@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# downloaded from Framer (optional; remove to commit)
+/public/images/kansliet-downloaded

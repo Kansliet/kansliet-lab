@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Martian_Mono } from "next/font/google";
-import { GoogleAnalytics } from "@next/third-parties/google"; // <--- 1. IMPORT ADDED
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import { CookieBanner } from "@/components/cookie-banner";
 import { DossierStrip } from "@/components/dossier-strip";
@@ -13,10 +13,7 @@ const martianMono = Martian_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://kansliet.co"),
-  title: {
-    default: "KANSLIET (DESIGN COMPANY)",
-    template: "%s | Kansliet",
-  },
+  title: "KANSLIET (DESIGN COMPANY)",
   description:
     "Swedish design company specializing in industrial, spatial, and identity design. We create products, spaces, and brands with brutalist precision.",
   keywords: [
@@ -64,9 +61,8 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  icons: {
-    icon: "/kansliet-favicon.png", // Ensure this matches your file in public/
-  },
+  // Favicon: Next.js serves app/icon.png by default when present.
+  // Add icons only if you need to override (e.g. icons: { icon: "/favicon.ico" }).
 };
 
 export default function RootLayout({
@@ -74,17 +70,23 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+
   return (
     <html lang="en" className={martianMono.className}>
       <body className="flex flex-col min-h-screen">
+        <a
+          href="#main-content"
+          className="sr-only focus:fixed focus:left-4 focus:top-4 focus:z-300 focus:m-0 focus:p-4 focus:w-auto focus:h-auto focus:overflow-visible focus:whitespace-normal focus:bg-background focus:text-caps focus:text-sm focus:outline focus:ring-2 focus:ring-signal focus:border-0"
+        >
+          Skip to main content
+        </a>
         <div className="sticky top-0 z-202 shrink-0 h-8 bg-background [--dossier-strip-height:2rem]">
           <DossierStrip />
         </div>
         <div className="flex flex-col flex-1 min-h-0">{children}</div>
         <CookieBanner />
-
-        {/* 2. COMPONENT ADDED HERE */}
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID || ""} />
+        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
       </body>
     </html>
   );

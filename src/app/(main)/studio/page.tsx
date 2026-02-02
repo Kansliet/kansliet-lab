@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "KANSLIET (STUDIO)",
+  description:
+    "Kansliet is a Swedish design company working in industrial, spatial, and identity design. Our services include product design, spatial design, and brand identity. Based in Sweden.",
 };
 
 const clients = [

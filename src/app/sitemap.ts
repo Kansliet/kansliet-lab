@@ -5,7 +5,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://kansliet.co";
 
   // 1. Static Routes
-  const routes = ["", "/works", "/studio", "/contact"].map((route) => ({
+  const routes = ["", "/works", "/studio", "/contact", "/legal"].map((route) => ({
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: "monthly" as const,

@@ -12,7 +12,7 @@ export default function MainLayout({
       <Header />
 
       {/* 2. flex-1 pushes the footer down, but allows full height expansion */}
-      <main className="flex-1 flex flex-col w-full">{children}</main>
+      <main id="main-content" className="flex-1 flex flex-col w-full">{children}</main>
 
       {/* 3. Footer is now just a block at the end of the document flow */}
       <Footer />
