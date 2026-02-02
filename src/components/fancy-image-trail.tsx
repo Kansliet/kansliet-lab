@@ -20,6 +20,8 @@ interface ImageTrailProps extends HTMLAttributes<HTMLDivElement> {
   repeatChildren?: number;
   baseZIndex?: number;
   zIndexDirection?: "new-on-top" | "old-on-top";
+  /** Optional callback fired on mouse move (e.g. to detect hover over another element). */
+  onMouseMoveCapture?: (e: React.MouseEvent) => void;
 }
 
 interface ImageTrailItemProps extends HTMLAttributes<HTMLDivElement> {
@@ -48,6 +50,7 @@ const ImageTrail = ({
   },
   baseZIndex = 0,
   zIndexDirection = "new-on-top",
+  onMouseMoveCapture,
   ...props
 }: ImageTrailProps) => {
   const allImages = React.useRef<NodeListOf<HTMLElement>>(undefined);
@@ -74,6 +77,7 @@ const ImageTrail = ({
   }, [containerRef, allImages]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    onMouseMoveCapture?.(e);
     const containerRect = containerRef?.current?.getBoundingClientRect();
     const mousePos = {
       x: e.clientX - (containerRect?.left || 0),

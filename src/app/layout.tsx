@@ -82,7 +82,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <div className="sticky top-0 z-202 shrink-0 h-8 bg-background [--dossier-strip-height:2rem]">
+        <div className="sticky top-0 z-202 shrink-0 h-8 bg-background [--dossier-strip-height:2rem] [view-transition-name:dossier-strip]">
           <DossierStrip />
         </div>
         <ViewTransitions>

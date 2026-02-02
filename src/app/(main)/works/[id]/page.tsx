@@ -140,6 +140,7 @@ export default async function ProjectPage({
             {prevProject ? (
               <Link
                 href={`/works/${prevProject.id}`}
+                scroll={false}
                 className="text-caps text-sm font-light tracking-wider hover:opacity-60 transition-opacity"
               >
                 ← PREVIOUS
@@ -150,6 +151,7 @@ export default async function ProjectPage({
             {nextProject ? (
               <Link
                 href={`/works/${nextProject.id}`}
+                scroll={false}
                 className="text-caps text-sm font-light tracking-wider hover:opacity-60 transition-opacity"
               >
                 NEXT →

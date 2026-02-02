@@ -18,7 +18,7 @@ export function Header() {
 
   return (
     <header
-      className="sticky z-50 border-b-brutal bg-background"
+      className="sticky z-50 border-b-brutal bg-background [view-transition-name:header]"
       style={{ top: "var(--dossier-strip-height, 2rem)" }}
     >
       <div className="container-kansliet">
@@ -26,6 +26,7 @@ export function Header() {
           {/* Logo */}
           <Link
             href="/"
+            scroll={false}
             className="hover:opacity-60 transition-opacity shrink-0 relative z-50"
             onClick={() => setIsOpen(false)}
           >
@@ -50,6 +51,7 @@ export function Header() {
               <Link
                 key={href}
                 href={href}
+                scroll={false}
                 className={`text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-60 whitespace-nowrap ${
                   pathname === href ? "opacity-100" : "opacity-60"
                 }`}
@@ -120,6 +122,7 @@ export function Header() {
                 <Link
                   key={href}
                   href={href}
+                  scroll={false}
                   onClick={() => setIsOpen(false)}
                   className="text-caps text-xl font-light tracking-widest hover:opacity-60 transition-opacity"
                 >

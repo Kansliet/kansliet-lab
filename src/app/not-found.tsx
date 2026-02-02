@@ -20,6 +20,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/"
+          scroll={false}
           className="text-caps inline-flex items-center justify-center text-sm font-light tracking-wide transition-opacity border-brutal bg-foreground text-background hover:opacity-80 px-8 py-3 disabled:pointer-events-none disabled:opacity-50"
         >
           RETURN HOME

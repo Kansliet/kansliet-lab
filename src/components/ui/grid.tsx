@@ -59,7 +59,7 @@ const GridItem = React.forwardRef<HTMLDivElement, GridItemProps>(
     );
 
     if (href) {
-      return <Link href={href}>{content}</Link>;
+      return <Link href={href} scroll={false}>{content}</Link>;
     }
 
     return content;

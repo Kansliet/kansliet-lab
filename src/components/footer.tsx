@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export function Footer() {
   return (
-    <footer className="border-t-brutal bg-background shrink-0 pb-12">
+    <footer className="border-t-brutal bg-background shrink-0 pb-12 [view-transition-name:footer]">
       <div className="container-kansliet">
         {/* Top Section: Navigation & Identity */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 py-8">

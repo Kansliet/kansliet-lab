@@ -11,8 +11,13 @@ export default function MainLayout({
     <div className="flex min-h-screen flex-col bg-background">
       <Header />
 
-      {/* 2. flex-1 pushes the footer down, but allows full height expansion */}
-      <main id="main-content" className="flex-1 flex flex-col w-full">{children}</main>
+      {/* 2. flex-1 pushes the footer down; view-transition-name so only main content slides */}
+      <main
+        id="main-content"
+        className="flex-1 flex flex-col w-full [view-transition-name:main-content]"
+      >
+        {children}
+      </main>
 
       {/* 3. Footer is now just a block at the end of the document flow */}
       <Footer />
