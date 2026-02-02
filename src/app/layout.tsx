@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Martian_Mono } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { ViewTransitions } from "next-view-transitions";
 import "./globals.css";
 import { CookieBanner } from "@/components/cookie-banner";
 import { DossierStrip } from "@/components/dossier-strip";
@@ -84,7 +85,9 @@ export default function RootLayout({
         <div className="sticky top-0 z-202 shrink-0 h-8 bg-background [--dossier-strip-height:2rem]">
           <DossierStrip />
         </div>
-        <div className="flex flex-col flex-1 min-h-0">{children}</div>
+        <ViewTransitions>
+          <div className="flex flex-col flex-1 min-h-0">{children}</div>
+        </ViewTransitions>
         <CookieBanner />
         {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
       </body>

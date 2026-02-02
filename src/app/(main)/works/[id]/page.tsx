@@ -1,5 +1,5 @@
 import { projects } from "@/data/projects";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { notFound } from "next/navigation";
 import { ProjectCarousel } from "./project-carousel";
 import type { Metadata } from "next";

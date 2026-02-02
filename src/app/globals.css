@@ -215,3 +215,10 @@
     transform: rotate(360deg);
   }
 }
+
+/* View Transitions: smooth cross-fade between routes (no flicker) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+  animation-timing-function: ease-out;
+}

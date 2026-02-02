@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import ImageTrail, { ImageTrailItem } from "@/components/fancy-image-trail";
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import { useRef, useState } from "react";
 import { CursorFollower } from "@/components/cursor-follower";
 import { motion, useInView, useReducedMotion } from "motion/react";
