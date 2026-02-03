@@ -26,7 +26,7 @@
 - **Server-first:** Home, Works, Studio, Contact, Works/[id] are server pages; they pass data as props to client components (`HomeView`, `ProjectCarousel`, etc.), so static data doesn’t ship in the client bundle.
 - **Client boundaries:** Only interactive parts use `"use client"`: `home-view`, `fancy-image-trail`, `cursor-follower`, `text-disperse`, `contact-form`, `project-carousel`, `cookie-banner`, `header` (mobile menu).
 - **Loading & error:** `loading.tsx` (root + works + works/[id]), `error.tsx`, `not-found.tsx` are in place.
-- **View transitions:** `next-view-transitions` with named groups so dossier strip, header, and footer stay static; only main content slides. `scroll={false}` on internal links avoids scroll jump.
+- **View transitions:** `next-view-transitions` with named groups so dossier strip, header, and footer stay static; only main content slides. Pages scroll to top on navigation.
 
 ### Optional improvements (non-blocking)
 

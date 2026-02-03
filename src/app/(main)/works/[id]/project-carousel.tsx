@@ -21,11 +21,11 @@ export function ProjectCarousel({
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col min-h-0">
       <Carousel
         images={images}
         autoplay={false}
-        variant="minimal"
+        variant="fullHeight"
         className="h-full flex-1 min-h-0 border-0 border-b-0 border-r-0 rounded-none"
       />
     </div>

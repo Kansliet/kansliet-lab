@@ -140,7 +140,6 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
               >
                 <Link
                   href={`/works/${project.id}`}
-                  scroll={false}
                   className="group flex items-center justify-between py-4 hover:bg-foreground hover:text-background transition-colors lg:cursor-none"
                   onMouseEnter={() => setIsHovering(true)}
                   onMouseLeave={() => setIsHovering(false)}

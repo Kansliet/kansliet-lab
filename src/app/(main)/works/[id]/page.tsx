@@ -53,14 +53,14 @@ export default async function ProjectPage({
   const totalPages = projects.length;
 
   return (
-    <div className="flex-1 bg-background flex flex-col lg:flex-row min-h-0 w-full relative">
-      {/* Left: Image carousel — same 4:5 aspect on mobile and desktop */}
-      <aside className="w-full lg:w-1/2 shrink-0 aspect-4/5 lg:sticky lg:top-0 lg:self-start">
+    <div className="flex flex-col lg:flex-row bg-background w-full min-h-0 lg:h-full">
+      {/* Left: Carousel — mobile: natural 4:5 aspect like before; desktop: fills viewport half */}
+      <aside className="w-full lg:w-1/2 aspect-[4/5] lg:aspect-auto lg:h-full min-h-0 shrink-0 flex flex-col">
         <ProjectCarousel images={project.images} projectTitle={project.title} />
       </aside>
 
-      {/* Right: Project info */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+      {/* Right: Project info — mobile: flows below carousel; desktop: scrolls in pane */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 lg:h-full lg:overflow-y-auto">
         {/* Page num strip — flush under header, full width of right column */}
         <p className="dossier-label tabular-nums w-full rounded-none px-4 lg:px-6 py-2">
           P. {String(pageNum).padStart(2, "0")} /{" "}
@@ -140,7 +140,6 @@ export default async function ProjectPage({
             {prevProject ? (
               <Link
                 href={`/works/${prevProject.id}`}
-                scroll={false}
                 className="text-caps text-sm font-light tracking-wider hover:opacity-60 transition-opacity"
               >
                 ← PREVIOUS
@@ -151,7 +150,6 @@ export default async function ProjectPage({
             {nextProject ? (
               <Link
                 href={`/works/${nextProject.id}`}
-                scroll={false}
                 className="text-caps text-sm font-light tracking-wider hover:opacity-60 transition-opacity"
               >
                 NEXT →

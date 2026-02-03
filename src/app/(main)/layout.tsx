@@ -1,5 +1,7 @@
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { TransitionWrapper } from "@/components/transition-wrapper";
+import { MainLayoutShell } from "@/components/main-layout-shell";
 
 export default function MainLayout({
   children,
@@ -7,20 +9,16 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    // 1. min-h-screen ensures the footer is at the bottom even on empty pages
-    <div className="flex min-h-screen flex-col bg-background">
-      <Header />
-
-      {/* 2. flex-1 pushes the footer down; view-transition-name so only main content slides */}
-      <main
-        id="main-content"
-        className="flex-1 flex flex-col w-full [view-transition-name:main-content]"
-      >
-        {children}
-      </main>
-
-      {/* 3. Footer is now just a block at the end of the document flow */}
+    <>
+      <MainLayoutShell>
+        <Header />
+        {/* On project pages, main fills the rest of the viewport (dossier + this shell = one window) */}
+        <main id="main-content" className="flex-1 flex flex-col w-full min-h-0">
+          <TransitionWrapper>{children}</TransitionWrapper>
+        </main>
+      </MainLayoutShell>
+      {/* Footer is outside the shell so on project pages it sits below the fold — scroll to reveal */}
       <Footer />
-    </div>
+    </>
   );
 }

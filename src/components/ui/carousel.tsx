@@ -9,7 +9,7 @@ interface CarouselProps extends React.HTMLAttributes<HTMLDivElement> {
   autoplay?: boolean;
   interval?: number;
   /** Minimal variant: dots only over image, no thick control bar */
-  variant?: "default" | "minimal";
+  variant?: "default" | "minimal" | "fullHeight";
 }
 
 const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
@@ -56,7 +56,10 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
       >
         {/* Images - Click to advance */}
         <div
-          className="relative aspect-4/5 w-full bg-foreground/5 cursor-pointer"
+          className={cn(
+            "relative w-full bg-foreground/5 cursor-pointer",
+            variant === "fullHeight" ? "h-full min-h-0" : "aspect-4/5",
+          )}
           onClick={next}
         >
           {images.map((image, index) => (
@@ -83,8 +86,8 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
               )}
             </div>
           ))}
-          {/* Minimal variant: dots + prev/next over image */}
-          {variant === "minimal" && (
+          {/* Minimal / fullHeight: dots + prev/next over image */}
+          {(variant === "minimal" || variant === "fullHeight") && (
             <>
               <button
                 onClick={(e) => {

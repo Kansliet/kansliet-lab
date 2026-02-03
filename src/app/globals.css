@@ -243,23 +243,52 @@
   animation: none;
 }
 
+/* Main pages (home, works list, studio, contact): bottom-up */
 ::view-transition-old(main-content) {
-  animation: view-transition-slide-out 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  animation: view-transition-main-out 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }
 
 ::view-transition-new(main-content) {
-  animation: view-transition-slide-in 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  animation: view-transition-main-in 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
   background: var(--color-background);
 }
 
-@keyframes view-transition-slide-out {
+@keyframes view-transition-main-out {
+  to {
+    transform: translateY(-24%);
+    opacity: 0;
+  }
+}
+
+@keyframes view-transition-main-in {
+  from {
+    transform: translateY(24%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Project pages (works/[id]): horizontal left-to-right */
+::view-transition-old(project-content) {
+  animation: view-transition-project-out 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+::view-transition-new(project-content) {
+  animation: view-transition-project-in 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  background: var(--color-background);
+}
+
+@keyframes view-transition-project-out {
   to {
     transform: translateX(-24%);
     opacity: 0;
   }
 }
 
-@keyframes view-transition-slide-in {
+@keyframes view-transition-project-in {
   from {
     transform: translateX(24%);
     opacity: 0;
