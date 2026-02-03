@@ -126,7 +126,7 @@ export const projects: Project[] = [
     category: "Industrial Design",
     year: "2025",
     tagline:
-      "Visual and spatial design for a QSR concept located in Mall of the Emirates, Dubai.",
+      "A mechanically articulated lighting system focused on precision, adjustability, and light control.",
     description: [
       "Roppongi is a lighting and spatial design project. Kansliet developed the visual and product direction, from concept to final execution.",
       "The work explores material, form, and light in a restrained system that can scale across contexts.",
@@ -147,7 +147,7 @@ export const projects: Project[] = [
       },
     ],
     specs: [
-      { label: "CLIENT", value: "KANSLIET" },
+      { label: "CLIENT", value: "KANSLIET (HARDWARE)" },
       { label: "YEAR", value: "2025" },
       { label: "ROLE", value: "Industrial Design" },
     ],
