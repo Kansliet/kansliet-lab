@@ -60,15 +60,15 @@ export default async function ProjectPage({
       </aside>
 
       {/* Right: Project info */}
-      <div className="flex-1 flex flex-col min-w-0 py-10 lg:py-20 min-h-0">
-        <div className="container-kansliet flex flex-col">
-          {/* Top Row: Page Num + Title + Category */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        {/* Page num strip — flush under header, full width of right column */}
+        <p className="dossier-label tabular-nums w-full rounded-none px-4 lg:px-6 py-2">
+          P. {String(pageNum).padStart(2, "0")} /{" "}
+          {String(totalPages).padStart(2, "0")}
+        </p>
+        <div className="container-kansliet flex flex-col flex-1 py-10 lg:py-20">
+          {/* Title + Category */}
           <div className="flex flex-col gap-6 lg:gap-8 mb-10 lg:mb-20">
-            <p className="dossier-label tabular-nums">
-              P. {String(pageNum).padStart(2, "0")} /{" "}
-              {String(totalPages).padStart(2, "0")}
-            </p>
-
             <div className="flex flex-col lg:flex-row lg:items-baseline lg:justify-between gap-6">
               {/* Mobile: text-3xl / Desktop: text-4xl */}
               <h1 className="text-3xl lg:text-4xl uppercase tracking-tight font-normal">
@@ -86,7 +86,7 @@ export default async function ProjectPage({
             </div>
           </div>
 
-          {/* Middle: Year Line */}
+          {/* Year Line */}
           <div className="border-b-brutal pb-8 lg:pb-10 mb-8 lg:mb-10">
             <div className="flex items-baseline gap-4">
               <span className="dossier-label">
