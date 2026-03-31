@@ -16,6 +16,11 @@ export async function submitContact(
   _prevState: ContactState | null,
   formData: FormData,
 ): Promise<ContactState> {
+  // Honeypot: real users never fill this field
+  if (formData.get("_trap")) {
+    return { message: "Message sent." };
+  }
+
   if (!process.env.RESEND_API_KEY?.trim()) {
     console.error("RESEND_API_KEY is not configured.");
     return { error: "Contact form is temporarily unavailable. Please try again later." };
@@ -42,7 +47,7 @@ export async function submitContact(
 
   try {
     await resend.emails.send({
-      from: "Kansliet Form <onboarding@resend.dev>",
+      from: process.env.RESEND_FROM_EMAIL ?? "Kansliet Form <onboarding@resend.dev>",
       to: "desk@kansliet.co",
       replyTo: email,
       subject: `New Inquiry: ${name.slice(0, 100)}`,

@@ -37,7 +37,7 @@ export function DossierStrip() {
   }, []);
 
   return (
-    <div className="border-b-brutal bg-background h-full min-h-[var(--dossier-strip-height)] flex items-center">
+    <div className="border-b-brutal bg-background h-full min-h-(--dossier-strip-height) flex items-center">
       <div className="container-kansliet w-full">
         <div className="flex items-center justify-between text-dossier">
           <span className="text-caps tracking-wider opacity-80 shrink-0">

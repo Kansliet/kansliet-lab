@@ -4,6 +4,10 @@ import { notFound } from "next/navigation";
 import { ProjectCarousel } from "./project-carousel";
 import type { Metadata } from "next";
 
+export function generateStaticParams() {
+  return projects.map((p) => ({ id: p.id }));
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -55,8 +59,8 @@ export default async function ProjectPage({
   return (
     <div className="flex flex-col lg:flex-row bg-background w-full min-h-0 lg:h-full">
       {/* Left: Carousel — mobile: natural 4:5 aspect like before; desktop: fills viewport half */}
-      <aside className="w-full lg:w-1/2 aspect-[4/5] lg:aspect-auto lg:h-full min-h-0 shrink-0 flex flex-col">
-        <ProjectCarousel images={project.images} projectTitle={project.title} />
+      <aside className="w-full lg:w-1/2 aspect-4/5 lg:aspect-auto lg:h-full min-h-0 shrink-0 flex flex-col">
+        <ProjectCarousel images={project.images} />
       </aside>
 
       {/* Right: Project info — mobile: flows below carousel; desktop: scrolls in pane */}
@@ -76,9 +80,7 @@ export default async function ProjectPage({
               </h1>
 
               <div className="flex items-baseline gap-4">
-                <span className="dossier-label">
-                  CATEGORY
-                </span>
+                <span className="dossier-label">CATEGORY</span>
                 <span className="text-caps text-sm font-light tracking-wider uppercase">
                   {project.category}
                 </span>
@@ -89,9 +91,7 @@ export default async function ProjectPage({
           {/* Year Line */}
           <div className="border-b-brutal pb-8 lg:pb-10 mb-8 lg:mb-10">
             <div className="flex items-baseline gap-4">
-              <span className="dossier-label">
-                YEAR
-              </span>
+              <span className="dossier-label">YEAR</span>
               <span className="text-caps text-sm font-light tracking-wider uppercase">
                 {project.year}
               </span>
@@ -105,9 +105,7 @@ export default async function ProjectPage({
                 .filter((spec) => spec.label !== "YEAR")
                 .map((spec) => (
                   <div key={spec.label} className="flex items-baseline gap-3">
-                    <span className="dossier-label shrink-0">
-                      {spec.label}
-                    </span>
+                    <span className="dossier-label shrink-0">{spec.label}</span>
                     <span className="text-caps text-sm font-light tracking-wider uppercase truncate">
                       {spec.value}
                     </span>

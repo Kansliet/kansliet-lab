@@ -33,6 +33,15 @@ export function ContactForm() {
 
   return (
     <form action={formAction} className="space-y-6">
+      {/* Honeypot: hidden from real users, bots fill it in */}
+      <input
+        type="text"
+        name="_trap"
+        aria-hidden="true"
+        tabIndex={-1}
+        className="absolute opacity-0 pointer-events-none w-0 h-0 overflow-hidden"
+        autoComplete="off"
+      />
       {state?.error && (
         <div className="border border-red-500 bg-red-500/5 p-4 text-red-600">
           <p className="text-caps text-sm tracking-wide font-bold">

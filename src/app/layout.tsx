@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Martian_Mono } from "next/font/google";
-import { GoogleAnalytics } from "@next/third-parties/google";
 import { ViewTransitions } from "next-view-transitions";
 import "./globals.css";
 import { CookieBanner } from "@/components/cookie-banner";
 import { DossierStrip } from "@/components/dossier-strip";
+import { AnalyticsConsent } from "@/components/analytics-consent";
 
 const martianMono = Martian_Mono({
   subsets: ["latin"],
@@ -89,7 +89,7 @@ export default function RootLayout({
           <div className="flex flex-col flex-1 min-h-0">{children}</div>
         </ViewTransitions>
         <CookieBanner />
-        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
+        {gaId ? <AnalyticsConsent gaId={gaId} /> : null}
       </body>
     </html>
   );

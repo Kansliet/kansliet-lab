@@ -5,13 +5,9 @@ import type { Project } from "@/data/projects";
 
 interface ProjectCarouselProps {
   images: Project["images"];
-  projectTitle: string;
 }
 
-export function ProjectCarousel({
-  images,
-  projectTitle,
-}: ProjectCarouselProps) {
+export function ProjectCarousel({ images }: ProjectCarouselProps) {
   if (!images.length) {
     return (
       <div className="flex h-full min-h-[50vh] items-center justify-center">
