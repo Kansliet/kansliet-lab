@@ -51,6 +51,7 @@ export const metadata: Metadata = {
       "Swedish design company specializing in industrial, spatial, and identity design",
     images: ["/og-image.jpg"],
   },
+  themeColor: "#ffffff",
   robots: {
     index: true,
     follow: true,
@@ -66,6 +67,34 @@ export const metadata: Metadata = {
   // Add icons only if you need to override (e.g. icons: { icon: "/favicon.ico" }).
 };
 
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Kansliet",
+  alternateName: "Kansliet Design Company",
+  url: "https://kansliet.co",
+  logo: "https://kansliet.co/kansliet-logo-navbar-web.svg",
+  description:
+    "Swedish design company specializing in industrial, spatial, and identity design.",
+  foundingDate: "2020",
+  areaServed: ["SE", "EU", "US"],
+  serviceType: [
+    "Industrial Design",
+    "Spatial Design",
+    "Brand Identity",
+    "3D Visualization",
+  ],
+  contactPoint: {
+    "@type": "ContactPoint",
+    email: "desk@kansliet.co",
+    contactType: "customer service",
+  },
+  sameAs: [
+    "https://instagram.com/kansliet.co",
+    "https://www.linkedin.com/company/kansliet",
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -75,6 +104,12 @@ export default function RootLayout({
 
   return (
     <html lang="en" className={martianMono.className}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+      </head>
       <body className="flex flex-col min-h-screen">
         <a
           href="#main-content"

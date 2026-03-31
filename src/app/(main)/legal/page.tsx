@@ -18,10 +18,12 @@ export default function LegalPage() {
               COOKIES
             </h2>
             <p>
-              This site may use cookies for analytics and to improve your
-              experience. By using the site you consent to our use of cookies as
-              described in this policy. You can manage preferences via your
-              browser settings.
+              We use analytics cookies (Google Analytics) to understand how
+              visitors use this site. These cookies are only set after you
+              explicitly accept via the consent banner. You can decline at any
+              time and no analytics data will be collected. You can also clear
+              previously given consent by clearing your browser&apos;s local
+              storage for this site.
             </p>
           </section>
           <section>

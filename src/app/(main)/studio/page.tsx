@@ -124,6 +124,7 @@ export default function StudioPage() {
                     src={client.logo}
                     alt={client.name}
                     fill
+                    sizes="112px"
                     className="object-contain"
                   />
                 </div>
