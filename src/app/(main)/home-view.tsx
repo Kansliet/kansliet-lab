@@ -95,7 +95,7 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
                     fill
                     className="object-cover"
                     sizes="128px"
-                    loading="lazy"
+                    loading="eager"
                   />
                 </div>
               </ImageTrailItem>
