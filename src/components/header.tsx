@@ -32,12 +32,11 @@ export function Header() {
             <Image
               src="/kansliet-logo-navbar-web.svg"
               alt="Kansliet"
-              width={250}
-              height={0}
-              style={{ height: "auto" }}
+              width={257}
+              height={22}
               priority
-              // UPDATED: w-[210px] makes it very prominent on mobile
               className="w-52.5 lg:w-62.5"
+              style={{ height: "auto" }}
             />
           </Link>
 

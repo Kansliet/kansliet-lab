@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Martian_Mono } from "next/font/google";
 import { ViewTransitions } from "next-view-transitions";
 import "./globals.css";
@@ -11,6 +11,10 @@ const martianMono = Martian_Mono({
   weight: ["300", "400"],
   variable: "--font-martian-mono",
 });
+
+export const viewport: Viewport = {
+  themeColor: "#ffffff",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://kansliet.co"),
@@ -51,7 +55,6 @@ export const metadata: Metadata = {
       "Swedish design company specializing in industrial, spatial, and identity design",
     images: ["/og-image.jpg"],
   },
-  themeColor: "#ffffff",
   robots: {
     index: true,
     follow: true,
