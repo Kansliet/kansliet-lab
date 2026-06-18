@@ -127,8 +127,8 @@ export default function RootLayout({
           <div className="flex flex-col flex-1 min-h-0">{children}</div>
         </ViewTransitions>
         <CookieBanner />
-        {gaId ? <AnalyticsConsent gaId={gaId} /> : null}
       </body>
+      {gaId ? <AnalyticsConsent gaId={gaId} /> : null}
     </html>
   );
 }

@@ -36,25 +36,26 @@ export default function StudioPage() {
         <div className="grid gap-12 lg:grid-cols-2">
           {/* About Section */}
           <div>
-            <h2 className="dossier-label mb-6">
-              ABOUT KANSLIET
-            </h2>
+            <h2 className="dossier-label mb-6">ABOUT KANSLIET</h2>
             <div className="text-normal-case space-y-4 text-base font-light leading-relaxed">
               <p>
-                Kansliet is a Swedish design company working in industrial,
-                spatial, and identity design. We make things that shape how
-                brands move in the real world.
+                Kansliet is a Swedish design company working across industrial,
+                spatial, and identity design.
               </p>
               <p>
-                Our approach is rooted in brutalist principles: honesty in
-                materials, clarity in function, and respect for the process. We
-                believe good design doesn&apos;t need ornament, it needs
-                precision, purpose, and attention to detail.
+                We work with clients who understand that form and function are
+                inseparable. The projects we take on demand precision in
+                structure, in execution, in how a brand presents itself to the
+                world.
               </p>
               <p>
-                Founded in 2020, we&apos;ve worked with clients across Europe,
-                APAC and North America, delivering projects that range from
-                product design to complete brand systems.
+                Our approach doesn't rely on trends or preconceived notions.
+                It's built on formal logic, material integrity, and a refusal to
+                compromise on clarity. The work stands on its own terms.
+              </p>
+              <p>
+                Established 2020. Clients across Europe, APAC, and North
+                America.
               </p>
             </div>
           </div>
@@ -62,9 +63,7 @@ export default function StudioPage() {
           {/* Services & Location */}
           <div className="space-y-12">
             <div>
-              <h2 className="dossier-label mb-6">
-                SERVICES
-              </h2>
+              <h2 className="dossier-label mb-6">SERVICES</h2>
               <div className="space-y-3">
                 <div className="border-b-brutal pb-3">
                   <h3 className="text-caps text-sm font-normal tracking-wider">
@@ -94,9 +93,7 @@ export default function StudioPage() {
             </div>
 
             <div>
-              <h2 className="dossier-label mb-6">
-                LOCATION
-              </h2>
+              <h2 className="dossier-label mb-6">LOCATION</h2>
               <p className="text-normal-case text-base font-light">SWEDEN</p>
             </div>
           </div>
@@ -104,9 +101,7 @@ export default function StudioPage() {
 
         {/* Clients Section */}
         <div className="mt-16 lg:mt-20 pt-16 lg:pt-20 border-t-brutal">
-          <h2 className="dossier-label mb-10">
-            SELECTED CLIENTS
-          </h2>
+          <h2 className="dossier-label mb-10">SELECTED CLIENTS</h2>
 
           {/* GRID LAYOUT UPDATE:
             - grid-cols-2 (mobile) -> 4 (tablet) -> 5 (desktop)

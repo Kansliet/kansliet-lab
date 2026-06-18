@@ -103,8 +103,11 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
           </ImageTrail>
         </div>
 
-        <div className="absolute inset-0 flex items-center justify-center z-[100] pointer-events-none">
-          <div ref={titleRef} className="container-kansliet w-full text-center pointer-events-none cursor-default">
+        <div className="absolute inset-0 flex items-center justify-center z-100 pointer-events-none">
+          <div
+            ref={titleRef}
+            className="container-kansliet w-full text-center pointer-events-none cursor-default"
+          >
             <motion.div
               className="text-caps text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light leading-tight tracking-tight whitespace-nowrap"
               initial={{ opacity: 0 }}
@@ -127,14 +130,14 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
         variants={reduceMotion ? listVariantsReduced : listVariants}
       >
         <div className="container-kansliet">
-          <h2 className="dossier-label px-4 mb-4">
-            SELECTED WORKS
-          </h2>
+          <h2 className="dossier-label px-4 mb-4">SELECTED WORKS</h2>
           <ul className="space-y-0 list-none m-0 p-0">
             {projects.map((project) => (
               <motion.li
                 key={project.id}
-                variants={reduceMotion ? listItemVariantsReduced : listItemVariants}
+                variants={
+                  reduceMotion ? listItemVariantsReduced : listItemVariants
+                }
                 transition={listTransition}
                 className="border-b-brutal"
               >
