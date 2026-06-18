@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https://www.google-analytics.com",
               "font-src 'self'",
-              "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net",
+              "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.g.doubleclick.net",
               "frame-ancestors 'none'",
             ].join("; "),
           },
