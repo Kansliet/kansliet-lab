@@ -2,7 +2,7 @@
 
 import { Link } from "next-view-transitions";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 
 const navLinks = [
@@ -15,6 +15,67 @@ const navLinks = [
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const menuRef = useRef<HTMLDivElement>(null);
+  const hamburgerRef = useRef<HTMLButtonElement>(null);
+
+  // Focus trap + Escape. The hamburger (which morphs into the X) lives OUTSIDE
+  // the overlay in the DOM but stays visible while open, so it's part of the
+  // trap cycle — otherwise the close button is unreachable by keyboard.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+        hamburgerRef.current?.focus();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const links = menuRef.current?.querySelectorAll<HTMLElement>("a[href]");
+      if (!links || links.length === 0) return;
+      const list = [hamburgerRef.current!, ...Array.from(links)];
+      const first = list[0];
+      const last = list[list.length - 1];
+      const active = document.activeElement as HTMLElement;
+      if (e.shiftKey && active === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first.focus();
+      } else if (!list.includes(active)) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isOpen]);
+
+  // Move focus into the menu when it opens (after the overlay un-hides).
+  useEffect(() => {
+    if (!isOpen) return;
+    requestAnimationFrame(() => {
+      menuRef.current?.querySelector<HTMLElement>("a[href]")?.focus();
+    });
+  }, [isOpen]);
+
+  // Lock body scroll while open; close if the viewport grows past the lg
+  // breakpoint (1024px), where the overlay is CSS-hidden but isOpen would
+  // otherwise keep scroll locked with no visible menu.
+  useEffect(() => {
+    if (!isOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const onChange = (e: MediaQueryListEvent) => {
+      if (e.matches) setIsOpen(false);
+    };
+    mq.addEventListener("change", onChange);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      mq.removeEventListener("change", onChange);
+    };
+  }, [isOpen]);
 
   return (
     <header
@@ -60,6 +121,7 @@ export function Header() {
 
           {/* Mobile Hamburger Button */}
           <button
+            ref={hamburgerRef}
             type="button"
             onClick={() => setIsOpen(!isOpen)}
             className="lg:hidden relative z-50 p-2 -mr-2 text-foreground hover:opacity-60 focus:outline-none focus-visible:ring-2 focus-visible:ring-signal"
@@ -102,6 +164,7 @@ export function Header() {
 
           {/* Mobile Overlay Menu */}
           <div
+            ref={menuRef}
             id="mobile-nav"
             role="dialog"
             aria-modal="true"
