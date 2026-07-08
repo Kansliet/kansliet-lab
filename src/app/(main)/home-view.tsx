@@ -143,7 +143,7 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
 
       <motion.section
         ref={listRef}
-        className="relative z-10 border-t-brutal bg-background py-12 pt-16 md:pt-12"
+        className="relative z-10 border-t-brutal max-md:-mt-px bg-background py-12 pt-16 md:pt-12"
         initial="hidden"
         animate={listInView ? "visible" : "hidden"}
         variants={reduceMotion ? listVariantsReduced : listVariants}
