@@ -4,8 +4,6 @@ import { redirect } from "next/navigation";
 import { Resend } from "resend";
 import { verifyFormToken } from "./token";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const MAX_NAME = 200;
 const MAX_EMAIL = 254;
 const MAX_COMPANY = 300;
@@ -53,6 +51,9 @@ export async function submitContact(
   }
 
   try {
+    // Constructed here (not at module scope) so the build/import never depends
+    // on RESEND_API_KEY — the Resend constructor throws on a missing key.
+    const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL ?? "Kansliet Form <onboarding@resend.dev>",
       to: "desk@kansliet.co",
