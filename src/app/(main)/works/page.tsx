@@ -23,7 +23,7 @@ export default function ProjectsPage() {
           </h1>
 
           <Grid cols={3} gap={6}>
-            {projects.map((project) => (
+            {projects.map((project, index) => (
               <GridItem key={project.id} href={`/works/${project.id}`}>
                 <div className="flex aspect-5/6 flex-col overflow-hidden">
                   <div className="relative min-h-0 flex-1 bg-foreground/5">
@@ -37,6 +37,7 @@ export default function ProjectsPage() {
                         fill
                         className="object-cover"
                         sizes="(max-width: 768px) 100vw, (max-width: 1400px) 33vw, 400px"
+                        priority={index === 0}
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center">

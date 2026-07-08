@@ -93,8 +93,8 @@ export function Header() {
             <Image
               src="/kansliet-logo-navbar-web.svg"
               alt="Kansliet"
-              width={257}
-              height={22}
+              width={256.86}
+              height={22.2}
               priority
               className="w-52.5 lg:w-62.5"
               style={{ height: "auto" }}
