@@ -1,4 +1,5 @@
 import { projects } from "@/data/projects";
+import { SITE_URL } from "@/lib/site";
 import { Link } from "next-view-transitions";
 import { notFound } from "next/navigation";
 import { ProjectCarousel } from "./project-carousel";
@@ -19,14 +20,14 @@ export async function generateMetadata({
   if (!project) {
     return { title: "Project Not Found" };
   }
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://kansliet.co";
   const imageUrl = project.images[0]
-    ? new URL(project.images[0].src, baseUrl).href
+    ? new URL(project.images[0].src, SITE_URL).href
     : undefined;
 
   return {
     title: project.title,
     description: project.tagline,
+    alternates: { canonical: `/works/${id}` },
     openGraph: {
       title: project.title,
       description: project.tagline,
@@ -56,8 +57,26 @@ export default async function ProjectPage({
   const pageNum = currentIndex + 1;
   const totalPages = projects.length;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CreativeWork",
+    name: project.title,
+    description: project.tagline,
+    dateCreated: project.year,
+    dateModified: project.updatedAt,
+    image: project.images.map((img) => new URL(img.src, SITE_URL).href),
+    creator: { "@type": "Organization", name: "Kansliet", url: SITE_URL },
+    keywords: project.tags.join(", "),
+  };
+
   return (
     <div className="flex flex-col lg:flex-row bg-background w-full min-h-0 lg:h-full">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       {/* Left: Carousel — mobile: natural 4:5 aspect like before; desktop: fills viewport half */}
       <aside className="w-full lg:w-1/2 aspect-4/5 lg:aspect-auto lg:h-full min-h-0 shrink-0 flex flex-col">
         <ProjectCarousel images={project.images} />

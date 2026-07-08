@@ -1,6 +1,11 @@
 import { projects } from "@/data/projects";
 import { trailImages } from "@/data/trail-images";
 import { HomeView } from "./home-view";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 /**
  * Home is a server component: it imports data and passes it as props to the

@@ -8,6 +8,8 @@ export interface Project {
   tags: string[];
   images: Array<{ src: string; alt: string }>;
   specs: Array<{ label: string; value: string }>;
+  /** ISO date (YYYY-MM-DD) of last content change; drives sitemap lastModified. */
+  updatedAt: string;
 }
 
 export const projects: Project[] = [
@@ -42,6 +44,7 @@ export const projects: Project[] = [
       { label: "YEAR", value: "2025" },
       { label: "MATERIAL", value: "Birch Plywood / Steel" },
     ],
+    updatedAt: "2026-02-03",
   },
   {
     id: "kallstorp",
@@ -82,6 +85,7 @@ export const projects: Project[] = [
       { label: "YEAR", value: "2022" },
       { label: "ROLE", value: "Interior & Visualization" },
     ],
+    updatedAt: "2026-02-03",
   },
   {
     id: "smeg-nespresso",
@@ -119,6 +123,7 @@ export const projects: Project[] = [
       { label: "YEAR", value: "2024" },
       { label: "ROLE", value: "Industrial Design" },
     ],
+    updatedAt: "2026-02-03",
   },
   {
     id: "roppongi",
@@ -151,6 +156,7 @@ export const projects: Project[] = [
       { label: "YEAR", value: "2025" },
       { label: "ROLE", value: "Industrial Design" },
     ],
+    updatedAt: "2026-02-03",
   },
   {
     id: "frank-and-stein",
@@ -187,6 +193,7 @@ export const projects: Project[] = [
       { label: "YEAR", value: "2021" },
       { label: "LOCATION", value: "Dubai, UAE" },
     ],
+    updatedAt: "2026-02-03",
   },
   {
     id: "nothing",
@@ -223,6 +230,7 @@ export const projects: Project[] = [
       { label: "YEAR", value: "2024" },
       { label: "ROLE", value: "INDUSTRIAL DESIGN" },
     ],
+    updatedAt: "2026-02-03",
   },
   {
     id: "aime-leon-dore",
@@ -255,6 +263,7 @@ export const projects: Project[] = [
       { label: "YEAR", value: "2023" },
       { label: "ROLE", value: "3D Visualization" },
     ],
+    updatedAt: "2026-02-03",
   },
   {
     id: "ebay-x-elton-john",
@@ -287,6 +296,7 @@ export const projects: Project[] = [
       { label: "YEAR", value: "2024" },
       { label: "ROLE", value: "Set Design & 3D" },
     ],
+    updatedAt: "2026-02-03",
   },
   {
     id: "cannaluxe",
@@ -322,5 +332,6 @@ export const projects: Project[] = [
       { label: "YEAR", value: "2021" },
       { label: "ROLE", value: "3D Visualization" },
     ],
+    updatedAt: "2026-02-03",
   },
 ];
