@@ -60,6 +60,14 @@ export function Footer() {
               ALL ELEMENTS CONTAINED HERE ARE PART OF A LARGER STRUCTURE WHICH
               MAY OR MAY NOT EXIST.
             </p>
+            <p className="mt-3">
+              REGISTERED AS KANSLIET STUDIO AB
+              {" · "}
+              ORG.NR{" "}
+              <span className="tabular-nums tracking-[0.04em]">559581-6033</span>
+              {" · "}
+              SWEDEN
+            </p>
           </div>
 
           {/* Right: Rotating Logo 
