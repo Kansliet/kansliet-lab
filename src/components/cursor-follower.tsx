@@ -39,14 +39,15 @@ export function CursorFollower({ image }: { image: PreviewImage | null }) {
       {/* The preview card. '-translate-x/y-1/2' centers it on the cursor.
           w-32 keeps it ≈ the old button width; image is a tasteful 4:5. */}
       <div className="w-fit -translate-x-1/2 -translate-y-1/2 border border-signal bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] overflow-hidden">
-        {/* Same dimensions as the hero trail images (w-32 h-40 = 128×160). */}
-        <div className="relative w-32 h-40 bg-foreground/5">
+        {/* Matches the hero trail images at their rendered size: base w-32 h-40
+            (128×160) × the trail's scale:1.3 keyframe ≈ 166×208. */}
+        <div className="relative w-41.5 h-52 bg-foreground/5">
           {lastImage && (
             <Image
               src={lastImage.src}
               alt=""
               fill
-              sizes="128px"
+              sizes="166px"
               className="object-cover"
             />
           )}

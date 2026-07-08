@@ -197,12 +197,12 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
         <div aria-hidden className="hidden">
           {projects.map((p) =>
             p.previewImage ? (
-              <div key={p.id} className="relative w-32 h-40">
+              <div key={p.id} className="relative w-41.5 h-52">
                 <Image
                   src={p.previewImage.src}
                   alt=""
                   fill
-                  sizes="128px"
+                  sizes="166px"
                   loading="eager"
                 />
               </div>
