@@ -49,7 +49,7 @@ export function DossierStrip() {
           <span className="text-caps tracking-widest opacity-80 text-center flex-1">
             ACTIVE: {active}
           </span>
-          <span className="text-caps tracking-wider tabular-nums shrink-0">
+          <span className="text-caps tracking-wider tabular-nums shrink-0 min-w-[20ch] text-right">
             {now ? formatDossierDate(now) : "—"}
           </span>
         </div>

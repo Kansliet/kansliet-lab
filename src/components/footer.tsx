@@ -45,7 +45,7 @@ export function Footer() {
         */}
         <div className="border-t border-signal/10 pt-6 mt-2 flex flex-col items-start gap-8 lg:flex-row lg:justify-between lg:items-end lg:gap-6">
           {/* Left: Fine Print */}
-          <div className="max-w-3xl space-y-1.5 select-none text-[8px] font-mono uppercase tracking-widest leading-none opacity-40">
+          <div className="max-w-3xl space-y-1.5 select-none text-[10px] font-mono uppercase tracking-widest leading-none opacity-60">
             <p>AUTHORIZED BY KANSLIET (DESIGN COMPANY), SWEDEN.</p>
             <p>
               ALL DATA, STATEMENTS, AND FORMULATIONS ARE TO BE INTERPRETED AS
@@ -60,7 +60,7 @@ export function Footer() {
               ALL ELEMENTS CONTAINED HERE ARE PART OF A LARGER STRUCTURE WHICH
               MAY OR MAY NOT EXIST.
             </p>
-            <p className="mt-3">
+            <p className="mt-3 select-text">
               REGISTERED AS KANSLIET STUDIO AB
               {" · "}
               ORG.NR{" "}
