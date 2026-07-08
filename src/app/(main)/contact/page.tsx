@@ -1,4 +1,6 @@
 import { ContactForm } from "./contact-form";
+import { ContactSuccessTracker } from "./contact-success-tracker";
+import { mintFormToken } from "./token";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -14,6 +16,7 @@ export default async function ContactPage({
 }) {
   const params = await searchParams;
   const showSuccess = params.success === "1";
+  const formToken = mintFormToken();
 
   return (
     // Mobile: py-10 / Desktop: py-20
@@ -27,6 +30,7 @@ export default async function ContactPage({
         {/* Success Banner */}
         {showSuccess && (
           <div className="mb-10 lg:mb-12 border border-signal bg-signal text-white p-6">
+            <ContactSuccessTracker />
             <p className="text-caps text-sm tracking-widest font-bold mb-1">
               STATUS: RECEIVED
             </p>
@@ -96,7 +100,7 @@ export default async function ContactPage({
 
           {/* Right Column: The Form */}
           <div className="order-1 lg:order-2">
-            <ContactForm />
+            <ContactForm formToken={formToken} />
           </div>
         </div>
       </div>

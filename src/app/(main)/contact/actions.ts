@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { Resend } from "resend";
+import { verifyFormToken } from "./token";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -19,6 +20,12 @@ export async function submitContact(
   // Honeypot: real users never fill this field
   if (formData.get("_trap")) {
     return { message: "Message sent." };
+  }
+
+  // Signed timing token: rejects instant/replayed bot submissions.
+  const token = formData.get("_token")?.toString() ?? "";
+  if (!verifyFormToken(token)) {
+    return { error: "Something went wrong. Please refresh the page and try again." };
   }
 
   if (!process.env.RESEND_API_KEY?.trim()) {
