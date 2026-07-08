@@ -76,7 +76,7 @@ const organizationSchema = {
   "@type": "Organization",
   name: "Kansliet",
   alternateName: "Kansliet Design Company",
-  legalName: "Kansliet Studio AB",
+  legalName: "KANSLIET STUDIO AB",
   url: SITE_URL,
   logo: `${SITE_URL}/kansliet-logo-navbar-web.svg`,
   description:

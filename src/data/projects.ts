@@ -27,6 +27,10 @@ export const projects: Project[] = [
     tags: ["FURNITURE", "PLYWOOD", "CNC", "SYSTEM"],
     images: [
       {
+        src: "/images/projects/laminar-01/super-seat-forest-editorial-WEB.jpg",
+        alt: "Laminar 01 modular plywood seat in an editorial forest setting",
+      },
+      {
         src: "/images/projects/laminar-01/super_seat_part_0_v2_WEB.jpg",
         alt: "Laminar 01 super seat part view",
       },
