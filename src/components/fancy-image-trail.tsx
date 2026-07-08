@@ -59,6 +59,9 @@ const ImageTrail = ({
   const cachedMousePos = React.useRef({ x: 0, y: 0 });
   const [containerRef, animate] = useAnimate();
   const zIndices = React.useRef<number[]>([]);
+  // Cache the container rect so we don't force a layout (getBoundingClientRect)
+  // on every mousemove — only re-measure when it can actually change.
+  const containerRectRef = React.useRef<DOMRect | null>(null);
 
   const clampedIntensity = useMemo(
     () => Math.max(0.0001, Math.min(1, intensity)),
@@ -76,9 +79,25 @@ const ImageTrail = ({
     );
   }, [containerRef, allImages]);
 
+  // Keep the cached container rect fresh on the events that can move it.
+  useEffect(() => {
+    const measure = () => {
+      containerRectRef.current =
+        containerRef?.current?.getBoundingClientRect() ?? null;
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, { passive: true });
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure);
+    };
+  }, [containerRef]);
+
   const handleMouseMove = (e: React.MouseEvent) => {
     onMouseMoveCapture?.(e);
-    const containerRect = containerRef?.current?.getBoundingClientRect();
+    // Read the cached rect (measured on mount/resize/scroll) — no layout here.
+    const containerRect = containerRectRef.current;
     const mousePos = {
       x: e.clientX - (containerRect?.left || 0),
       y: e.clientY - (containerRect?.top || 0),

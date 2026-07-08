@@ -102,7 +102,7 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
                 rotate: [-5, 5],
               }}
               keyframesOptions={{ duration: 1 }}
-              repeatChildren={5}
+              repeatChildren={3}
               baseZIndex={-50}
               className="h-full w-full"
               onMouseMoveCapture={handleHeroMouseMove}

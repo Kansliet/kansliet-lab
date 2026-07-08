@@ -73,15 +73,15 @@ export const projects: Project[] = [
       },
       {
         src: "/images/projects/kallstorp/Källstorp_Interior_Laundry_Final.jpg",
-        alt: "Detail view of kitchen island and bar seating, with graphic yellow wall poster",
+        alt: "Källstorp laundry room in pale wood with a compact sink and a front-loading LG washer-dryer",
       },
       {
         src: "/images/projects/kallstorp/Källstorp_Interior_Livingoom_Final.jpg",
-        alt: "Detail view of kitchen island and bar seating, with graphic yellow wall poster",
+        alt: "Källstorp living room with a modular taupe sofa, round wood coffee table, dome pendant light, and a framed gallery wall",
       },
       {
         src: "/images/projects/kallstorp/Källstorp_Interior_Livingroom_Final_2.jpg",
-        alt: "Detail view of kitchen island and bar seating, with graphic yellow wall poster",
+        alt: "Källstorp living and dining area with a laptop on a pale wood table, a wood sling chair, and framed prints on timber walls",
       },
     ],
     specs: [
@@ -115,11 +115,11 @@ export const projects: Project[] = [
       },
       {
         src: "/images/projects/smeg-nespresso/smeg_propeller_final_wide_perspective.jpg",
-        alt: "Exploded view of coffee machine components, emphasizing modular construction",
+        alt: "SMEG x Nespresso concept machine, two stacked cream modules with Nespresso and SMEG branding, three-quarter view",
       },
       {
         src: "/images/projects/smeg-nespresso/smeg_propeller_detail.jpg",
-        alt: "Exploded view of coffee machine components, emphasizing modular construction",
+        alt: "Close-up of the SMEG x Nespresso brewing head above a sage-green cup on the vented base",
       },
     ],
     specs: [
@@ -185,11 +185,11 @@ export const projects: Project[] = [
       },
       {
         src: "/images/projects/frank-and-stein/frank_stein_NEW_0001.jpg",
-        alt: "Three-quarter view of layered plywood bench constructed from repeated slices",
+        alt: "Frank & Stein café counter with espresso machine, pastry display case, wall drink menu, and a barista in motion",
       },
       {
         src: "/images/projects/frank-and-stein/frank_stein_coffee_bag_NEW_0001.jpg",
-        alt: "Three-quarter view of layered plywood bench constructed from repeated slices",
+        alt: "Frank & Stein coffee bag in yellow with a repeating wordmark pattern and a Coffee Bar label",
       },
     ],
     specs: [
@@ -222,11 +222,11 @@ export const projects: Project[] = [
       },
       {
         src: "/images/projects/nothing/nothing_2a_detail_bottom.jpg",
-        alt: "Rear view of concept phone showing circuit-inspired engraving and translucent paneling",
+        alt: "Macro detail of the Nothing Phone's lower corner: dot-matrix textured back, embossed NOTHING wordmark, and USB-C port",
       },
       {
         src: "/images/projects/nothing/nothing_2a_back_front.jpg",
-        alt: "Rear view of concept phone showing circuit-inspired engraving and translucent paneling",
+        alt: "Nothing Phone concept shown front and back — translucent rear with dual camera and Glyph, and the monochrome dot-matrix interface",
       },
     ],
     specs: [
@@ -324,11 +324,11 @@ export const projects: Project[] = [
       },
       {
         src: "/images/projects/cannaluxe/cannaluxe_kansliet_view_5.jpg",
-        alt: "Cannaluxe skincare products arranged together on a light background",
+        alt: "Moody green-toned editorial portrait of a woman for the Cannaluxe skincare brand",
       },
       {
         src: "/images/projects/cannaluxe/cannaluxe_kansliet_view_3.jpg",
-        alt: "Cannaluxe skincare products arranged together on a light background",
+        alt: "Cannaluxe skincare range lined up on white — face oil, toner, moisturizer, and cleanser in dark green packaging",
       },
     ],
     specs: [
