@@ -188,6 +188,28 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
           </ul>
         </div>
       </motion.section>
+
+      {/* Warm the hover-preview cache once the list scrolls into view (desktop
+          only, so it never competes with initial load). Same fill + w-32 h-40 +
+          sizes as the CursorFollower preview, so next/image requests an
+          identical URL — a guaranteed cache hit, making row swaps instant. */}
+      {isDesktop && listInView && (
+        <div aria-hidden className="hidden">
+          {projects.map((p) =>
+            p.previewImage ? (
+              <div key={p.id} className="relative w-32 h-40">
+                <Image
+                  src={p.previewImage.src}
+                  alt=""
+                  fill
+                  sizes="128px"
+                  loading="eager"
+                />
+              </div>
+            ) : null,
+          )}
+        </div>
+      )}
     </div>
   );
 }
