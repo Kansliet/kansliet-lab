@@ -26,6 +26,8 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
   ) => {
     const [current, setCurrent] = React.useState(0);
     const [isHovered, setIsHovered] = React.useState(false);
+    const dragStartX = React.useRef<number | null>(null);
+    const didSwipe = React.useRef(false);
 
     const next = React.useCallback(() => {
       setCurrent((prev) => (prev + 1) % images.length);
@@ -50,21 +52,59 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
       <div
         ref={ref}
         className={cn(" relative overflow-hidden bg-background", className)}
+        role="region"
+        aria-roledescription="carousel"
+        aria-label="Project images"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            prev();
+          } else if (e.key === "ArrowRight") {
+            e.preventDefault();
+            next();
+          }
+        }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         {...props}
       >
+        <span aria-live="polite" className="sr-only">
+          {`Slide ${current + 1} of ${images.length}`}
+        </span>
         {/* Images - Click to advance */}
         <div
           className={cn(
-            "relative w-full bg-foreground/5 cursor-pointer",
+            "relative w-full bg-foreground/5 cursor-pointer touch-pan-y",
             variant === "fullHeight" ? "h-full min-h-0" : "aspect-4/5",
           )}
-          onClick={next}
+          onPointerDown={(e) => {
+            dragStartX.current = e.clientX;
+            didSwipe.current = false;
+          }}
+          onPointerUp={(e) => {
+            if (dragStartX.current === null) return;
+            const dx = e.clientX - dragStartX.current;
+            dragStartX.current = null;
+            if (Math.abs(dx) > 40) {
+              didSwipe.current = true;
+              if (dx < 0) next();
+              else prev();
+            }
+          }}
+          onClick={() => {
+            // A swipe ends with a click — swallow it so we don't advance twice.
+            if (didSwipe.current) {
+              didSwipe.current = false;
+              return;
+            }
+            next();
+          }}
         >
           {images.map((image, index) => (
             <div
               key={index}
+              aria-hidden={index !== current}
               className={cn(
                 "absolute inset-0 transition-opacity duration-500",
                 index === current ? "opacity-100" : "opacity-0",
@@ -90,6 +130,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
           {(variant === "minimal" || variant === "fullHeight") && (
             <>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   prev();
@@ -100,6 +141,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
                 ←
               </button>
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   next();
@@ -113,6 +155,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
                 {images.map((_, index) => (
                   <button
                     key={index}
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       goTo(index);
@@ -136,6 +179,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
           <>
             <div className="border-t-brutal flex items-center justify-between bg-background p-4">
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   prev();
@@ -157,6 +201,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
               </div>
 
               <button
+                type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   next();
@@ -172,6 +217,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
               {images.map((_, index) => (
                 <button
                   key={index}
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     goTo(index);
