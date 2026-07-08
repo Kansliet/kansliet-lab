@@ -4,7 +4,7 @@ import Image from "next/image";
 import ImageTrail, { ImageTrailItem } from "@/components/fancy-image-trail";
 import { Link } from "next-view-transitions";
 import type { MouseEvent } from "react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CursorFollower } from "@/components/cursor-follower";
 import { TextDisperse } from "@/components/text-disperse";
 import { motion, useInView, useReducedMotion } from "motion/react";
@@ -52,6 +52,23 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
   const listInView = useInView(listRef, { once: true, amount: 0.15 });
   const reduceMotion = useReducedMotion();
 
+  // Gate the image trail to desktop. The trail is CSS-hidden below md, but
+  // display:none does NOT stop <img> downloads — mobile would still fetch ~20
+  // trail images for a feature it can't use. Start false (matches SSR) and flip
+  // post-mount to avoid a hydration mismatch. 768px = Tailwind's md breakpoint.
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    // One-time post-mount read of a browser-only API; starting false on the
+    // server and syncing here is what prevents a hydration mismatch.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsDesktop(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
   const handleHeroMouseMove = (e: MouseEvent<Element>) => {
     const el = titleRef.current;
     if (!el) return;
@@ -70,37 +87,39 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <CursorFollower isVisible={isHovering} />
+      {isDesktop && <CursorFollower isVisible={isHovering} />}
 
       <div className="flex-1 relative hidden md:block">
         <div className="absolute inset-0">
-          <ImageTrail
-            keyframes={{
-              scale: [0, 1.3, 1.3, 0],
-              opacity: [0, 1, 1, 0],
-              rotate: [-5, 5],
-            }}
-            keyframesOptions={{ duration: 1 }}
-            repeatChildren={5}
-            baseZIndex={-50}
-            className="h-full w-full"
-            onMouseMoveCapture={handleHeroMouseMove}
-          >
-            {trailImages.map((image, index) => (
-              <ImageTrailItem key={`${image.src}-${index}`}>
-                <div className="relative w-32 h-40">
-                  <Image
-                    src={image.src}
-                    alt={image.alt}
-                    fill
-                    className="object-cover"
-                    sizes="128px"
-                    loading="eager"
-                  />
-                </div>
-              </ImageTrailItem>
-            ))}
-          </ImageTrail>
+          {isDesktop && !reduceMotion && (
+            <ImageTrail
+              keyframes={{
+                scale: [0, 1.3, 1.3, 0],
+                opacity: [0, 1, 1, 0],
+                rotate: [-5, 5],
+              }}
+              keyframesOptions={{ duration: 1 }}
+              repeatChildren={5}
+              baseZIndex={-50}
+              className="h-full w-full"
+              onMouseMoveCapture={handleHeroMouseMove}
+            >
+              {trailImages.map((image, index) => (
+                <ImageTrailItem key={`${image.src}-${index}`}>
+                  <div className="relative w-32 h-40">
+                    <Image
+                      src={image.src}
+                      alt={image.alt}
+                      fill
+                      className="object-cover"
+                      sizes="128px"
+                      loading="eager"
+                    />
+                  </div>
+                </ImageTrailItem>
+              ))}
+            </ImageTrail>
+          )}
         </div>
 
         <div className="absolute inset-0 flex items-center justify-center z-100 pointer-events-none">
