@@ -9,6 +9,9 @@ export function CookieBanner() {
   useEffect(() => {
     const consent = localStorage.getItem("cookie-consent");
     if (!consent) {
+      // localStorage is client-only; reading it post-mount avoids a hydration
+      // mismatch. One-time sync, not a render-driving loop.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsVisible(true);
     }
   }, []);

@@ -8,6 +8,9 @@ export function AnalyticsConsent({ gaId }: { gaId: string }) {
 
   useEffect(() => {
     if (localStorage.getItem("cookie-consent") === "accepted") {
+      // localStorage is client-only; reading it post-mount avoids a hydration
+      // mismatch. One-time sync, not a render-driving loop.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasConsent(true);
     }
 

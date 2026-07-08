@@ -31,6 +31,9 @@ export function DossierStrip() {
   const active = getActiveSection(pathname ?? "");
 
   useEffect(() => {
+    // Render "—" on the server, then the real clock only after mount — this
+    // avoids a server/client hydration mismatch on the timestamp.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNow(new Date());
     const interval = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(interval);
