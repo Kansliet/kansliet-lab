@@ -10,9 +10,15 @@ import { TextDisperse } from "@/components/text-disperse";
 import { motion, useInView, useReducedMotion } from "motion/react";
 
 /** Minimal shape for home list — data comes from server via props, not from @/data. */
-export type HomeProjectItem = { id: string; title: string; category: string };
-
 export type HomeTrailImage = { src: string; alt: string };
+
+export type HomeProjectItem = {
+  id: string;
+  title: string;
+  category: string;
+  /** First project image, shown in the cursor hover preview. */
+  previewImage?: HomeTrailImage;
+};
 
 interface HomeViewProps {
   projects: HomeProjectItem[];
@@ -45,7 +51,7 @@ const listVariantsReduced = {
 };
 
 export function HomeView({ projects, trailImages }: HomeViewProps) {
-  const [isHovering, setIsHovering] = useState(false);
+  const [hoveredImage, setHoveredImage] = useState<HomeTrailImage | null>(null);
   const [isTitleHovered, setIsTitleHovered] = useState(false);
   const listRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
@@ -90,7 +96,7 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
       {/* Primary heading — the visible hero is hidden on mobile, so this
           sr-only h1 guarantees a top-level heading on every viewport. */}
       <h1 className="sr-only">Kansliet — objects, spaces, systems</h1>
-      {isDesktop && <CursorFollower isVisible={isHovering} />}
+      {isDesktop && <CursorFollower image={hoveredImage} />}
 
       <div className="flex-1 relative hidden md:block">
         <div className="absolute inset-0">
@@ -167,8 +173,8 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
                 <Link
                   href={`/works/${project.id}`}
                   className="group flex items-center justify-between py-4 hover:bg-foreground hover:text-background transition-colors lg:cursor-none"
-                  onMouseEnter={() => setIsHovering(true)}
-                  onMouseLeave={() => setIsHovering(false)}
+                  onMouseEnter={() => setHoveredImage(project.previewImage ?? null)}
+                  onMouseLeave={() => setHoveredImage(null)}
                 >
                   <span className="text-caps text-sm font-light tracking-wider px-4">
                     {project.title}

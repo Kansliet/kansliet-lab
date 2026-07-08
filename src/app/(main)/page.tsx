@@ -19,6 +19,7 @@ export default function HomePage() {
         id: p.id,
         title: p.title,
         category: p.category,
+        previewImage: p.images[0],
       }))}
       trailImages={trailImages}
     />
