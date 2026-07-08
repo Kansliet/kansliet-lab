@@ -25,7 +25,7 @@ function SubmitButton() {
   );
 }
 
-export function ContactForm() {
+export function ContactForm({ formToken }: { formToken: string }) {
   const [state, formAction] = useActionState<ContactState | null, FormData>(
     submitContact,
     null,
@@ -42,6 +42,8 @@ export function ContactForm() {
         className="absolute opacity-0 pointer-events-none w-0 h-0 overflow-hidden"
         autoComplete="off"
       />
+      {/* Signed timing token verified server-side (see token.ts) */}
+      <input type="hidden" name="_token" value={formToken} />
       {state?.error && (
         <div className="border border-red-500 bg-red-500/5 p-4 text-red-600">
           <p className="text-caps text-sm tracking-wide font-bold">
