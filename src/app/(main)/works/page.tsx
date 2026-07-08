@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "KANSLIET (WORKS)",
+  alternates: { canonical: "/works" },
 };
 
 export default function ProjectsPage() {

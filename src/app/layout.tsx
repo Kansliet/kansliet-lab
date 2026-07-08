@@ -5,6 +5,7 @@ import "./globals.css";
 import { CookieBanner } from "@/components/cookie-banner";
 import { DossierStrip } from "@/components/dossier-strip";
 import { AnalyticsConsent } from "@/components/analytics-consent";
+import { SITE_URL } from "@/lib/site";
 
 const martianMono = Martian_Mono({
   subsets: ["latin"],
@@ -17,7 +18,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://kansliet.co"),
+  metadataBase: new URL(SITE_URL),
   title: "KANSLIET (DESIGN COMPANY)",
   description:
     "Swedish design company specializing in industrial, spatial, and identity design. We create products, spaces, and brands with brutalist precision.",
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://kansliet.co",
+    url: SITE_URL,
     title: "KANSLIET (DESIGN COMPANY)",
     description:
       "Swedish design company specializing in industrial, spatial, and identity design",
@@ -75,8 +76,8 @@ const organizationSchema = {
   "@type": "Organization",
   name: "Kansliet",
   alternateName: "Kansliet Design Company",
-  url: "https://kansliet.co",
-  logo: "https://kansliet.co/kansliet-logo-navbar-web.svg",
+  url: SITE_URL,
+  logo: `${SITE_URL}/kansliet-logo-navbar-web.svg`,
   description:
     "Swedish design company specializing in industrial, spatial, and identity design.",
   foundingDate: "2020",
@@ -110,7 +111,9 @@ export default function RootLayout({
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema).replace(/</g, "\\u003c"),
+          }}
         />
       </head>
       <body className="flex flex-col min-h-screen">

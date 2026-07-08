@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "KANSLIET (LEGAL)",
   description: "Legal information and cookie policy for Kansliet.",
+  alternates: { canonical: "/legal" },
 };
 
 export default function LegalPage() {
