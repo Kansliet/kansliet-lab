@@ -7,9 +7,7 @@ export function Footer() {
       <div className="container-kansliet">
         {/* Top Section: Navigation & Identity */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 py-8">
-          <p className="dossier-label">
-            IDN-2526-K(DC)SYS
-          </p>
+          <p className="dossier-label">IDN-2526-K(DC)SYS</p>
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-6 sm:gap-10">
             <div className="flex gap-6">
@@ -46,7 +44,6 @@ export function Footer() {
         <div className="border-t border-signal/10 pt-6 mt-2 flex flex-col items-start gap-8 lg:flex-row lg:justify-between lg:items-end lg:gap-6">
           {/* Left: Fine Print */}
           <div className="max-w-3xl space-y-1.5 select-none text-[10px] font-mono uppercase tracking-widest leading-none opacity-60">
-            <p>AUTHORIZED BY KANSLIET (DESIGN COMPANY), SWEDEN.</p>
             <p>
               ALL DATA, STATEMENTS, AND FORMULATIONS ARE TO BE INTERPRETED AS
               INDICATIVE ONLY.
@@ -61,10 +58,12 @@ export function Footer() {
               MAY OR MAY NOT EXIST.
             </p>
             <p className="mt-3 select-text">
-              REGISTERED AS KANSLIET STUDIO AB
+              KANSLIET STUDIO AB
               {" · "}
               ORG.NR{" "}
-              <span className="tabular-nums tracking-[0.04em]">559581-6033</span>
+              <span className="tabular-nums tracking-[0.04em]">
+                559581-6033
+              </span>
               {" · "}
               SWEDEN
             </p>
