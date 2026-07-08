@@ -49,9 +49,10 @@ export default function StudioPage() {
                 world.
               </p>
               <p>
-                Our approach doesn't rely on trends or preconceived notions.
-                It's built on formal logic, material integrity, and a refusal to
-                compromise on clarity. The work stands on its own terms.
+                Our approach doesn&apos;t rely on trends or preconceived
+                notions. It&apos;s built on formal logic, material integrity,
+                and a refusal to compromise on clarity. The work stands on its
+                own terms.
               </p>
               <p>
                 Established 2020. Clients across Europe, APAC, and North
