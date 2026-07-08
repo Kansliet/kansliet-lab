@@ -87,6 +87,9 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Primary heading — the visible hero is hidden on mobile, so this
+          sr-only h1 guarantees a top-level heading on every viewport. */}
+      <h1 className="sr-only">Kansliet — objects, spaces, systems</h1>
       {isDesktop && <CursorFollower isVisible={isHovering} />}
 
       <div className="flex-1 relative hidden md:block">
@@ -128,6 +131,7 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
             className="container-kansliet w-full text-center pointer-events-none cursor-default"
           >
             <motion.div
+              aria-hidden="true"
               className="text-caps text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light leading-tight tracking-tight whitespace-nowrap"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

@@ -298,3 +298,23 @@
     opacity: 1;
   }
 }
+
+/* Respect reduced-motion at the CSS level: JS animations already branch on
+   useReducedMotion(), but CSS animations (footer spin) and view transitions
+   did not. Near-instant instead of fully off keeps state changes perceivable. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
