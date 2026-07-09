@@ -35,8 +35,20 @@ export function DossierStrip() {
     // avoids a server/client hydration mismatch on the timestamp.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setNow(new Date());
-    const interval = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(interval);
+    // Display resolution is HH:MM, so tick once per minute (aligned to the next
+    // minute boundary), not every second.
+    const start = new Date();
+    const msToNextMinute =
+      60000 - (start.getSeconds() * 1000 + start.getMilliseconds());
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const timeout = setTimeout(() => {
+      setNow(new Date());
+      interval = setInterval(() => setNow(new Date()), 60000);
+    }, msToNextMinute);
+    return () => {
+      clearTimeout(timeout);
+      if (interval) clearInterval(interval);
+    };
   }, []);
 
   return (

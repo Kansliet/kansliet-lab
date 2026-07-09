@@ -75,10 +75,26 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
+  // Cache the title's rect so the hero mousemove hit-test doesn't force a layout
+  // (getBoundingClientRect) on every pointer event; re-measure only when it can
+  // move (scroll/resize).
+  const titleRectRef = useRef<DOMRect | null>(null);
+  useEffect(() => {
+    const measure = () => {
+      titleRectRef.current = titleRef.current?.getBoundingClientRect() ?? null;
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, { passive: true });
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure);
+    };
+  }, []);
+
   const handleHeroMouseMove = (e: MouseEvent<Element>) => {
-    const el = titleRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
+    const rect = titleRectRef.current;
+    if (!rect) return;
     const x = e.clientX;
     const y = e.clientY;
     const over =
