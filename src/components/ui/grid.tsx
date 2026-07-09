@@ -88,7 +88,7 @@ const GridItemContent = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "border-t-brutal bg-background p-4 min-h-[4.5rem] flex flex-col justify-center",
+      "border-t-brutal bg-background p-4 min-h-18 flex flex-col justify-center",
       className,
     )}
     {...props}
