@@ -228,12 +228,12 @@
   }
 }
 
-/* View Transitions: only main content slides; header & footer stay static (dossier-style) */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-}
+/* Page transitions (dossier / OS feel): the header, footer, and dossier strip
+   stay bolted in place. Every navigation is the same single motion — the new
+   page slides in from the right, snappy, over the previous page which holds
+   still underneath. No fade, no per-section direction, no vertical jump.
 
+   Tuning knobs: --page-in distance (100% = full sheet), duration, easing. */
 ::view-transition-old(header),
 ::view-transition-new(header),
 ::view-transition-old(footer),
@@ -243,59 +243,22 @@
   animation: none;
 }
 
-/* Main pages (home, works list, studio, contact): bottom-up */
-::view-transition-old(main-content) {
-  animation: view-transition-main-out 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+/* Previous page holds still; new page slides over it from the right. */
+::view-transition-old(root) {
+  animation: none;
 }
 
-::view-transition-new(main-content) {
-  animation: view-transition-main-in 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+::view-transition-new(root) {
+  animation: dossier-page-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   background: var(--color-background);
 }
 
-@keyframes view-transition-main-out {
-  to {
-    transform: translateY(-24%);
-    opacity: 0;
-  }
-}
-
-@keyframes view-transition-main-in {
+@keyframes dossier-page-in {
   from {
-    transform: translateY(24%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Project pages (works/[id]): horizontal left-to-right */
-::view-transition-old(project-content) {
-  animation: view-transition-project-out 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-}
-
-::view-transition-new(project-content) {
-  animation: view-transition-project-in 0.45s cubic-bezier(0.32, 0.72, 0, 1) forwards;
-  background: var(--color-background);
-}
-
-@keyframes view-transition-project-out {
-  to {
-    transform: translateX(-24%);
-    opacity: 0;
-  }
-}
-
-@keyframes view-transition-project-in {
-  from {
-    transform: translateX(24%);
-    opacity: 0;
+    transform: translateX(80%);
   }
   to {
     transform: translateX(0);
-    opacity: 1;
   }
 }
 
