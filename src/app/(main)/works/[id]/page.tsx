@@ -20,8 +20,13 @@ export async function generateMetadata({
   if (!project) {
     return { title: "Project Not Found" };
   }
-  const imageUrl = project.images[0]
-    ? new URL(project.images[0].src, SITE_URL).href
+  // Prefer a dedicated social-share asset when the project defines one.
+  const shareImage = project.ogImage ?? project.images[0];
+  const imageUrl = shareImage
+    ? new URL(shareImage.src, SITE_URL).href
+    : undefined;
+  const images = imageUrl
+    ? [{ url: imageUrl, alt: shareImage.alt }]
     : undefined;
 
   return {
@@ -31,9 +36,14 @@ export async function generateMetadata({
     openGraph: {
       title: project.title,
       description: project.tagline,
-      images: imageUrl
-        ? [{ url: imageUrl, alt: project.images[0].alt }]
-        : undefined,
+      images,
+    },
+    // Without this, project pages inherit the root layout's twitter block and
+    // advertise the site-wide title/description/image instead of their own.
+    twitter: {
+      title: project.title,
+      description: project.tagline,
+      images,
     },
   };
 }

@@ -7,12 +7,56 @@ export interface Project {
   description: string[];
   tags: string[];
   images: Array<{ src: string; alt: string }>;
+  /** Optional dedicated social-share image. Falls back to images[0] when unset. */
+  ogImage?: { src: string; alt: string };
   specs: Array<{ label: string; value: string }>;
   /** ISO date (YYYY-MM-DD) of last content change; drives sitemap lastModified. */
   updatedAt: string;
 }
 
 export const projects: Project[] = [
+  {
+    id: "mattsons",
+    title: "MATTSONS",
+    category: "Brand Identity",
+    year: "2026",
+    tagline:
+      "A new brand identity for a Swedish bed manufacturer working in Falkenberg, Sweden since 1851.",
+    description: [
+      "Six generations, one product, one place. The beds had entered the international premium market. The identity had not kept pace.",
+      "We created a contemporary brand system rooted in the substance of the craft, bringing together a new wordmark, a monogram drawn from the spring, typography, color, imagery, and verbal direction.",
+      "The identity was applied across digital, editorial, and retail, and extended to Lagom, the company's hospitality concept.",
+    ],
+    tags: ["BRANDING", "IDENTITY", "TYPOGRAPHY", "FALKENBERG"],
+    images: [
+      {
+        src: "/images/projects/mattsons/Mattsons_REF_Detail_1.webp",
+        alt: "Mattsons monogram embossed into natural linen",
+      },
+      {
+        src: "/images/projects/mattsons/mattsons-green-gradient.jpg",
+        alt: "Mattsons wordmark set in Lateral Extended beneath the two-oval monogram, in off-white on a deep forest green field",
+      },
+      {
+        src: "/images/projects/mattsons/Life_in_a_Mattsons_REF_01_HERO.webp",
+        alt: "Overhead view of a man in linen pyjamas asleep on a Mattsons bed with cream bedding and a tufted headboard, on a herringbone parquet floor",
+      },
+      {
+        src: "/images/projects/mattsons/Mattsons_REF_Detail_3.webp",
+        alt: "Mattsons wordmark on a card resting on crumpled tissue paper",
+      },
+      {
+        src: "/images/projects/mattsons/Mattsons_REF_Detail_2.webp",
+        alt: "Mattsons storefront at dusk with warm light in the window",
+      },
+    ],
+    specs: [
+      { label: "CLIENT", value: "Mattsons" },
+      { label: "YEAR", value: "2026" },
+      { label: "LOCATION", value: "Sweden" },
+    ],
+    updatedAt: "2026-07-09",
+  },
   {
     id: "laminar-01",
     title: "LAMINAR-01",
@@ -128,6 +172,50 @@ export const projects: Project[] = [
       { label: "ROLE", value: "Industrial Design" },
     ],
     updatedAt: "2026-02-03",
+  },
+  {
+    id: "skrea-backe",
+    title: "SKREA BACKE",
+    category: "Packaging Design",
+    year: "2025",
+    tagline:
+      "Packaging and merchandise for a limited-edition gin from a distillery on the Swedish west coast.",
+    description: [
+      "Created for a release of 400 numbered bottles, the identity was designed to feel as collectible as the spirit itself.",
+      "The work includes label design and merchandise, extending the visual language across the bottle and a series of apparel.",
+    ],
+    tags: ["PACKAGING", "SPIRITS", "MERCHANDISE", "FALKENBERG"],
+    images: [
+      {
+        src: "/images/projects/skrea-backe/Skrea_Backe_Limited_Edition_Packshot_Final.jpg",
+        alt: "Skrea Backe limited edition gin bottle in dark glass with a distorted orange and white wordmark",
+      },
+      {
+        src: "/images/projects/skrea-backe/skrea-backe-vintage-tee-back-paragraph-live.jpg",
+        alt: "Man wearing the Skrea Backe tee outdoors at a table with a drink",
+      },
+      {
+        src: "/images/projects/skrea-backe/skrea-backe-vintage-tee-back-colada.jpg",
+        alt: "White tee printed with the Skrea Colada character and recipe in orange",
+      },
+      {
+        src: "/images/projects/skrea-backe/skrea-backe-vintage-tee-back-paragraph.jpg",
+        alt: "White tee printed with the Skrea Backe wordmark surrounded by a block of distillery terms in orange",
+      },
+    ],
+    // TODO: before deploy, add a 1200x630 crop at
+    // /public/images/projects/skrea-backe/skrea-backe-og.jpg — the file does not
+    // exist yet, so link previews for this project will show no image until it does.
+    ogImage: {
+      src: "/images/projects/skrea-backe/skrea-backe-og.jpg",
+      alt: "Skrea Backe limited edition gin bottle with a distorted orange and white wordmark",
+    },
+    specs: [
+      { label: "CLIENT", value: "Skrea Backe Destilleri" },
+      { label: "YEAR", value: "2025" },
+      { label: "LOCATION", value: "Falkenberg, Sweden" },
+    ],
+    updatedAt: "2026-07-09",
   },
   {
     id: "roppongi",
