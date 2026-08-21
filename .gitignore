@@ -42,3 +42,6 @@ next-env.d.ts
 
 # downloaded from Framer (optional; remove to commit)
 /public/images/kansliet-downloaded
+
+# claude code local tooling config
+.claude/
