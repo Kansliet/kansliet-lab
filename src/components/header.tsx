@@ -79,7 +79,7 @@ export function Header() {
 
   return (
     <header
-      className="sticky z-50 border-b-brutal bg-background [view-transition-name:header]"
+      className="sticky z-201 border-b-brutal bg-background [view-transition-name:header]"
       style={{ top: "var(--dossier-strip-height, 2rem)" }}
     >
       <div className="container-kansliet">
