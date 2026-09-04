@@ -114,7 +114,7 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
       <h1 className="sr-only">Kansliet — objects, spaces, systems</h1>
       {isDesktop && <CursorFollower image={hoveredImage} />}
 
-      <div className="flex-1 relative hidden md:block">
+      <div className="flex-1 relative hidden md:block md:min-h-[calc(100vh-var(--dossier-strip-height,2rem)-4rem)]">
         <div className="absolute inset-0">
           {isDesktop && !reduceMotion && (
             <ImageTrail
@@ -165,11 +165,32 @@ export function HomeView({ projects, trailImages }: HomeViewProps) {
             </motion.div>
           </div>
         </div>
+
+        {/* Scroll cue. Lives inside the hero so it scrolls away on its own —
+            no scroll listener needed. Wrapper is pointer-events-none so the
+            image trail still receives mousemove across the full hero; only the
+            link itself is clickable. */}
+        <div className="absolute inset-x-0 bottom-0 z-100 flex justify-center pb-6 pointer-events-none">
+          <button
+            type="button"
+            onClick={() =>
+              listRef.current?.scrollIntoView({
+                behavior: reduceMotion ? "auto" : "smooth",
+                block: "start",
+              })
+            }
+            aria-label="Continue to selected works"
+            className="text-dossier text-caps tracking-wider opacity-70 pointer-events-auto cursor-pointer transition-opacity hover:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-signal"
+          >
+            CONT. ↓
+          </button>
+        </div>
       </div>
 
       <motion.section
         ref={listRef}
-        className="relative z-10 border-t-brutal max-md:-mt-px bg-background py-12 pt-16 md:pt-12"
+        id="selected-works"
+        className="relative z-10 border-t-brutal max-md:-mt-px bg-background py-12 pt-16 md:pt-12 scroll-mt-[calc(var(--dossier-strip-height,2rem)+4rem)]"
         initial="hidden"
         animate={listInView ? "visible" : "hidden"}
         variants={reduceMotion ? listVariantsReduced : listVariants}

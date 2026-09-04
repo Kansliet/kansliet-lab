@@ -55,13 +55,13 @@ export function DossierStrip() {
     <div className="border-b-brutal bg-background h-full min-h-(--dossier-strip-height) flex items-center">
       <div className="container-kansliet w-full">
         <div className="flex items-center justify-between text-dossier">
-          <span className="text-caps tracking-wider opacity-80 shrink-0">
+          <span className="text-caps tracking-wider opacity-80 flex-1">
             REF: {REF_ID}
           </span>
-          <span className="text-caps tracking-widest opacity-80 text-center flex-1">
+          <span className="text-caps tracking-widest opacity-80 text-center">
             ACTIVE: {active}
           </span>
-          <span className="text-caps tracking-wider tabular-nums shrink-0 min-w-[20ch] text-right">
+          <span className="text-caps tracking-wider tabular-nums flex-1 min-w-[20ch] text-right">
             {now ? formatDossierDate(now) : "—"}
           </span>
         </div>
