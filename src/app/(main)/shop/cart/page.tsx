@@ -80,7 +80,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
   return (
     <div className="min-h-screen bg-background">
       <section className="py-20">
-        <div className="container-kansliet max-w-4xl">
+        <div className="container-kansliet">
           <Link
             href="/shop"
             className="text-caps text-sm font-light tracking-wider mb-10 inline-block transition-opacity hover:opacity-60"

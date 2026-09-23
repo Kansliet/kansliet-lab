@@ -20,7 +20,7 @@ export default async function ShopSuccessPage({
     <div className="min-h-screen bg-background">
       <ClearCartOnMount />
       <section className="py-20">
-        <div className="container-kansliet max-w-2xl">
+        <div className="container-kansliet">
           <h1 className="dossier-label mb-12">ORDER CONFIRMED</h1>
           <p className="mb-6 text-3xl font-normal uppercase tracking-tight lg:text-4xl">
             THANK YOU.
@@ -30,7 +30,7 @@ export default async function ShopSuccessPage({
             and we&apos;ll be in touch with shipping details shortly.
           </p>
           {sessionId && (
-            <div className="mb-10 flex items-baseline gap-4 border-y border-foreground py-4">
+            <div className="mb-10 flex max-w-xl items-baseline gap-4 border-y border-foreground py-4">
               <span className="dossier-label shrink-0">REF</span>
               <span className="text-dossier break-all font-light tracking-wider">
                 {sessionId}

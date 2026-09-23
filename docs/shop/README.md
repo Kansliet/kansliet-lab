@@ -9,9 +9,10 @@ Webshop at `/shop`, with the orders admin at `/shop/orders` (login at `/login`).
 
 ## Local setup
 1. Postgres 17 runs in Docker (container `kansliet-pg`, db `kansliet`). On a fresh database, load the schema: `docker exec -i kansliet-pg psql -U postgres -d kansliet < db/schema.sql`
-2. Fill in the shop vars in `.env.local`.
-3. Seed a new database: `node seed-shop-products.mjs` (creates Stripe test products and prices, plus the DB rows) and `node seed-admin.mjs` (creates the one admin user).
+2. Fill in the shop vars in `.env.local`. Locally, `STRIPE_WEBHOOK_SECRET` is the Stripe CLI's signing secret (`stripe listen --print-secret`), not a dashboard endpoint's. Without it the webhook route throws on load and every event gets a 500, so no orders are recorded.
+3. Seed a new database: `node seed-shop-products.mjs` (creates Stripe test products and prices, plus the DB rows; safe to re-run) and `node seed-admin.mjs` (creates the one admin user).
 4. `npm run dev`. For the webhook: `stripe listen --forward-to localhost:3000/api/shop/webhook`
+5. Test card: `4242 4242 4242 4242`, any future expiry, any CVC.
 
 ## Schema
 There's no migrations system. `db/schema.sql` is a `pg_dump --schema-only` of the shop tables, so re-dump it whenever the schema changes.

@@ -48,7 +48,8 @@ function formatDate(value: string): string {
   return new Date(value).toISOString().slice(0, 10);
 }
 
-const TH = "text-caps px-4 py-3 text-sm font-light tracking-wider opacity-60";
+// Plain uppercase, not .text-caps: its display: inline-block breaks table cell layout.
+const TH = "px-4 py-3 text-sm font-light uppercase tracking-wider opacity-60";
 
 export default async function ShopOrdersPage() {
   await requireSession();
@@ -108,7 +109,7 @@ export default async function ShopOrdersPage() {
                       </td>
                       <td className="px-4 py-3">
                         <Badge variant={order.fulfillment_status === "paid" ? "solid" : "default"}>
-                          {order.fulfillment_status}
+                          {order.fulfillment_status.toUpperCase()}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-right">

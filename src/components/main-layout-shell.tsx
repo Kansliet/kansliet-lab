@@ -2,10 +2,18 @@
 
 import { usePathname } from "next/navigation";
 
+// Fixed shop routes that live beside /shop/[slug] but aren't product pages.
+const SHOP_NON_PRODUCT_SEGMENTS = new Set(["cart", "orders", "success"]);
+
+function isShopProductPage(pathname: string): boolean {
+  const match = pathname.match(/^\/shop\/([^/]+)$/);
+  return !!match && !SHOP_NON_PRODUCT_SEGMENTS.has(match[1]);
+}
+
 /**
- * On project pages (works/[id]) desktop only: constrains layout to one viewport so
- * main matches the window and footer is below the fold. Mobile: normal flow,
- * single column, footer at bottom.
+ * On project pages (works/[id]) and product pages (shop/[slug]) desktop only:
+ * constrains layout to one viewport so main matches the window and footer is
+ * below the fold. Mobile: normal flow, single column, footer at bottom.
  */
 export function MainLayoutShell({
   children,
@@ -14,7 +22,8 @@ export function MainLayoutShell({
 }) {
   const pathname = usePathname();
   const isProjectPage =
-    pathname?.startsWith("/works/") && pathname !== "/works";
+    (pathname?.startsWith("/works/") && pathname !== "/works") ||
+    isShopProductPage(pathname ?? "");
 
   return (
     <div

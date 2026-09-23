@@ -143,7 +143,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
                           {product.name}
                         </GridItemTitle>
                         <GridItemMeta>
-                          {product.category}, {product.displayPrice}
+                          <span className="capitalize">{product.category}</span>, {product.displayPrice}
                         </GridItemMeta>
                       </Link>
                       {!product.sold_out && (

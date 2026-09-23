@@ -18,10 +18,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <div className="min-h-screen bg-background">
       <section className="py-20">
-        <div className="container-kansliet max-w-md">
+        <div className="container-kansliet">
           <h1 className="dossier-label mb-12">ADMIN LOGIN</h1>
 
-          <form action={login} className="space-y-6">
+          <form action={login} className="max-w-md space-y-6">
             {params.error && (
               <div
                 role="alert"
@@ -44,7 +44,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 autoComplete="username"
                 required
                 defaultValue={params.email ?? ""}
-                className="text-normal-case border-signal"
+                className="text-normal-case"
               />
             </div>
 
@@ -58,7 +58,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="text-normal-case border-signal"
+                className="text-normal-case"
               />
             </div>
 

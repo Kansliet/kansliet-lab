@@ -7,7 +7,7 @@ import { addToCart } from "@/app/(main)/shop/cart/actions";
 import { buyNow } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ProductImage, productRef } from "@/components/shop/ProductImage";
+import { ProductImage } from "@/components/shop/ProductImage";
 
 type Product = {
   id: number;
@@ -31,6 +31,14 @@ async function getProduct(slug: string): Promise<Product | null> {
     [slug]
   );
   return rows[0] ?? null;
+}
+
+/** Catalog order, matching the /shop grid, for the P. xx / yy strip and prev/next. */
+async function getCatalogSlugs(): Promise<string[]> {
+  const { rows } = await pool.query<{ slug: string }>(
+    "SELECT slug FROM shop_products ORDER BY created_at DESC, id DESC"
+  );
+  return rows.map((row) => row.slug);
 }
 
 export async function generateMetadata({
@@ -69,26 +77,36 @@ export default async function ProductPage({
     notFound();
   }
 
-  const displayPrice = await getDisplayPrice(product.stripe_price_id);
+  const [displayPrice, slugs] = await Promise.all([
+    getDisplayPrice(product.stripe_price_id),
+    getCatalogSlugs(),
+  ]);
+  const currentIndex = slugs.indexOf(product.slug);
+  const prevSlug = currentIndex > 0 ? slugs[currentIndex - 1] : null;
+  const nextSlug =
+    currentIndex >= 0 && currentIndex < slugs.length - 1 ? slugs[currentIndex + 1] : null;
 
   return (
-    <div className="flex w-full flex-col bg-background lg:flex-row">
+    // Same split as /works/[id]: MainLayoutShell locks this to one viewport
+    // on desktop, so the image fills the left half and the info pane scrolls.
+    <div className="flex min-h-0 w-full flex-col bg-background lg:h-full lg:flex-row">
       {/* Only one image per product today (shop_products.image_url is a
           single column), so no carousel like /works/[id] has. */}
-      <aside className="w-full shrink-0 lg:w-1/2 lg:border-r lg:border-foreground">
+      <aside className="flex aspect-4/5 min-h-0 w-full shrink-0 flex-col lg:aspect-auto lg:h-full lg:w-1/2 lg:border-r lg:border-foreground">
         <ProductImage
           id={product.id}
           name={product.name}
           imageUrl={product.image_url}
-          className="aspect-4/5 w-full"
+          className="h-full w-full"
           sizes="(max-width: 1024px) 100vw, 50vw"
           priority
         />
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <p className="dossier-label w-full rounded-none px-4 py-2 lg:px-6">
-          REF: {productRef(product.id)}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:h-full lg:overflow-y-auto">
+        <p className="dossier-label w-full rounded-none px-4 py-2 tabular-nums lg:px-6">
+          P. {String(currentIndex + 1).padStart(2, "0")} /{" "}
+          {String(slugs.length).padStart(2, "0")}
         </p>
 
         <div className="container-kansliet flex flex-1 flex-col py-10 lg:py-20">
@@ -125,11 +143,11 @@ export default async function ProductPage({
           )}
 
           {product.sold_out ? (
-            <Button type="button" disabled className="w-full max-w-xl">
+            <Button type="button" disabled className="mb-10 w-full max-w-xl lg:mb-12">
               SOLD OUT
             </Button>
           ) : (
-            <div className="flex max-w-xl flex-col gap-3">
+            <div className="mb-10 flex max-w-xl flex-col gap-3 lg:mb-12">
               <form action={addToCart} className="flex items-end gap-3">
                 <input type="hidden" name="productId" value={product.id} />
                 <div className="w-24 shrink-0">
@@ -143,7 +161,6 @@ export default async function ProductPage({
                     min={1}
                     max={99}
                     defaultValue={1}
-                    className="border-signal"
                   />
                 </div>
                 <Button type="submit" className="flex-1 py-3.5">
@@ -158,6 +175,29 @@ export default async function ProductPage({
               </form>
             </div>
           )}
+
+          <div className="mt-auto flex items-center justify-between border-t-brutal pt-10 lg:pt-12">
+            {prevSlug ? (
+              <Link
+                href={`/shop/${prevSlug}`}
+                className="text-caps text-sm font-light tracking-wider transition-opacity hover:opacity-60"
+              >
+                ← PREVIOUS
+              </Link>
+            ) : (
+              <span aria-hidden />
+            )}
+            {nextSlug ? (
+              <Link
+                href={`/shop/${nextSlug}`}
+                className="text-caps text-sm font-light tracking-wider transition-opacity hover:opacity-60"
+              >
+                NEXT →
+              </Link>
+            ) : (
+              <span aria-hidden />
+            )}
+          </div>
         </div>
       </div>
     </div>
