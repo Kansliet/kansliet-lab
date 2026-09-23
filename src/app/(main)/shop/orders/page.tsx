@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import { pool } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
+import { formatPrice } from "@/lib/stripe";
 import { logout } from "@/app/(main)/login/actions";
 import { markShipped } from "./actions";
-import { Button } from "@/components/shop/Button";
-import { PAGE_SHELL, HEADING } from "@/lib/design-tokens";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
+export const metadata: Metadata = {
+  title: "KANSLIET (ORDERS)",
+  robots: { index: false },
+};
 
 type Order = {
   id: number;
@@ -37,77 +44,92 @@ function formatAddress(address: Order["shipping_address"]): string {
     .join(", ");
 }
 
+function formatDate(value: string): string {
+  return new Date(value).toISOString().slice(0, 10);
+}
+
+const TH = "text-caps px-4 py-3 text-sm font-light tracking-wider opacity-60";
+
 export default async function ShopOrdersPage() {
   await requireSession();
   const orders = await getOrders();
 
   return (
-    <div className={PAGE_SHELL.data}>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className={HEADING}>Orders</h1>
-        <form action={logout}>
-          <Button variant="tertiary" type="submit">
-            Log out
-          </Button>
-        </form>
-      </div>
+    <div className="min-h-screen bg-background">
+      <section className="py-20">
+        <div className="container-kansliet">
+          <div className="mb-12 flex items-baseline justify-between gap-6">
+            <h1 className="dossier-label">ORDERS</h1>
+            <form action={logout}>
+              <Button type="submit" variant="ghost" className="px-0 py-0">
+                LOG OUT
+              </Button>
+            </form>
+          </div>
 
-      {orders.length === 0 ? (
-        <p className="text-zinc-500 dark:text-zinc-400">No orders yet.</p>
-      ) : (
-        <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-800">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-zinc-50 dark:bg-zinc-900">
-              <tr>
-                <th className="px-4 py-3 font-medium text-zinc-500 dark:text-zinc-400">Date</th>
-                <th className="px-4 py-3 font-medium text-zinc-500 dark:text-zinc-400">Customer</th>
-                <th className="px-4 py-3 font-medium text-zinc-500 dark:text-zinc-400">Shipping address</th>
-                <th className="px-4 py-3 font-medium text-zinc-500 dark:text-zinc-400">Amount</th>
-                <th className="px-4 py-3 font-medium text-zinc-500 dark:text-zinc-400">Status</th>
-                <th className="px-4 py-3 font-medium text-zinc-500 dark:text-zinc-400"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-              {orders.map((order) => (
-                <tr key={order.id}>
-                  <td className="px-4 py-3 text-zinc-500 dark:text-zinc-400">
-                    {new Date(order.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-900 dark:text-zinc-50">
-                    <div>{order.shipping_name ?? "—"}</div>
-                    <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {order.customer_email ?? "—"}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-zinc-900 dark:text-zinc-50">
-                    {formatAddress(order.shipping_address)}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-900 dark:text-zinc-50">
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: order.currency.toUpperCase(),
-                    }).format(order.amount_total / 100)}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-900 dark:text-zinc-50">
-                    {order.fulfillment_status}
-                  </td>
-                  <td className="px-4 py-3">
-                    {order.fulfillment_status !== "shipped" && (
-                      <form action={markShipped}>
-                        <input type="hidden" name="orderId" value={order.id} />
-                        <input type="hidden" name="status" value="shipped" />
-                        <Button variant="tertiary" type="submit">
-                          Mark shipped
-                        </Button>
-                      </form>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {orders.length === 0 ? (
+            <div className="border-brutal p-10 text-center">
+              <p className="text-caps text-sm font-light tracking-wider opacity-60">
+                NO ORDERS YET.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto border-brutal">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b-brutal">
+                  <tr>
+                    <th className={TH}>DATE</th>
+                    <th className={TH}>CUSTOMER</th>
+                    <th className={TH}>SHIPPING ADDRESS</th>
+                    <th className={TH}>AMOUNT</th>
+                    <th className={TH}>STATUS</th>
+                    <th className={TH}>
+                      <span className="sr-only">ACTIONS</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order, index) => (
+                    <tr key={order.id} className={index > 0 ? "border-t-brutal" : ""}>
+                      <td className="px-4 py-3 tabular-nums whitespace-nowrap">
+                        {formatDate(order.created_at)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div>{order.shipping_name ?? "—"}</div>
+                        <div className="font-light opacity-60">
+                          {order.customer_email ?? "—"}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-light">
+                        {formatAddress(order.shipping_address)}
+                      </td>
+                      <td className="px-4 py-3 tabular-nums whitespace-nowrap">
+                        {formatPrice(order.amount_total / 100, order.currency.toUpperCase())}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={order.fulfillment_status === "paid" ? "solid" : "default"}>
+                          {order.fulfillment_status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {order.fulfillment_status === "paid" && (
+                          <form action={markShipped}>
+                            <input type="hidden" name="orderId" value={order.id} />
+                            <input type="hidden" name="status" value="shipped" />
+                            <Button type="submit" variant="secondary" size="sm" className="whitespace-nowrap">
+                              MARK SHIPPED
+                            </Button>
+                          </form>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-      )}
+      </section>
     </div>
   );
 }

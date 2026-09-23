@@ -1,6 +1,11 @@
-import Link from "next/link";
+import { Link } from "next-view-transitions";
+import type { Metadata } from "next";
 import { ClearCartOnMount } from "./clear-cart-on-mount";
-import { PAGE_SHELL, HEADING, buttonClasses } from "@/lib/design-tokens";
+
+export const metadata: Metadata = {
+  title: "KANSLIET (ORDER CONFIRMED)",
+  robots: { index: false },
+};
 
 type SuccessPageProps = {
   searchParams: Promise<{ session_id?: string }>;
@@ -12,20 +17,34 @@ export default async function ShopSuccessPage({
   const { session_id: sessionId } = await searchParams;
 
   return (
-    <div className={`${PAGE_SHELL.form} text-center`}>
+    <div className="min-h-screen bg-background">
       <ClearCartOnMount />
-      <h1 className={HEADING}>Thanks for your order</h1>
-      <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-        We&apos;ll be in touch with shipping details shortly.
-      </p>
-      {sessionId && (
-        <p className="mt-4 text-xs text-zinc-400 dark:text-zinc-500">
-          Order reference: {sessionId}
-        </p>
-      )}
-      <Link href="/shop" className={`mt-6 inline-block ${buttonClasses("tertiary")}`}>
-        Back to shop
-      </Link>
+      <section className="py-20">
+        <div className="container-kansliet max-w-2xl">
+          <h1 className="dossier-label mb-12">ORDER CONFIRMED</h1>
+          <p className="mb-6 text-3xl font-normal uppercase tracking-tight lg:text-4xl">
+            THANK YOU.
+          </p>
+          <p className="text-normal-case mb-10 max-w-xl text-base font-light leading-relaxed">
+            Your payment went through. A receipt is on its way to your email,
+            and we&apos;ll be in touch with shipping details shortly.
+          </p>
+          {sessionId && (
+            <div className="mb-10 flex items-baseline gap-4 border-y border-foreground py-4">
+              <span className="dossier-label shrink-0">REF</span>
+              <span className="text-dossier break-all font-light tracking-wider">
+                {sessionId}
+              </span>
+            </div>
+          )}
+          <Link
+            href="/shop"
+            className="text-caps text-sm font-light tracking-wider transition-opacity hover:opacity-60"
+          >
+            ← BACK TO SHOP
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

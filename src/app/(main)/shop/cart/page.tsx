@@ -1,17 +1,16 @@
-import Link from "next/link";
-import Image from "next/image";
+import { Link } from "next-view-transitions";
+import type { Metadata } from "next";
 import { pool } from "@/lib/db";
 import { getCart } from "@/lib/cart";
 import { getPrice, formatPrice } from "@/lib/stripe";
 import { updateQuantity, removeFromCart, checkoutCart } from "./actions";
-import { Button } from "@/components/shop/Button";
-import {
-  PAGE_SHELL,
-  HEADING,
-  PRICE_PRIMARY,
-  PRICE_SECONDARY,
-  buttonClasses,
-} from "@/lib/design-tokens";
+import { Button } from "@/components/ui/button";
+import { ProductImage } from "@/components/shop/ProductImage";
+
+export const metadata: Metadata = {
+  title: "KANSLIET (CART)",
+  robots: { index: false },
+};
 
 type Product = {
   id: number;
@@ -25,6 +24,32 @@ type Product = {
 type CartPageProps = {
   searchParams: Promise<{ error?: string }>;
 };
+
+function QuantityButton({
+  productId,
+  quantity,
+  label,
+  children,
+}: {
+  productId: number;
+  quantity: number;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <form action={updateQuantity}>
+      <input type="hidden" name="productId" value={productId} />
+      <input type="hidden" name="quantity" value={quantity} />
+      <button
+        type="submit"
+        aria-label={label}
+        className="flex h-8 w-8 cursor-pointer items-center justify-center text-sm transition-opacity hover:opacity-60"
+      >
+        {children}
+      </button>
+    </form>
+  );
+}
 
 export default async function CartPage({ searchParams }: CartPageProps) {
   const { error } = await searchParams;
@@ -48,119 +73,131 @@ export default async function CartPage({ searchParams }: CartPageProps) {
       })
   );
 
-  const currency = lines[0]?.currency ?? "USD";
+  const currency = lines[0]?.currency ?? "EUR";
   const total = lines.reduce((sum, line) => sum + line.amount * line.item.quantity, 0);
+  const itemCount = lines.reduce((sum, line) => sum + line.item.quantity, 0);
 
   return (
-    <div className={PAGE_SHELL.full}>
-      <Link href="/shop" className={`mb-6 inline-block ${buttonClasses("tertiary")}`}>
-        ← Back to shop
-      </Link>
-
-      <h1 className={`mb-8 ${HEADING}`}>Cart</h1>
-
-      {error && (
-        <p className="mb-6 text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
-
-      {lines.length === 0 ? (
-        <p className="text-zinc-500 dark:text-zinc-400">
-          Your cart is empty.{" "}
-          <Link href="/shop" className={buttonClasses("tertiary")}>
-            Continue shopping
+    <div className="min-h-screen bg-background">
+      <section className="py-20">
+        <div className="container-kansliet max-w-4xl">
+          <Link
+            href="/shop"
+            className="text-caps text-sm font-light tracking-wider mb-10 inline-block transition-opacity hover:opacity-60"
+          >
+            ← SHOP
           </Link>
-          .
-        </p>
-      ) : (
-        <>
-          <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
-            {lines.map(({ item, product, amount, currency: lineCurrency }) => (
-              <li key={product.id} className="flex items-center gap-4 py-6">
-                <Link
-                  href={`/shop/${product.slug}`}
-                  className="relative aspect-square w-20 shrink-0 overflow-hidden bg-white dark:bg-zinc-900"
-                >
-                  {product.image_url && (
-                    <Image
-                      src={product.image_url}
-                      alt={product.name}
-                      fill
-                      className="object-contain"
-                      sizes="80px"
-                    />
-                  )}
-                </Link>
 
-                <div className="min-w-0 flex-1">
-                  <Link
-                    href={`/shop/${product.slug}`}
-                    className="text-sm font-medium text-zinc-900 dark:text-zinc-50"
-                  >
-                    {product.name}
-                  </Link>
-                  <p className={`mt-1 ${PRICE_SECONDARY}`}>
-                    {formatPrice(amount, lineCurrency)}
-                  </p>
-
-                  <div className="mt-3 flex items-center gap-4">
-                    <div className="flex items-center gap-3">
-                      <form action={updateQuantity}>
-                        <input type="hidden" name="productId" value={product.id} />
-                        <input type="hidden" name="quantity" value={item.quantity - 1} />
-                        <button
-                          type="submit"
-                          aria-label="Decrease quantity"
-                          className="cursor-pointer text-zinc-400 transition-colors hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-50"
-                        >
-                          −
-                        </button>
-                      </form>
-                      <span className="w-4 text-center text-sm text-zinc-900 dark:text-zinc-50">
-                        {item.quantity}
-                      </span>
-                      <form action={updateQuantity}>
-                        <input type="hidden" name="productId" value={product.id} />
-                        <input type="hidden" name="quantity" value={item.quantity + 1} />
-                        <button
-                          type="submit"
-                          aria-label="Increase quantity"
-                          className="cursor-pointer text-zinc-400 transition-colors hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-50"
-                        >
-                          +
-                        </button>
-                      </form>
-                    </div>
-
-                    <form action={removeFromCart}>
-                      <input type="hidden" name="productId" value={product.id} />
-                      <Button variant="tertiary" type="submit">
-                        Remove
-                      </Button>
-                    </form>
-                  </div>
-                </div>
-
-                <p className={PRICE_SECONDARY}>
-                  {formatPrice(amount * item.quantity, lineCurrency)}
-                </p>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-8 flex items-center justify-between border-t border-zinc-200 pt-6 dark:border-zinc-800">
-            <span className="text-base font-medium text-zinc-900 dark:text-zinc-50">
-              Total
+          <div className="mb-12 flex items-baseline justify-between gap-6">
+            <h1 className="dossier-label">CART</h1>
+            <span className="text-caps text-sm font-light tracking-wider opacity-60 tabular-nums">
+              {String(itemCount).padStart(2, "0")} {itemCount === 1 ? "ITEM" : "ITEMS"}
             </span>
-            <span className={PRICE_PRIMARY}>{formatPrice(total, currency)}</span>
           </div>
 
-          <form action={checkoutCart} className="mt-6">
-            <Button variant="primary" type="submit" className="w-full">
-              Checkout
-            </Button>
-          </form>
-        </>
-      )}
+          {error && (
+            <div
+              role="alert"
+              className="mb-6 border border-red-500 bg-red-500/5 p-4 text-red-600"
+            >
+              <p className="text-caps text-sm font-bold tracking-wide">ERROR: {error}</p>
+            </div>
+          )}
+
+          {lines.length === 0 ? (
+            <div className="border-brutal p-10 text-center">
+              <p className="text-caps text-sm font-light tracking-wider opacity-60">
+                YOUR CART IS EMPTY.
+              </p>
+            </div>
+          ) : (
+            <>
+              <ul className="border-brutal">
+                {lines.map(({ item, product, amount, currency: lineCurrency }, index) => (
+                  <li
+                    key={product.id}
+                    className={`flex items-center gap-4 p-4 ${index > 0 ? "border-t-brutal" : ""}`}
+                  >
+                    <Link href={`/shop/${product.slug}`} className="shrink-0">
+                      <ProductImage
+                        id={product.id}
+                        name={product.name}
+                        imageUrl={product.image_url}
+                        className="aspect-5/6 w-16 md:w-20"
+                        sizes="80px"
+                        compact
+                      />
+                    </Link>
+
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/shop/${product.slug}`}
+                        className="text-caps text-sm font-normal tracking-wider transition-opacity hover:opacity-60"
+                      >
+                        {product.name}
+                      </Link>
+                      <p className="text-normal-case mt-1 text-sm font-light opacity-60">
+                        {formatPrice(amount, lineCurrency)}
+                        {product.sold_out && " — sold out, remove to check out"}
+                      </p>
+
+                      <div className="mt-3 flex items-center gap-4">
+                        <div className="flex items-center border-brutal">
+                          <QuantityButton
+                            productId={product.id}
+                            quantity={item.quantity - 1}
+                            label="Decrease quantity"
+                          >
+                            −
+                          </QuantityButton>
+                          <span className="w-6 text-center text-sm tabular-nums">
+                            {item.quantity}
+                          </span>
+                          <QuantityButton
+                            productId={product.id}
+                            quantity={item.quantity + 1}
+                            label="Increase quantity"
+                          >
+                            +
+                          </QuantityButton>
+                        </div>
+
+                        <form action={removeFromCart}>
+                          <input type="hidden" name="productId" value={product.id} />
+                          <button
+                            type="submit"
+                            className="text-caps text-sm font-light tracking-wider cursor-pointer opacity-60 transition-opacity hover:opacity-100"
+                          >
+                            REMOVE
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+
+                    <p className="text-sm tabular-nums">
+                      {formatPrice(amount * item.quantity, lineCurrency)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-8 flex items-baseline justify-between gap-6 border-b-brutal pb-8">
+                <span className="dossier-label">TOTAL</span>
+                <span className="text-lg tabular-nums">{formatPrice(total, currency)}</span>
+              </div>
+              <p className="text-normal-case mt-3 text-sm font-light opacity-60">
+                Payment and shipping address on the next step (Stripe).
+              </p>
+
+              <form action={checkoutCart} className="mt-8 flex justify-end">
+                <Button type="submit" size="lg" className="w-full md:w-auto">
+                  CHECKOUT →
+                </Button>
+              </form>
+            </>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

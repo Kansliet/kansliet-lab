@@ -1,15 +1,20 @@
-import Link from "next/link";
-import Image from "next/image";
+import { Link } from "next-view-transitions";
+import type { Metadata } from "next";
 import { pool } from "@/lib/db";
 import { getDisplayPrice } from "@/lib/stripe";
 import { quickAddToCart } from "@/app/(main)/shop/cart/actions";
-import { PAGE_SHELL, HEADING, PRICE_SECONDARY } from "@/lib/design-tokens";
+import { Grid, GridItem, GridItemTitle, GridItemMeta } from "@/components/ui/grid";
+import { ProductImage } from "@/components/shop/ProductImage";
+
+export const metadata: Metadata = {
+  title: "KANSLIET (SHOP)",
+  alternates: { canonical: "/shop" },
+};
 
 type Product = {
   id: number;
   slug: string;
   name: string;
-  description: string | null;
   image_url: string | null;
   stripe_price_id: string;
   sold_out: boolean;
@@ -32,17 +37,39 @@ async function getProducts(
 ): Promise<(Product & { displayPrice: string })[]> {
   const { rows } = category
     ? await pool.query<Product>(
-        "SELECT id, slug, name, description, image_url, stripe_price_id, sold_out, category FROM shop_products WHERE category = $1 ORDER BY created_at DESC",
+        "SELECT id, slug, name, image_url, stripe_price_id, sold_out, category FROM shop_products WHERE category = $1 ORDER BY created_at DESC, id DESC",
         [category]
       )
     : await pool.query<Product>(
-        "SELECT id, slug, name, description, image_url, stripe_price_id, sold_out, category FROM shop_products ORDER BY created_at DESC"
+        "SELECT id, slug, name, image_url, stripe_price_id, sold_out, category FROM shop_products ORDER BY created_at DESC, id DESC"
       );
   return Promise.all(
     rows.map(async (product) => ({
       ...product,
       displayPrice: await getDisplayPrice(product.stripe_price_id),
     }))
+  );
+}
+
+function FilterLink({
+  href,
+  active,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={`text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-60 whitespace-nowrap ${
+        active ? "opacity-100 border-b border-foreground" : "opacity-60"
+      }`}
+    >
+      {children}
+    </Link>
   );
 }
 
@@ -54,91 +81,92 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   ]);
 
   return (
-    <div className={PAGE_SHELL.full}>
-      <h1 className={`mb-6 ${HEADING}`}>Shop</h1>
+    <div className="min-h-screen bg-background">
+      <section className="py-20">
+        <div className="container-kansliet">
+          <div className="mb-12 flex items-baseline justify-between gap-6">
+            <h1 className="dossier-label">SHOP</h1>
+            <span className="text-caps text-sm font-light tracking-wider opacity-60 tabular-nums">
+              {String(products.length).padStart(2, "0")}{" "}
+              {products.length === 1 ? "OBJECT" : "OBJECTS"}
+            </span>
+          </div>
 
-      <div className="mb-10 flex items-center justify-between">
-        <nav className="flex flex-wrap gap-6 text-sm">
-          <Link
-            href="/shop"
-            className={
-              category
-                ? "text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-                : "font-medium text-zinc-900 dark:text-zinc-50"
-            }
+          <nav
+            aria-label="Product categories"
+            className="mb-8 flex flex-wrap gap-x-8 gap-y-3"
           >
-            all products
-          </Link>
-          {categories.map((cat) => (
-            <Link
-              key={cat}
-              href={`/shop?category=${encodeURIComponent(cat)}`}
-              className={
-                category === cat
-                  ? "font-medium text-zinc-900 dark:text-zinc-50"
-                  : "text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-              }
-            >
-              {cat}
-            </Link>
-          ))}
-        </nav>
-        <span className="text-sm text-zinc-400 dark:text-zinc-500">
-          {products.length} product{products.length === 1 ? "" : "s"}
-        </span>
-      </div>
-
-      {products.length === 0 ? (
-        <p className="text-zinc-500 dark:text-zinc-400">
-          Nothing in the shop yet.
-        </p>
-      ) : (
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10">
-          {products.map((product) => (
-            <div key={product.id}>
-              <Link
-                href={`/shop/${product.slug}`}
-                className="group relative block aspect-square overflow-hidden bg-white dark:bg-zinc-900"
+            <FilterLink href="/shop" active={!category}>
+              ALL
+            </FilterLink>
+            {categories.map((cat) => (
+              <FilterLink
+                key={cat}
+                href={`/shop?category=${encodeURIComponent(cat)}`}
+                active={category === cat}
               >
-                {product.image_url && (
-                  <Image
-                    src={product.image_url}
-                    alt={product.name}
-                    fill
-                    className="object-contain transition-transform group-hover:scale-105"
-                    sizes="(min-width: 640px) 33vw, 50vw"
-                  />
-                )}
-              </Link>
+                {cat}
+              </FilterLink>
+            ))}
+          </nav>
 
-              <div className="mt-3 flex items-start justify-between gap-2">
-                <Link href={`/shop/${product.slug}`} className="min-w-0">
-                  <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                    {product.name}
-                  </p>
-                  <p className={PRICE_SECONDARY}>
-                    {product.sold_out ? "sold out" : product.displayPrice}
-                  </p>
-                </Link>
-
-                {!product.sold_out && (
-                  <form action={quickAddToCart}>
-                    <input type="hidden" name="productId" value={product.id} />
-                    <input type="hidden" name="quantity" value={1} />
-                    <button
-                      type="submit"
-                      aria-label={`Add ${product.name} to cart`}
-                      className="mt-0.5 cursor-pointer text-lg leading-none text-zinc-400 transition-colors hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-50"
+          {products.length === 0 ? (
+            <p className="text-caps text-sm font-light tracking-wider opacity-60">
+              NOTHING HERE YET.
+            </p>
+          ) : (
+            <Grid cols={3} gap={6}>
+              {products.map((product, index) => (
+                <GridItem key={product.id}>
+                  <div className="flex aspect-5/6 flex-col overflow-hidden">
+                    <Link
+                      href={`/shop/${product.slug}`}
+                      className="relative min-h-0 flex-1"
                     >
-                      +
-                    </button>
-                  </form>
-                )}
-              </div>
-            </div>
-          ))}
+                      <ProductImage
+                        id={product.id}
+                        name={product.name}
+                        imageUrl={product.image_url}
+                        className="h-full"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1400px) 33vw, 400px"
+                        priority={index === 0}
+                      />
+                      {product.sold_out && (
+                        <span className="dossier-label absolute top-2 right-2">
+                          SOLD OUT
+                        </span>
+                      )}
+                    </Link>
+                    <div className="flex shrink-0 items-start justify-between gap-4 border-t-brutal bg-background p-4">
+                      <Link href={`/shop/${product.slug}`} className="min-w-0">
+                        <GridItemTitle className="truncate">
+                          {product.name}
+                        </GridItemTitle>
+                        <GridItemMeta>
+                          {product.category}, {product.displayPrice}
+                        </GridItemMeta>
+                      </Link>
+                      {!product.sold_out && (
+                        <form action={quickAddToCart} className="shrink-0">
+                          <input type="hidden" name="productId" value={product.id} />
+                          <input type="hidden" name="quantity" value={1} />
+                          <button
+                            type="submit"
+                            aria-label={`Add ${product.name} to cart`}
+                            className="text-caps text-sm font-light tracking-wider cursor-pointer transition-opacity hover:opacity-60"
+                          >
+                            + ADD
+                          </button>
+                        </form>
+                      )}
+                    </div>
+                  </div>
+                </GridItem>
+              ))}
+            </Grid>
+          )}
         </div>
-      )}
+      </section>
     </div>
   );
 }

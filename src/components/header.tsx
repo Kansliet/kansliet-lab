@@ -112,7 +112,10 @@ export function Header() {
                 key={href}
                 href={href}
                 className={`text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-60 whitespace-nowrap ${
-                  pathname === href ? "opacity-100" : "opacity-60"
+                  pathname === href ||
+                  (href === "/shop" && pathname?.startsWith("/shop/"))
+                    ? "opacity-100"
+                    : "opacity-60"
                 }`}
               >
                 {label}

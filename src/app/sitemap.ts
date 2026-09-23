@@ -9,7 +9,7 @@ const LAUNCH_DATE = new Date("2026-07-08");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // 1. Static Routes
-  const routes = ["", "/works", "/studio", "/contact", "/legal"].map((route) => ({
+  const routes = ["", "/works", "/studio", "/shop", "/contact", "/legal"].map((route) => ({
     url: `${SITE_URL}${route}`,
     lastModified: LAUNCH_DATE,
     changeFrequency: "monthly" as const,
