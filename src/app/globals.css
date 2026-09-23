@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* The site has no dark mode. The shop pages carry dark: utilities; binding
+   the variant to a .dark class that's never applied keeps them inert
+   instead of following the visitor's OS preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-signal: #2f3133;
   --color-white: #ffffff;
