@@ -14,11 +14,8 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year — portfolio images never change
     // Remote shop product images. Fetched server-side by the image
     // optimizer and served from /_next/image, so CSP img-src 'self' covers
-    // them. placehold.co is only for the seed placeholders.
-    remotePatterns: [
-      { protocol: "https", hostname: "placehold.co" },
-      { protocol: "https", hostname: "files.stripe.com" },
-    ],
+    // them. Add a host here before pointing image_url at it.
+    remotePatterns: [{ protocol: "https", hostname: "files.stripe.com" }],
   },
   async headers() {
     return [
