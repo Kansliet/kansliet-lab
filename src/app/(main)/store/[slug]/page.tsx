@@ -8,6 +8,7 @@ import { buyNow } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProductImage } from "@/components/store/ProductImage";
+import { MAX_QUANTITY } from "@/lib/cart";
 
 type Product = {
   id: number;
@@ -159,7 +160,7 @@ export default async function ProductPage({
                     type="number"
                     name="quantity"
                     min={1}
-                    max={99}
+                    max={MAX_QUANTITY}
                     defaultValue={1}
                   />
                 </div>

@@ -21,10 +21,21 @@ export function mintFormToken(): string {
   return `${ts}.${sign(ts, secret)}`;
 }
 
-/** Verify signature + fill-time window. Fails open when no secret is set. */
+/**
+ * Verify signature + fill-time window. Fails open when no secret is set, except
+ * on the production deployment: there a missing env var must not silently turn
+ * the bot guard off. (VERCEL_ENV, not NODE_ENV — previews also build as
+ * NODE_ENV=production and should keep working without the secret.)
+ */
 export function verifyFormToken(token: string): boolean {
   const secret = process.env.CONTACT_FORM_SECRET;
-  if (!secret) return true; // fail-open when unconfigured
+  if (!secret) {
+    if (process.env.VERCEL_ENV === "production") {
+      console.error("CONTACT_FORM_SECRET is not set on production; rejecting submission.");
+      return false;
+    }
+    return true; // fail-open when unconfigured (local dev, previews)
+  }
   const [ts, sig] = token.split(".");
   if (!ts || !sig) return false;
   const expected = sign(ts, secret);

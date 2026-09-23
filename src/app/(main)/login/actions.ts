@@ -6,10 +6,16 @@ import { pool } from "@/lib/db";
 import {
   SESSION_COOKIE,
   createSessionToken,
+  hashPassword,
   hashToken,
   sessionExpiresAt,
   verifyPassword,
 } from "@/lib/auth";
+
+// Verified against when the email doesn't exist, so an unknown email costs the
+// same scrypt time as a wrong password and response timing can't reveal which
+// emails have accounts. Computed once per server instance.
+const DUMMY_PASSWORD_HASH = hashPassword("timing-equalizer");
 
 function backToLoginWithError(
   error: string,
@@ -38,13 +44,18 @@ export async function login(formData: FormData) {
     [email]
   );
   const user = rows[0];
+  const passwordOk = verifyPassword(password, user?.password_hash ?? DUMMY_PASSWORD_HASH);
 
-  if (!user || !verifyPassword(password, user.password_hash)) {
+  if (!user || !passwordOk) {
     backToLoginWithError("Invalid email or password", rawEmail);
   }
 
   const token = createSessionToken();
   const expiresAt = sessionExpiresAt();
+
+  // Housekeeping: expired sessions are never valid again, so drop them here
+  // (the only write path for sessions) instead of running a cron for one admin.
+  await pool.query("DELETE FROM sessions WHERE expires_at < now()");
 
   await pool.query(
     "INSERT INTO sessions (id, user_id, expires_at) VALUES ($1, $2, $3)",

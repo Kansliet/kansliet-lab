@@ -3,6 +3,10 @@ import { cookies } from "next/headers";
 export const CART_COOKIE = "cart";
 const CART_COOKIE_MAX_AGE_S = 30 * 24 * 60 * 60; // 30 days, matches the session cookie's lifetime
 
+// Per-line cap, enforced here (on every read and write) rather than per action,
+// so no code path can hand Stripe an absurd quantity. Matches the qty input's max.
+export const MAX_QUANTITY = 99;
+
 export type CartItem = {
   productId: number;
   quantity: number;
@@ -22,7 +26,7 @@ export async function getCart(): Promise<CartItem[]> {
     return Object.entries(parsed)
       .map(([productId, quantity]) => ({
         productId: Number(productId),
-        quantity: Number(quantity),
+        quantity: Math.min(Number(quantity), MAX_QUANTITY),
       }))
       .filter((item) => Number.isInteger(item.productId) && Number.isInteger(item.quantity) && item.quantity > 0);
   } catch {
@@ -33,7 +37,7 @@ export async function getCart(): Promise<CartItem[]> {
 export function cartToCookieValue(cart: CartItem[]): string {
   const record: Record<string, number> = {};
   for (const item of cart) {
-    record[item.productId] = item.quantity;
+    record[item.productId] = Math.min(item.quantity, MAX_QUANTITY);
   }
   return JSON.stringify(record);
 }

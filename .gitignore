@@ -46,3 +46,6 @@ next-env.d.ts
 
 # claude code local tooling config
 .claude/
+
+# repomix whole-codebase dumps (for pasting into LLMs), never commit
+repomix-output.*

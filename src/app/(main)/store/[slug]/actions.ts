@@ -52,7 +52,8 @@ export async function buyNow(formData: FormData) {
       integration_identifier: "kansliet-shop-vqxmzrtl",
     });
     sessionUrl = session.url;
-  } catch {
+  } catch (err) {
+    console.error("Stripe checkout session failed", err);
     redirect(
       `/store/${product.slug}?error=${encodeURIComponent(
         "Something went wrong, try again"
