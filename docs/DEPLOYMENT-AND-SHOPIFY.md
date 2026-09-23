@@ -1,5 +1,7 @@
 # Deployment readiness & Shopify (store.kansliet.co)
 
+> **Superseded (2026-09):** the shop is now built into this site at `/shop` with Stripe Checkout rather than Shopify on a subdomain. See `docs/shop/README.md`. Section 3 below is kept for history.
+
 **Senior-dev view:** Is the site healthy, snappy, and ready to deploy? What’s left? What about adding a Shopify store on a subdomain?
 
 ---
