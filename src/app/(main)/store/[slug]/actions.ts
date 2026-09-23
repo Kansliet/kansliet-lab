@@ -1,9 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { pool } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
+import { getAppBaseUrl } from "@/lib/site";
 
 type Product = {
   id: number;
@@ -11,13 +11,6 @@ type Product = {
   stripe_price_id: string;
   sold_out: boolean;
 };
-
-async function getBaseUrl(): Promise<string> {
-  const headersList = await headers();
-  const host = headersList.get("host");
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  return `${protocol}://${host}`;
-}
 
 export async function buyNow(formData: FormData) {
   const productId = Number(formData.get("productId"));
@@ -36,7 +29,7 @@ export async function buyNow(formData: FormData) {
     redirect(`/store/${product.slug}?error=${encodeURIComponent("Sold out")}`);
   }
 
-  const baseUrl = await getBaseUrl();
+  const baseUrl = getAppBaseUrl();
 
   let sessionUrl: string | null;
   try {

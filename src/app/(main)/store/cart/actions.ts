@@ -1,10 +1,11 @@
 "use server";
 
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { pool } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
+import { getAppBaseUrl } from "@/lib/site";
 import {
   CART_COOKIE,
   cartCookieOptions,
@@ -27,13 +28,6 @@ async function writeCart(cart: CartItem[]) {
   } else {
     store.set(CART_COOKIE, cartToCookieValue(cart), cartCookieOptions);
   }
-}
-
-async function getBaseUrl(): Promise<string> {
-  const headersList = await headers();
-  const host = headersList.get("host");
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-  return `${protocol}://${host}`;
 }
 
 async function addItemToCart(formData: FormData): Promise<void> {
@@ -129,7 +123,7 @@ export async function checkoutCart() {
     }
   }
 
-  const baseUrl = await getBaseUrl();
+  const baseUrl = getAppBaseUrl();
 
   let sessionUrl: string | null;
   try {
