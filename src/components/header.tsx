@@ -9,7 +9,7 @@ const navLinks = [
   { href: "/", label: "HOME" },
   { href: "/works", label: "WORKS" },
   { href: "/studio", label: "STUDIO" },
-  { href: "/shop", label: "SHOP" },
+  { href: "/store", label: "STORE" },
   { href: "/contact", label: "CONTACT" },
 ] as const;
 
@@ -113,7 +113,7 @@ export function Header() {
                 href={href}
                 className={`text-caps text-sm font-light tracking-wide transition-opacity hover:opacity-60 whitespace-nowrap ${
                   pathname === href ||
-                  (href === "/shop" && pathname?.startsWith("/shop/"))
+                  (href === "/store" && pathname?.startsWith("/store/"))
                     ? "opacity-100"
                     : "opacity-60"
                 }`}

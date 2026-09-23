@@ -1,10 +1,10 @@
-// Seeds placeholder shop products (Stripe product/price + DB row).
-// Usage: node seed-shop-products.mjs
+// Seeds placeholder store products (Stripe product/price + DB row).
+// Usage: node seed-store-products.mjs
 // Safe to re-run: a slug already in shop_products keeps its Stripe product
 // and price (so no duplicate Stripe test objects pile up) and only gets its
 // catalog fields refreshed. Price changes to an existing slug are NOT applied
 // here — Stripe prices are immutable; create a new price in the dashboard.
-// image_url is left NULL: the shop renders a typographic placeholder until a
+// image_url is left NULL: the store renders a typographic placeholder until a
 // real photo URL is set on the row.
 import nextEnv from "@next/env";
 import pg from "pg";

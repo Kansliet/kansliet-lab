@@ -11,7 +11,7 @@ type SuccessPageProps = {
   searchParams: Promise<{ session_id?: string }>;
 };
 
-export default async function ShopSuccessPage({
+export default async function StoreSuccessPage({
   searchParams,
 }: SuccessPageProps) {
   const { session_id: sessionId } = await searchParams;
@@ -38,10 +38,10 @@ export default async function ShopSuccessPage({
             </div>
           )}
           <Link
-            href="/shop"
+            href="/store"
             className="text-caps text-sm font-light tracking-wider transition-opacity hover:opacity-60"
           >
-            ← BACK TO SHOP
+            ← BACK TO STORE
           </Link>
         </div>
       </section>

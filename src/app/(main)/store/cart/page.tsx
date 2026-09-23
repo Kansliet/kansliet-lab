@@ -5,7 +5,7 @@ import { getCart } from "@/lib/cart";
 import { getPrice, formatPrice } from "@/lib/stripe";
 import { updateQuantity, removeFromCart, checkoutCart } from "./actions";
 import { Button } from "@/components/ui/button";
-import { ProductImage } from "@/components/shop/ProductImage";
+import { ProductImage } from "@/components/store/ProductImage";
 
 export const metadata: Metadata = {
   title: "KANSLIET (CART)",
@@ -82,10 +82,10 @@ export default async function CartPage({ searchParams }: CartPageProps) {
       <section className="py-20">
         <div className="container-kansliet">
           <Link
-            href="/shop"
+            href="/store"
             className="text-caps text-sm font-light tracking-wider mb-10 inline-block transition-opacity hover:opacity-60"
           >
-            ← SHOP
+            ← STORE
           </Link>
 
           <div className="mb-12 flex items-baseline justify-between gap-6">
@@ -118,7 +118,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                     key={product.id}
                     className={`flex items-center gap-4 p-4 ${index > 0 ? "border-t-brutal" : ""}`}
                   >
-                    <Link href={`/shop/${product.slug}`} className="shrink-0">
+                    <Link href={`/store/${product.slug}`} className="shrink-0">
                       <ProductImage
                         id={product.id}
                         name={product.name}
@@ -131,7 +131,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
 
                     <div className="min-w-0 flex-1">
                       <Link
-                        href={`/shop/${product.slug}`}
+                        href={`/store/${product.slug}`}
                         className="text-caps text-sm font-normal tracking-wider transition-opacity hover:opacity-60"
                       >
                         {product.name}

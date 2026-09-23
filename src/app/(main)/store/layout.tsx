@@ -1,6 +1,6 @@
-import { CartIcon } from "@/components/shop/CartIcon";
+import { CartIcon } from "@/components/store/CartIcon";
 
-export default function ShopLayout({
+export default function StoreLayout({
   children,
 }: {
   children: React.ReactNode;

@@ -59,7 +59,7 @@ export async function login(formData: FormData) {
     expires: expiresAt,
   });
 
-  redirect("/shop/orders");
+  redirect("/store/orders");
 }
 
 export async function logout() {

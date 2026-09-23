@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1400, 1920, 2048],
     minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year — portfolio images never change
-    // Remote shop product images. Fetched server-side by the image
+    // Remote store product images. Fetched server-side by the image
     // optimizer and served from /_next/image, so CSP img-src 'self' covers
     // them. Add a host here before pointing image_url at it.
     remotePatterns: [{ protocol: "https", hostname: "files.stripe.com" }],

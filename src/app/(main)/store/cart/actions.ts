@@ -66,14 +66,14 @@ async function addItemToCart(formData: FormData): Promise<void> {
 // cart so you can see what you just added.
 export async function addToCart(formData: FormData) {
   await addItemToCart(formData);
-  redirect("/shop/cart");
+  redirect("/store/cart");
 }
 
-// Used by the shop grid's inline "+" — adds the item without navigating
+// Used by the store grid's inline "+" — adds the item without navigating
 // away, so browsing stays uninterrupted.
 export async function quickAddToCart(formData: FormData) {
   await addItemToCart(formData);
-  revalidatePath("/shop");
+  revalidatePath("/store");
 }
 
 export async function updateQuantity(formData: FormData) {
@@ -87,14 +87,14 @@ export async function updateQuantity(formData: FormData) {
       : cart.filter((item) => item.productId !== productId);
 
   await writeCart(next);
-  revalidatePath("/shop/cart");
+  revalidatePath("/store/cart");
 }
 
 export async function removeFromCart(formData: FormData) {
   const productId = Number(formData.get("productId"));
   const cart = await getCart();
   await writeCart(cart.filter((item) => item.productId !== productId));
-  revalidatePath("/shop/cart");
+  revalidatePath("/store/cart");
 }
 
 export async function clearCart() {
@@ -104,7 +104,7 @@ export async function clearCart() {
 export async function checkoutCart() {
   const cart = await getCart();
   if (cart.length === 0) {
-    redirect("/shop/cart");
+    redirect("/store/cart");
   }
 
   const { rows: products } = await pool.query<Product>(
@@ -122,7 +122,7 @@ export async function checkoutCart() {
     const product = productsById.get(item.productId);
     if (!product || product.sold_out) {
       redirect(
-        `/shop/cart?error=${encodeURIComponent(
+        `/store/cart?error=${encodeURIComponent(
           "One of the items in your cart is no longer available — remove it to continue"
         )}`
       );
@@ -142,20 +142,20 @@ export async function checkoutCart() {
       shipping_address_collection: {
         allowed_countries: ["SE", "NO", "DK", "FI", "DE", "GB", "US"],
       },
-      success_url: `${baseUrl}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/shop/cart`,
+      success_url: `${baseUrl}/store/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/store/cart`,
       integration_identifier: "kansliet-shop-vqxmzrtl",
     });
     sessionUrl = session.url;
   } catch {
     redirect(
-      `/shop/cart?error=${encodeURIComponent("Something went wrong, try again")}`
+      `/store/cart?error=${encodeURIComponent("Something went wrong, try again")}`
     );
   }
 
   if (!sessionUrl) {
     redirect(
-      `/shop/cart?error=${encodeURIComponent("Something went wrong, try again")}`
+      `/store/cart?error=${encodeURIComponent("Something went wrong, try again")}`
     );
   }
 

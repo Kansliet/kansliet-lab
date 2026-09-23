@@ -29,11 +29,11 @@ export async function buyNow(formData: FormData) {
   const product = rows[0];
 
   if (!product) {
-    redirect("/shop");
+    redirect("/store");
   }
 
   if (product.sold_out) {
-    redirect(`/shop/${product.slug}?error=${encodeURIComponent("Sold out")}`);
+    redirect(`/store/${product.slug}?error=${encodeURIComponent("Sold out")}`);
   }
 
   const baseUrl = await getBaseUrl();
@@ -46,15 +46,15 @@ export async function buyNow(formData: FormData) {
       shipping_address_collection: {
         allowed_countries: ["SE", "NO", "DK", "FI", "DE", "GB", "US"],
       },
-      success_url: `${baseUrl}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/shop/${product.slug}`,
+      success_url: `${baseUrl}/store/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/store/${product.slug}`,
       metadata: { shop_product_id: String(product.id) },
       integration_identifier: "kansliet-shop-vqxmzrtl",
     });
     sessionUrl = session.url;
   } catch {
     redirect(
-      `/shop/${product.slug}?error=${encodeURIComponent(
+      `/store/${product.slug}?error=${encodeURIComponent(
         "Something went wrong, try again"
       )}`
     );
@@ -62,7 +62,7 @@ export async function buyNow(formData: FormData) {
 
   if (!sessionUrl) {
     redirect(
-      `/shop/${product.slug}?error=${encodeURIComponent(
+      `/store/${product.slug}?error=${encodeURIComponent(
         "Something went wrong, try again"
       )}`
     );

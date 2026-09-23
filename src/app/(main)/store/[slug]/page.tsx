@@ -3,11 +3,11 @@ import { Link } from "next-view-transitions";
 import type { Metadata } from "next";
 import { pool } from "@/lib/db";
 import { getDisplayPrice } from "@/lib/stripe";
-import { addToCart } from "@/app/(main)/shop/cart/actions";
+import { addToCart } from "@/app/(main)/store/cart/actions";
 import { buyNow } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ProductImage } from "@/components/shop/ProductImage";
+import { ProductImage } from "@/components/store/ProductImage";
 
 type Product = {
   id: number;
@@ -33,7 +33,7 @@ async function getProduct(slug: string): Promise<Product | null> {
   return rows[0] ?? null;
 }
 
-/** Catalog order, matching the /shop grid, for the P. xx / yy strip and prev/next. */
+/** Catalog order, matching the /store grid, for the P. xx / yy strip and prev/next. */
 async function getCatalogSlugs(): Promise<string[]> {
   const { rows } = await pool.query<{ slug: string }>(
     "SELECT slug FROM shop_products ORDER BY created_at DESC, id DESC"
@@ -50,9 +50,9 @@ export async function generateMetadata({
     return { title: "Product Not Found" };
   }
   return {
-    title: `${product.name.toUpperCase()} — KANSLIET (SHOP)`,
+    title: `${product.name.toUpperCase()} — KANSLIET (STORE)`,
     description: product.description ?? undefined,
-    alternates: { canonical: `/shop/${product.slug}` },
+    alternates: { canonical: `/store/${product.slug}` },
   };
 }
 
@@ -111,10 +111,10 @@ export default async function ProductPage({
 
         <div className="container-kansliet flex flex-1 flex-col py-10 lg:py-20">
           <Link
-            href="/shop"
+            href="/store"
             className="text-caps text-sm font-light tracking-wider mb-10 self-start transition-opacity hover:opacity-60"
           >
-            ← SHOP
+            ← STORE
           </Link>
 
           <h1 className="mb-10 text-3xl font-normal uppercase tracking-tight lg:mb-12 lg:text-4xl">
@@ -179,7 +179,7 @@ export default async function ProductPage({
           <div className="mt-auto flex items-center justify-between border-t-brutal pt-10 lg:pt-12">
             {prevSlug ? (
               <Link
-                href={`/shop/${prevSlug}`}
+                href={`/store/${prevSlug}`}
                 className="text-caps text-sm font-light tracking-wider transition-opacity hover:opacity-60"
               >
                 ← PREVIOUS
@@ -189,7 +189,7 @@ export default async function ProductPage({
             )}
             {nextSlug ? (
               <Link
-                href={`/shop/${nextSlug}`}
+                href={`/store/${nextSlug}`}
                 className="text-caps text-sm font-light tracking-wider transition-opacity hover:opacity-60"
               >
                 NEXT →

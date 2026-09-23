@@ -1,9 +1,9 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 
-/** Dossier-style catalog reference, e.g. id 7 → "SHP-007". */
+/** Dossier-style catalog reference, e.g. id 7 → "STR-007". */
 export function productRef(id: number): string {
-  return `SHP-${String(id).padStart(3, "0")}`;
+  return `STR-${String(id).padStart(3, "0")}`;
 }
 
 type ProductImageProps = {

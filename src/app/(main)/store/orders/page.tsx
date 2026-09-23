@@ -51,7 +51,7 @@ function formatDate(value: string): string {
 // Plain uppercase, not .text-caps: its display: inline-block breaks table cell layout.
 const TH = "px-4 py-3 text-sm font-light uppercase tracking-wider opacity-60";
 
-export default async function ShopOrdersPage() {
+export default async function StoreOrdersPage() {
   await requireSession();
   const orders = await getOrders();
 

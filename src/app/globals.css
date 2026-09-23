@@ -180,6 +180,14 @@
     animation: spin 12s linear infinite;
   }
 
+  /* The page-transition slide (dossier-page-in, below) scoped to one element:
+     the /store category filter skips the page transition and replays this on
+     the product grid only, so the heading and category bar stay put. Parent
+     needs overflow-x clipping. */
+  .animate-dossier-in {
+    animation: dossier-page-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
   .dossier-stamp {
     position: absolute;
     font-family: var(--font-family-mono);

@@ -1,6 +1,6 @@
-# Shop
+# Store
 
-Webshop at `/shop`, with the orders admin at `/shop/orders` (login at `/login`). The Stripe webhook is `/api/shop/webhook`. It was built as a standalone app (`kansliet-app`) and moved in here. `SPEC.md` and `CART-SPEC.md` in this folder are the original design notes.
+Webstore at `/store`, with the orders admin at `/store/orders` (login at `/login`). The Stripe webhook is `/api/store/webhook`. It was built as a standalone app (`kansliet-app`) and moved in here. `SPEC.md` and `CART-SPEC.md` in this folder are the original design notes.
 
 - Stripe (test mode), pure server-redirect Checkout Sessions. There's no `@stripe/stripe-js` (see `src/lib/stripe.ts`).
 - Postgres via `pg` (`src/lib/db.ts`). `src/lib/db.ts` throws at import if `DATABASE_URL` is unset, so every environment that builds the site needs it, including Vercel Preview.
@@ -9,13 +9,13 @@ Webshop at `/shop`, with the orders admin at `/shop/orders` (login at `/login`).
 
 ## Local setup
 1. Postgres 17 runs in Docker (container `kansliet-pg`, db `kansliet`). On a fresh database, load the schema: `docker exec -i kansliet-pg psql -U postgres -d kansliet < db/schema.sql`
-2. Fill in the shop vars in `.env.local`. Locally, `STRIPE_WEBHOOK_SECRET` is the Stripe CLI's signing secret (`stripe listen --print-secret`), not a dashboard endpoint's. Without it the webhook route throws on load and every event gets a 500, so no orders are recorded.
-3. Seed a new database: `node seed-shop-products.mjs` (creates Stripe test products and prices, plus the DB rows; safe to re-run) and `node seed-admin.mjs` (creates the one admin user).
-4. `npm run dev`. For the webhook: `stripe listen --forward-to localhost:3000/api/shop/webhook`
+2. Fill in the store vars in `.env.local`. Locally, `STRIPE_WEBHOOK_SECRET` is the Stripe CLI's signing secret (`stripe listen --print-secret`), not a dashboard endpoint's. Without it the webhook route throws on load and every event gets a 500, so no orders are recorded.
+3. Seed a new database: `node seed-store-products.mjs` (creates Stripe test products and prices, plus the DB rows; safe to re-run) and `node seed-admin.mjs` (creates the one admin user).
+4. `npm run dev`. For the webhook: `stripe listen --forward-to localhost:3000/api/store/webhook`
 5. Test card: `4242 4242 4242 4242`, any future expiry, any CVC.
 
 ## Schema
-There's no migrations system. `db/schema.sql` is a `pg_dump --schema-only` of the shop tables, so re-dump it whenever the schema changes.
+There's no migrations system. `db/schema.sql` is a `pg_dump --schema-only` of the store tables, so re-dump it whenever the schema changes.
 
 - `shop_products`: catalog rows. `slug` is UNIQUE. `category` is plain TEXT (the catalog is too small to justify a categories table) and drives the grid's category nav and `?category=` filter. `stripe_product_id`/`stripe_price_id` point at Stripe, which is the source of truth for the chargeable price: it's always resolved live at checkout and never trusted from a local cache. `sold_out` is flipped by hand and not derived from any stock system.
 - `shop_orders`: one row per completed Checkout Session, written by the webhook on `checkout.session.completed` (payment_status "paid") or `checkout.session.async_payment_succeeded`. `stripe_checkout_session_id` is UNIQUE (`ON CONFLICT DO NOTHING`), as a backstop alongside `stripe_webhook_events`. `fulfillment_status` is a plain TEXT enum (`paid` | `shipped` | `cancelled`). `shop_product_id` is vestigial, kept for pre-cart rows (see `shop_order_items`). `user_id` is a nullable FK to `users` kept for forward-compatibility; nothing sets it.
