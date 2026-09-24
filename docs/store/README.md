@@ -3,7 +3,8 @@
 Webstore at `/store`, with the orders admin at `/store/orders` (login at `/login`). The Stripe webhook is `/api/store/webhook`. It was built as a standalone app (`kansliet-app`) and moved in here. `SPEC.md` and `CART-SPEC.md` in this folder are the original design notes.
 
 - Stripe (test mode), pure server-redirect Checkout Sessions. There's no `@stripe/stripe-js` (see `src/lib/stripe.ts`).
-- Postgres via `pg` (`src/lib/db.ts`). `src/lib/db.ts` throws at import if `DATABASE_URL` is unset, so every environment that builds the site needs it, including Vercel Preview.
+- Postgres via `pg` (`src/lib/db.ts`). `src/lib/db.ts` throws at import if `DATABASE_URL` is unset, so every environment that builds the site needs it, including Vercel Preview. On Vercel, point `DATABASE_URL` at the provider's **pooled** connection string (e.g. Neon's `-pooler` host), not the direct one: each function instance opens its own pool (capped at 5 there).
+- Display prices come from one cached `prices.list` call (5 min, tag `stripe-prices`; see `src/lib/stripe.ts`). A price change in the Stripe dashboard shows on the site within 5 minutes; checkout always charges the live price immediately.
 - Env vars: `DATABASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (see `.env.example`).
 - Remote product image hosts must be listed in `images.remotePatterns` in `next.config.ts`.
 
