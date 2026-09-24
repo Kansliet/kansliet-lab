@@ -21,5 +21,5 @@ export async function markShipped(formData: FormData) {
     orderId,
   ]);
 
-  revalidatePath("/store/orders");
+  revalidatePath("/admin/orders");
 }

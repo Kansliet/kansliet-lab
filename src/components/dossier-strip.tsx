@@ -23,7 +23,7 @@ function getActiveSection(pathname: string): string {
   if (pathname === "/contact") return "CONTACT";
   if (pathname === "/legal") return "LEGAL";
   if (pathname === "/store/cart") return "CART";
-  if (pathname === "/store/orders" || pathname === "/login") return "ADMIN";
+  if (pathname.startsWith("/admin") || pathname === "/login") return "ADMIN";
   if (pathname === "/store" || pathname.startsWith("/store/")) return "STORE";
   return "INDEX";
 }

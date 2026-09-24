@@ -70,7 +70,7 @@ export async function login(formData: FormData) {
     expires: expiresAt,
   });
 
-  redirect("/store/orders");
+  redirect("/admin/orders");
 }
 
 export async function logout() {

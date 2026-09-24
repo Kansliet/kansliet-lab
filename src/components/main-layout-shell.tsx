@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 
 // Fixed store routes that live beside /store/[slug] but aren't product pages.
-const STORE_NON_PRODUCT_SEGMENTS = new Set(["cart", "orders", "success"]);
+const STORE_NON_PRODUCT_SEGMENTS = new Set(["cart", "success"]);
 
 function isStoreProductPage(pathname: string): boolean {
   const match = pathname.match(/^\/store\/([^/]+)$/);
