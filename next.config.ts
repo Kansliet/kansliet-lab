@@ -41,6 +41,13 @@ const nextConfig: NextConfig = {
               "font-src 'self'",
               "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.g.doubleclick.net",
               "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "object-src 'none'",
+              // Store forms post to our own server actions; without JS, checkout
+              // is a form post answered by a redirect to Stripe Checkout, which
+              // form-action also governs.
+              "form-action 'self' https://checkout.stripe.com",
+              ...(isDev ? [] : ["upgrade-insecure-requests"]),
             ].join("; "),
           },
         ],
