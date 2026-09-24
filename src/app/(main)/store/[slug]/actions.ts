@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { stripe } from "@/lib/stripe";
 import { getAppBaseUrl } from "@/lib/site";
+import { withError } from "@/lib/error-codes";
 import { getProductById } from "@/lib/products";
 
 export async function buyNow(formData: FormData) {
@@ -13,7 +14,7 @@ export async function buyNow(formData: FormData) {
   }
 
   if (product.sold_out) {
-    redirect(`/store/${product.slug}?error=${encodeURIComponent("Sold out")}`);
+    redirect(withError(`/store/${product.slug}`, "sold_out"));
   }
 
   const baseUrl = getAppBaseUrl();
@@ -34,19 +35,11 @@ export async function buyNow(formData: FormData) {
     sessionUrl = session.url;
   } catch (err) {
     console.error("Stripe checkout session failed", err);
-    redirect(
-      `/store/${product.slug}?error=${encodeURIComponent(
-        "Something went wrong, try again"
-      )}`
-    );
+    redirect(withError(`/store/${product.slug}`, "checkout_failed"));
   }
 
   if (!sessionUrl) {
-    redirect(
-      `/store/${product.slug}?error=${encodeURIComponent(
-        "Something went wrong, try again"
-      )}`
-    );
+    redirect(withError(`/store/${product.slug}`, "checkout_failed"));
   }
 
   redirect(sessionUrl);

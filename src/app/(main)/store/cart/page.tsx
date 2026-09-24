@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getCart } from "@/lib/cart";
 import { getProductsByIds } from "@/lib/products";
 import { getPrice, formatPrice } from "@/lib/stripe";
+import { errorMessage } from "@/lib/error-codes";
 import { updateQuantity, removeFromCart, checkoutCart } from "./actions";
 import { Button } from "@/components/ui/button";
 import { ProductImage } from "@/components/store/ProductImage";
@@ -43,7 +44,7 @@ function QuantityButton({
 }
 
 export default async function CartPage({ searchParams }: CartPageProps) {
-  const { error } = await searchParams;
+  const error = errorMessage((await searchParams).error);
   const cart = await getCart();
 
   const products = await getProductsByIds(cart.map((item) => item.productId));

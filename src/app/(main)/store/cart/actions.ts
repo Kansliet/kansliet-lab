@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { stripe } from "@/lib/stripe";
 import { getAppBaseUrl } from "@/lib/site";
+import { withError } from "@/lib/error-codes";
 import { getProductById, getProductsByIds } from "@/lib/products";
 import {
   CART_COOKIE,
@@ -101,11 +102,7 @@ export async function checkoutCart() {
   for (const item of cart) {
     const product = productsById.get(item.productId);
     if (!product || product.sold_out) {
-      redirect(
-        `/store/cart?error=${encodeURIComponent(
-          "One of the items in your cart is no longer available — remove it to continue"
-        )}`
-      );
+      redirect(withError("/store/cart", "unavailable"));
     }
   }
 
@@ -129,15 +126,11 @@ export async function checkoutCart() {
     sessionUrl = session.url;
   } catch (err) {
     console.error("Stripe checkout session failed", err);
-    redirect(
-      `/store/cart?error=${encodeURIComponent("Something went wrong, try again")}`
-    );
+    redirect(withError("/store/cart", "checkout_failed"));
   }
 
   if (!sessionUrl) {
-    redirect(
-      `/store/cart?error=${encodeURIComponent("Something went wrong, try again")}`
-    );
+    redirect(withError("/store/cart", "checkout_failed"));
   }
 
   redirect(sessionUrl);

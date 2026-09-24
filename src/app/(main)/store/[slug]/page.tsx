@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Link } from "next-view-transitions";
 import type { Metadata } from "next";
 import { getDisplayPrice } from "@/lib/stripe";
+import { errorMessage } from "@/lib/error-codes";
 import { getCatalogSlugs, getProductBySlug } from "@/lib/products";
 import { addToCart } from "@/app/(main)/store/cart/actions";
 import { buyNow } from "./actions";
@@ -44,7 +45,7 @@ export default async function ProductPage({
   searchParams,
 }: ProductPageProps) {
   const { slug } = await params;
-  const { error } = await searchParams;
+  const error = errorMessage((await searchParams).error);
 
   const product = await getProductBySlug(slug);
   if (!product) {

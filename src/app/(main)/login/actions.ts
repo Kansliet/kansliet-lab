@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { pool } from "@/lib/db";
+import type { ErrorCode } from "@/lib/error-codes";
 import {
   SESSION_COOKIE,
   createSessionToken,
@@ -18,10 +19,10 @@ import {
 const DUMMY_PASSWORD_HASH = hashPassword("timing-equalizer");
 
 function backToLoginWithError(
-  error: string,
+  code: ErrorCode,
   email: FormDataEntryValue | null
 ): never {
-  const params = new URLSearchParams({ error });
+  const params = new URLSearchParams({ error: code });
   if (email) params.set("email", String(email));
   redirect(`/login?${params.toString()}`);
 }
@@ -36,7 +37,7 @@ export async function login(formData: FormData) {
   const password = String(rawPassword ?? "");
 
   if (!email || !password) {
-    backToLoginWithError("Email and password are required", rawEmail);
+    backToLoginWithError("missing_credentials", rawEmail);
   }
 
   const { rows } = await pool.query<{ id: number; password_hash: string }>(
@@ -47,7 +48,7 @@ export async function login(formData: FormData) {
   const passwordOk = verifyPassword(password, user?.password_hash ?? DUMMY_PASSWORD_HASH);
 
   if (!user || !passwordOk) {
-    backToLoginWithError("Invalid email or password", rawEmail);
+    backToLoginWithError("invalid_credentials", rawEmail);
   }
 
   const token = createSessionToken();

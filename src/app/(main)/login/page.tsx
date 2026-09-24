@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { login } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { errorMessage } from "@/lib/error-codes";
 
 export const metadata: Metadata = {
   title: "KANSLIET (LOGIN)",
@@ -14,6 +15,7 @@ type LoginPageProps = {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
+  const error = errorMessage(params.error);
 
   return (
     <div className="min-h-screen bg-background">
@@ -22,13 +24,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <h1 className="dossier-label mb-12">ADMIN LOGIN</h1>
 
           <form action={login} className="max-w-md space-y-6">
-            {params.error && (
+            {error && (
               <div
                 role="alert"
                 className="border border-red-500 bg-red-500/5 p-4 text-red-600"
               >
                 <p className="text-caps text-sm font-bold tracking-wide">
-                  ERROR: {params.error}
+                  ERROR: {error}
                 </p>
               </div>
             )}
