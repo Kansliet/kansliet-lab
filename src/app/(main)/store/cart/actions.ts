@@ -3,9 +3,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { pool } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { getAppBaseUrl } from "@/lib/site";
+import { getProductById, getProductsByIds } from "@/lib/products";
 import {
   CART_COOKIE,
   cartCookieOptions,
@@ -13,13 +13,6 @@ import {
   getCart,
   type CartItem,
 } from "@/lib/cart";
-
-type Product = {
-  id: number;
-  slug: string;
-  stripe_price_id: string;
-  sold_out: boolean;
-};
 
 async function writeCart(cart: CartItem[]) {
   const store = await cookies();
@@ -36,11 +29,7 @@ async function addItemToCart(formData: FormData): Promise<void> {
   const quantity =
     Number.isInteger(requestedQuantity) && requestedQuantity > 0 ? requestedQuantity : 1;
 
-  const { rows } = await pool.query<Pick<Product, "id" | "sold_out">>(
-    "SELECT id, sold_out FROM shop_products WHERE id = $1",
-    [productId]
-  );
-  const product = rows[0];
+  const product = await getProductById(productId);
   if (!product || product.sold_out) {
     return;
   }
@@ -101,10 +90,7 @@ export async function checkoutCart() {
     redirect("/store/cart");
   }
 
-  const { rows: products } = await pool.query<Product>(
-    "SELECT id, slug, stripe_price_id, sold_out FROM shop_products WHERE id = ANY($1)",
-    [cart.map((item) => item.productId)]
-  );
+  const products = await getProductsByIds(cart.map((item) => item.productId));
   const productsById = new Map(products.map((product) => [product.id, product]));
 
   // Defense in depth, same principle as buyNow re-checking sold_out

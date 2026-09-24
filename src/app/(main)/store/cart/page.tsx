@@ -1,7 +1,7 @@
 import { Link } from "next-view-transitions";
 import type { Metadata } from "next";
-import { pool } from "@/lib/db";
 import { getCart } from "@/lib/cart";
+import { getProductsByIds } from "@/lib/products";
 import { getPrice, formatPrice } from "@/lib/stripe";
 import { updateQuantity, removeFromCart, checkoutCart } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -10,15 +10,6 @@ import { ProductImage } from "@/components/store/ProductImage";
 export const metadata: Metadata = {
   title: "KANSLIET (CART)",
   robots: { index: false },
-};
-
-type Product = {
-  id: number;
-  slug: string;
-  name: string;
-  image_url: string | null;
-  stripe_price_id: string;
-  sold_out: boolean;
 };
 
 type CartPageProps = {
@@ -55,12 +46,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
   const { error } = await searchParams;
   const cart = await getCart();
 
-  const { rows: products } = cart.length
-    ? await pool.query<Product>(
-        "SELECT id, slug, name, image_url, stripe_price_id, sold_out FROM shop_products WHERE id = ANY($1)",
-        [cart.map((item) => item.productId)]
-      )
-    : { rows: [] as Product[] };
+  const products = await getProductsByIds(cart.map((item) => item.productId));
   const productsById = new Map(products.map((product) => [product.id, product]));
 
   const lines = await Promise.all(

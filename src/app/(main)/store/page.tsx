@@ -1,8 +1,8 @@
 import { Link } from "next-view-transitions";
 import NextLink from "next/link";
 import type { Metadata } from "next";
-import { pool } from "@/lib/db";
 import { getDisplayPrice } from "@/lib/stripe";
+import { getCategories, getProducts } from "@/lib/products";
 import { quickAddToCart } from "@/app/(main)/store/cart/actions";
 import { Grid, GridItem, GridItemTitle, GridItemMeta } from "@/components/ui/grid";
 import { ProductImage } from "@/components/store/ProductImage";
@@ -13,40 +13,14 @@ export const metadata: Metadata = {
   alternates: { canonical: "/store" },
 };
 
-type Product = {
-  id: number;
-  slug: string;
-  name: string;
-  image_url: string | null;
-  stripe_price_id: string;
-  sold_out: boolean;
-  category: string;
-};
-
 type StorePageProps = {
   searchParams: Promise<{ category?: string }>;
 };
 
-async function getCategories(): Promise<string[]> {
-  const { rows } = await pool.query<{ category: string }>(
-    "SELECT DISTINCT category FROM shop_products ORDER BY category"
-  );
-  return rows.map((row) => row.category);
-}
-
-async function getProducts(
-  category?: string
-): Promise<(Product & { displayPrice: string })[]> {
-  const { rows } = category
-    ? await pool.query<Product>(
-        "SELECT id, slug, name, image_url, stripe_price_id, sold_out, category FROM shop_products WHERE category = $1 ORDER BY created_at DESC, id DESC",
-        [category]
-      )
-    : await pool.query<Product>(
-        "SELECT id, slug, name, image_url, stripe_price_id, sold_out, category FROM shop_products ORDER BY created_at DESC, id DESC"
-      );
+async function getProductsWithPrices(category?: string) {
+  const products = await getProducts(category);
   return Promise.all(
-    rows.map(async (product) => ({
+    products.map(async (product) => ({
       ...product,
       displayPrice: await getDisplayPrice(product.stripe_price_id),
     }))
@@ -82,7 +56,7 @@ function FilterLink({
 export default async function StorePage({ searchParams }: StorePageProps) {
   const { category } = await searchParams;
   const [products, categories] = await Promise.all([
-    getProducts(category),
+    getProductsWithPrices(category),
     getCategories(),
   ]);
 

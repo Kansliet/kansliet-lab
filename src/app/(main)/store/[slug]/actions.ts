@@ -1,25 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { pool } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { getAppBaseUrl } from "@/lib/site";
-
-type Product = {
-  id: number;
-  slug: string;
-  stripe_price_id: string;
-  sold_out: boolean;
-};
+import { getProductById } from "@/lib/products";
 
 export async function buyNow(formData: FormData) {
-  const productId = Number(formData.get("productId"));
-
-  const { rows } = await pool.query<Product>(
-    "SELECT id, slug, stripe_price_id, sold_out FROM shop_products WHERE id = $1",
-    [productId]
-  );
-  const product = rows[0];
+  const product = await getProductById(Number(formData.get("productId")));
 
   if (!product) {
     redirect("/store");

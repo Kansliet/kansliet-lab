@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { Link } from "next-view-transitions";
 import type { Metadata } from "next";
-import { pool } from "@/lib/db";
 import { getDisplayPrice } from "@/lib/stripe";
+import { getCatalogSlugs, getProductBySlug } from "@/lib/products";
 import { addToCart } from "@/app/(main)/store/cart/actions";
 import { buyNow } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -10,43 +10,16 @@ import { Input } from "@/components/ui/input";
 import { ProductImage } from "@/components/store/ProductImage";
 import { MAX_QUANTITY } from "@/lib/cart";
 
-type Product = {
-  id: number;
-  slug: string;
-  name: string;
-  description: string | null;
-  image_url: string | null;
-  stripe_price_id: string;
-  sold_out: boolean;
-  category: string;
-};
-
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ error?: string }>;
 };
 
-async function getProduct(slug: string): Promise<Product | null> {
-  const { rows } = await pool.query<Product>(
-    "SELECT id, slug, name, description, image_url, stripe_price_id, sold_out, category FROM shop_products WHERE slug = $1",
-    [slug]
-  );
-  return rows[0] ?? null;
-}
-
-/** Catalog order, matching the /store grid, for the P. xx / yy strip and prev/next. */
-async function getCatalogSlugs(): Promise<string[]> {
-  const { rows } = await pool.query<{ slug: string }>(
-    "SELECT slug FROM shop_products ORDER BY created_at DESC, id DESC"
-  );
-  return rows.map((row) => row.slug);
-}
-
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProduct(slug);
+  const product = await getProductBySlug(slug);
   if (!product) {
     return { title: "Product Not Found" };
   }
@@ -73,7 +46,7 @@ export default async function ProductPage({
   const { slug } = await params;
   const { error } = await searchParams;
 
-  const product = await getProduct(slug);
+  const product = await getProductBySlug(slug);
   if (!product) {
     notFound();
   }
