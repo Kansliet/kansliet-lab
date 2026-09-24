@@ -2,7 +2,6 @@
 -- PostgreSQL database dump
 --
 
-\restrict XFg9X36SPmJVxQYrrYd9I8HfsiPq455OeeAjxu140FrXukI1VB8FCaEX1ogfwse
 
 -- Dumped from database version 17.11 (Debian 17.11-1.pgdg13+2)
 -- Dumped by pg_dump version 17.11 (Debian 17.11-1.pgdg13+2)
@@ -123,7 +122,9 @@ CREATE TABLE public.shop_products (
     stripe_price_id text NOT NULL,
     sold_out boolean DEFAULT false NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    category text DEFAULT 'misc'::text NOT NULL
+    category text DEFAULT 'misc'::text NOT NULL,
+    tagline text,
+    specs jsonb DEFAULT '[]'::jsonb NOT NULL
 );
 
 
@@ -334,5 +335,4 @@ ALTER TABLE ONLY public.shop_orders
 -- PostgreSQL database dump complete
 --
 
-\unrestrict XFg9X36SPmJVxQYrrYd9I8HfsiPq455OeeAjxu140FrXukI1VB8FCaEX1ogfwse
 

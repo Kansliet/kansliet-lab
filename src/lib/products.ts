@@ -4,11 +4,18 @@ import { pool } from "@/lib/db";
 // Every read of the store catalog goes through here, so the row shape and
 // ordering are defined once. (Table names keep their original shop_* prefix.)
 
+/** A labelled product fact (MATERIAL / DIMENSIONS / …), shown like /works specs. */
+export type ProductSpec = { label: string; value: string };
+
 export type Product = {
   id: number;
   slug: string;
   name: string;
+  /** One-line statement shown large on the product page, like a /works tagline. */
+  tagline: string | null;
+  /** Paragraphs separated by a blank line. */
   description: string | null;
+  specs: ProductSpec[];
   image_url: string | null;
   stripe_price_id: string;
   sold_out: boolean;
@@ -16,7 +23,7 @@ export type Product = {
 };
 
 const COLUMNS =
-  "id, slug, name, description, image_url, stripe_price_id, sold_out, category";
+  "id, slug, name, tagline, description, specs, image_url, stripe_price_id, sold_out, category";
 
 // Newest first; id breaks ties between rows seeded in the same instant.
 const CATALOG_ORDER = "ORDER BY created_at DESC, id DESC";
