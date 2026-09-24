@@ -60,17 +60,29 @@ async function recordOrder(client: PoolClient, session: Stripe.Checkout.Session)
 
   for (const line of lineItems.data) {
     const priceId = line.price?.id;
+    const productId = priceId ? (productIdByPriceId.get(priceId) ?? null) : null;
     await client.query(
       `INSERT INTO shop_order_items (shop_order_id, shop_product_id, quantity, unit_amount, currency)
        VALUES ($1, $2, $3, $4, $5)`,
       [
         orderId,
-        priceId ? (productIdByPriceId.get(priceId) ?? null) : null,
+        productId,
         line.quantity ?? 0,
         line.price?.unit_amount ?? 0,
         session.currency ?? "usd",
       ]
     );
+
+    // Same transaction as the order insert and the event-id marker, so a
+    // redelivered event can't decrement twice. Clamped at 0: two buyers can
+    // race for the last unit (stock is checked at checkout, not reserved);
+    // the loser is refunded by hand rather than the row going negative.
+    if (productId !== null) {
+      await client.query(
+        "UPDATE shop_products SET stock = GREATEST(stock - $1, 0) WHERE id = $2",
+        [line.quantity ?? 0, productId]
+      );
+    }
   }
 }
 

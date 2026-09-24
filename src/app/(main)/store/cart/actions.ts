@@ -12,6 +12,7 @@ import {
   cartCookieOptions,
   cartToCookieValue,
   getCart,
+  maxLineQuantity,
   type CartItem,
 } from "@/lib/cart";
 
@@ -35,12 +36,14 @@ async function addItemToCart(formData: FormData): Promise<void> {
     return;
   }
 
+  // Never hold more than is in stock, however many times "add" is pressed.
+  const cap = maxLineQuantity(product.stock);
   const cart = await getCart();
   const existing = cart.find((item) => item.productId === productId);
   if (existing) {
-    existing.quantity += quantity;
+    existing.quantity = Math.min(existing.quantity + quantity, cap);
   } else {
-    cart.push({ productId, quantity });
+    cart.push({ productId, quantity: Math.min(quantity, cap) });
   }
 
   await writeCart(cart);
@@ -64,13 +67,19 @@ export async function updateQuantity(formData: FormData) {
   const productId = Number(formData.get("productId"));
   const quantity = Number(formData.get("quantity"));
 
+  const product = await getProductById(productId);
+  const cap = product ? maxLineQuantity(product.stock) : 0;
+
   const cart = await getCart();
   const next =
     Number.isInteger(quantity) && quantity > 0
-      ? cart.map((item) => (item.productId === productId ? { ...item, quantity } : item))
+      ? cart.map((item) =>
+          item.productId === productId ? { ...item, quantity: Math.min(quantity, cap) } : item
+        )
       : cart.filter((item) => item.productId !== productId);
 
-  await writeCart(next);
+  // A cap of 0 (sold out meanwhile) leaves a zero line; drop it.
+  await writeCart(next.filter((item) => item.quantity > 0));
   revalidatePath("/store/cart");
 }
 
@@ -103,6 +112,9 @@ export async function checkoutCart() {
     const product = productsById.get(item.productId);
     if (!product || product.sold_out) {
       redirect(withError("/store/cart", "unavailable"));
+    }
+    if (item.quantity > product.stock) {
+      redirect(withError("/store/cart", "insufficient_stock"));
     }
   }
 

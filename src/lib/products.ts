@@ -18,12 +18,15 @@ export type Product = {
   specs: ProductSpec[];
   image_url: string | null;
   stripe_price_id: string;
+  /** Units on hand. Paid orders decrement it (Stripe webhook). */
+  stock: number;
+  /** Derived: stock <= 0. Not a stored flag anymore. */
   sold_out: boolean;
   category: string;
 };
 
 const COLUMNS =
-  "id, slug, name, tagline, description, specs, image_url, stripe_price_id, sold_out, category";
+  "id, slug, name, tagline, description, specs, image_url, stripe_price_id, stock, (stock <= 0) AS sold_out, category";
 
 // Newest first; id breaks ties between rows seeded in the same instant.
 const CATALOG_ORDER = "ORDER BY created_at DESC, id DESC";

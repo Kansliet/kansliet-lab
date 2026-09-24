@@ -5,6 +5,8 @@
 // and the Stripe product's name/description are synced. Price changes to an
 // existing slug are NOT applied here — Stripe prices are immutable; create a
 // new price in the dashboard.
+// Day-to-day catalog edits (new products, stock, photos) belong in
+// /admin/products; this script only bootstraps a fresh database.
 // image_url is left NULL: the store renders a typographic placeholder until a
 // real photo URL is set on the row. All copy below is placeholder.
 import nextEnv from "@next/env";
@@ -324,15 +326,15 @@ async function main() {
     }
 
     const { rows } = await pool.query(
-      `INSERT INTO shop_products (slug, name, tagline, description, specs, image_url, stripe_product_id, stripe_price_id, sold_out, category)
+      // stock and image_url are set on first insert only; after that /admin/products and
+      // paid orders own them, so a re-run never resets live stock or photos.
+      `INSERT INTO shop_products (slug, name, tagline, description, specs, image_url, stripe_product_id, stripe_price_id, stock, category)
        VALUES ($1, $2, $3, $4, $5, NULL, $6, $7, $8, $9)
        ON CONFLICT (slug) DO UPDATE SET
          name = EXCLUDED.name,
          tagline = EXCLUDED.tagline,
          description = EXCLUDED.description,
          specs = EXCLUDED.specs,
-         image_url = EXCLUDED.image_url,
-         sold_out = EXCLUDED.sold_out,
          category = EXCLUDED.category
        RETURNING id, slug`,
       [
@@ -343,7 +345,7 @@ async function main() {
         JSON.stringify(product.specs),
         stripeProductId,
         stripePriceId,
-        product.soldOut,
+        product.soldOut ? 0 : 10,
         product.category,
       ]
     );

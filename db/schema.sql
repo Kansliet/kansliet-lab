@@ -124,7 +124,9 @@ CREATE TABLE public.shop_products (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     category text DEFAULT 'misc'::text NOT NULL,
     tagline text,
-    specs jsonb DEFAULT '[]'::jsonb NOT NULL
+    specs jsonb DEFAULT '[]'::jsonb NOT NULL,
+    stock integer DEFAULT 0 NOT NULL,
+    CONSTRAINT shop_products_stock_check CHECK ((stock >= 0))
 );
 
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { cartToCookieValue, getCart, MAX_QUANTITY } from "./cart";
+import { cartToCookieValue, getCart, maxLineQuantity, MAX_QUANTITY } from "./cart";
 
 const { cookieValue } = vi.hoisted(() => ({ cookieValue: { current: undefined as string | undefined } }));
 
@@ -48,5 +48,14 @@ describe("getCart", () => {
 describe("cartToCookieValue", () => {
   it("caps quantities when writing", () => {
     expect(JSON.parse(cartToCookieValue([{ productId: 1, quantity: 500 }]))).toEqual({ 1: MAX_QUANTITY });
+  });
+});
+
+describe("maxLineQuantity", () => {
+  it("caps a cart line at stock, and at MAX_QUANTITY above that", () => {
+    expect(maxLineQuantity(3)).toBe(3);
+    expect(maxLineQuantity(0)).toBe(0);
+    expect(maxLineQuantity(500)).toBe(MAX_QUANTITY);
+    expect(maxLineQuantity(-2)).toBe(0);
   });
 });

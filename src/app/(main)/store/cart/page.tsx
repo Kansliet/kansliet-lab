@@ -1,6 +1,6 @@
 import { Link } from "next-view-transitions";
 import type { Metadata } from "next";
-import { getCart } from "@/lib/cart";
+import { getCart, maxLineQuantity } from "@/lib/cart";
 import { getProductsByIds } from "@/lib/products";
 import { getPrice, formatPrice } from "@/lib/stripe";
 import { errorMessage } from "@/lib/error-codes";
@@ -21,11 +21,13 @@ function QuantityButton({
   productId,
   quantity,
   label,
+  disabled,
   children,
 }: {
   productId: number;
   quantity: number;
   label: string;
+  disabled?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -35,7 +37,8 @@ function QuantityButton({
       <button
         type="submit"
         aria-label={label}
-        className="flex h-8 w-8 cursor-pointer items-center justify-center text-sm transition-opacity hover:opacity-60"
+        disabled={disabled}
+        className="flex h-8 w-8 items-center justify-center text-sm transition-opacity hover:opacity-60 disabled:pointer-events-none disabled:opacity-25"
       >
         {children}
       </button>
@@ -125,7 +128,10 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                       </Link>
                       <p className="text-normal-case mt-1 text-sm font-light opacity-60">
                         {formatPrice(amount, lineCurrency)}
-                        {product.sold_out && " — sold out, remove to check out"}
+                        {product.sold_out
+                          ? " — sold out, remove to check out"
+                          : item.quantity > product.stock &&
+                            ` — only ${product.stock} left, lower the quantity`}
                       </p>
 
                       <div className="mt-3 flex items-center gap-4">
@@ -144,6 +150,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                             productId={product.id}
                             quantity={item.quantity + 1}
                             label="Increase quantity"
+                            disabled={item.quantity >= maxLineQuantity(product.stock)}
                           >
                             +
                           </QuantityButton>

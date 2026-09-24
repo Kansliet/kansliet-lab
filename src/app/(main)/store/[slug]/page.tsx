@@ -9,9 +9,9 @@ import { getCatalogSlugs, getProductBySlug } from "@/lib/products";
 import { addToCart } from "@/app/(main)/store/cart/actions";
 import { buyNow } from "./actions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ProductImage } from "@/components/store/ProductImage";
-import { MAX_QUANTITY } from "@/lib/cart";
+import { QuantityStepper } from "@/components/store/QuantityStepper";
+import { maxLineQuantity } from "@/lib/cart";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -185,17 +185,14 @@ export default async function ProductPage({
             <div className="mb-10 flex max-w-xl flex-col gap-3 lg:mb-12">
               <form action={addToCart} className="flex items-end gap-3">
                 <input type="hidden" name="productId" value={product.id} />
-                <div className="w-24 shrink-0">
+                <div className="w-32 shrink-0">
                   <label htmlFor="quantity" className="dossier-label mb-2 block">
                     QTY
                   </label>
-                  <Input
+                  <QuantityStepper
                     id="quantity"
-                    type="number"
                     name="quantity"
-                    min={1}
-                    max={MAX_QUANTITY}
-                    defaultValue={1}
+                    max={maxLineQuantity(product.stock)}
                   />
                 </div>
                 <Button type="submit" className="flex-1 py-3.5">

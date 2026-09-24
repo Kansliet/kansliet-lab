@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { pool } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
 import { formatPrice } from "@/lib/stripe";
-import { logout } from "@/app/(main)/login/actions";
 import { markShipped } from "./actions";
+import { AdminNav } from "../admin-nav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -59,14 +59,7 @@ export default async function StoreOrdersPage() {
     <div className="min-h-screen bg-background">
       <section className="py-20">
         <div className="container-kansliet">
-          <div className="mb-12 flex items-baseline justify-between gap-6">
-            <h1 className="dossier-label">ORDERS</h1>
-            <form action={logout}>
-              <Button type="submit" variant="ghost" className="px-0 py-0">
-                LOG OUT
-              </Button>
-            </form>
-          </div>
+          <AdminNav active="ORDERS" />
 
           {orders.length === 0 ? (
             <div className="border-brutal p-10 text-center">

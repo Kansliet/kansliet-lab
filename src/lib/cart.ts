@@ -7,6 +7,11 @@ const CART_COOKIE_MAX_AGE_S = 30 * 24 * 60 * 60; // 30 days, matches the session
 // so no code path can hand Stripe an absurd quantity. Matches the qty input's max.
 export const MAX_QUANTITY = 99;
 
+/** Largest quantity one cart line may hold: the per-line cap, or what's in stock. */
+export function maxLineQuantity(stock: number): number {
+  return Math.max(0, Math.min(MAX_QUANTITY, stock));
+}
+
 export type CartItem = {
   productId: number;
   quantity: number;
