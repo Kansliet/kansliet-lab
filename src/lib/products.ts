@@ -20,13 +20,15 @@ export type Product = {
   stripe_price_id: string;
   /** Units on hand. Paid orders decrement it (Stripe webhook). */
   stock: number;
-  /** Derived: stock <= 0. Not a stored flag anymore. */
+  /** Kept out of the store; only the admin lists it. */
+  hidden: boolean;
+  /** Derived: out of stock, or hidden (so a hidden product in a cart can't be bought). */
   sold_out: boolean;
   category: string;
 };
 
 const COLUMNS =
-  "id, slug, name, tagline, description, specs, image_url, stripe_price_id, stock, (stock <= 0) AS sold_out, category";
+  "id, slug, name, tagline, description, specs, image_url, stripe_price_id, stock, hidden, (stock <= 0 OR hidden) AS sold_out, category";
 
 // Newest first; id breaks ties between rows seeded in the same instant.
 const CATALOG_ORDER = "ORDER BY created_at DESC, id DESC";
@@ -35,16 +37,24 @@ const CATALOG_ORDER = "ORDER BY created_at DESC, id DESC";
 export async function getProducts(category?: string): Promise<Product[]> {
   const { rows } = await pool.query<Product>(
     `SELECT ${COLUMNS} FROM shop_products
-     WHERE ($1::text IS NULL OR category = $1)
+     WHERE NOT hidden AND ($1::text IS NULL OR category = $1)
      ${CATALOG_ORDER}`,
     [category ?? null]
   );
   return rows;
 }
 
+/** Every product, hidden ones included, for /admin/products. */
+export async function getAdminProducts(): Promise<Product[]> {
+  const { rows } = await pool.query<Product>(
+    `SELECT ${COLUMNS} FROM shop_products ${CATALOG_ORDER}`
+  );
+  return rows;
+}
+
 export async function getCategories(): Promise<string[]> {
   const { rows } = await pool.query<{ category: string }>(
-    "SELECT DISTINCT category FROM shop_products ORDER BY category"
+    "SELECT DISTINCT category FROM shop_products WHERE NOT hidden ORDER BY category"
   );
   return rows.map((row) => row.category);
 }
@@ -56,13 +66,16 @@ export async function getCategories(): Promise<string[]> {
  */
 export const getProductBySlug = cache(async (slug: string): Promise<Product | null> => {
   const { rows } = await pool.query<Product>(
-    `SELECT ${COLUMNS} FROM shop_products WHERE slug = $1`,
+    `SELECT ${COLUMNS} FROM shop_products WHERE slug = $1 AND NOT hidden`,
     [slug]
   );
   return rows[0] ?? null;
 });
 
-/** Ids come from form fields; a tampered non-integer is "not found", not a pg error/500. */
+/**
+ * Ids come from form fields; a tampered non-integer is "not found", not a pg
+ * error/500. Hidden rows are included (cart, admin); sold_out covers them.
+ */
 export async function getProductById(id: number): Promise<Product | null> {
   if (!Number.isInteger(id)) return null;
   const { rows } = await pool.query<Product>(
@@ -84,7 +97,7 @@ export async function getProductsByIds(ids: number[]): Promise<Product[]> {
 /** Slugs in grid order, for a product page's P. xx / yy strip and prev/next. */
 export async function getCatalogSlugs(): Promise<string[]> {
   const { rows } = await pool.query<{ slug: string }>(
-    `SELECT slug FROM shop_products ${CATALOG_ORDER}`
+    `SELECT slug FROM shop_products WHERE NOT hidden ${CATALOG_ORDER}`
   );
   return rows.map((row) => row.slug);
 }

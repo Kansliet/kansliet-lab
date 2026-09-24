@@ -52,6 +52,16 @@ export function parsePriceToCents(input: string): number | null {
   return cents > 0 ? cents : null;
 }
 
+/**
+ * Stock forms submit the number they were loaded with next to the new one,
+ * and the save applies the difference. A sale landing while the form was
+ * open then still counts, instead of being overwritten by a stale total.
+ */
+export function stockDelta(formData: FormData, newStock: number): number {
+  const previous = parseStock(String(formData.get("previousStock") ?? ""));
+  return previous === null ? 0 : newStock - previous;
+}
+
 export function parseStock(input: string): number | null {
   const trimmed = input.trim();
   if (!/^\d+$/.test(trimmed)) return null;
@@ -69,6 +79,8 @@ export type ProductFields = {
   tagline: string;
   description: string;
   specs: string;
+  /** Checkbox: "on" when ticked, "" otherwise. */
+  hidden: string;
 };
 
 export type ParsedProduct = {
@@ -81,6 +93,7 @@ export type ParsedProduct = {
   /** Normalized to paragraphs separated by one blank line, as the store renders it. */
   description: string | null;
   specs: ProductSpec[];
+  hidden: boolean;
 };
 
 export function readProductFields(formData: FormData): ProductFields {
@@ -94,6 +107,7 @@ export function readProductFields(formData: FormData): ProductFields {
     tagline: text("tagline"),
     description: text("description"),
     specs: text("specs"),
+    hidden: text("hidden"),
   };
 }
 
@@ -133,6 +147,7 @@ export function parseProductFields(
       tagline: fields.tagline.trim() || null,
       description: paragraphs.length ? paragraphs.join("\n\n") : null,
       specs: parseSpecs(fields.specs),
+      hidden: fields.hidden === "on",
     },
   };
 }

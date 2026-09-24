@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Link } from "next-view-transitions";
 import { requireSession } from "@/lib/auth";
-import { getProducts } from "@/lib/products";
+import { getAdminProducts } from "@/lib/products";
 import { getDisplayPrice } from "@/lib/stripe";
 import { MAX_STOCK } from "@/lib/product-form";
 import { setStock } from "./actions";
@@ -21,7 +21,7 @@ const TH = "px-4 py-3 text-sm font-light uppercase tracking-wider opacity-60";
 
 export default async function AdminProductsPage() {
   await requireSession();
-  const products = await getProducts();
+  const products = await getAdminProducts();
   const prices = await Promise.all(products.map((p) => getDisplayPrice(p.stripe_price_id)));
 
   return (
@@ -69,7 +69,7 @@ export default async function AdminProductsPage() {
                             compact
                             className="h-12 w-12 shrink-0"
                           />
-                          <div>
+                          <div className={product.hidden ? "opacity-50" : undefined}>
                             <div>{product.name}</div>
                             <div className="font-light opacity-60">
                               {productRef(product.id)} · /{product.slug}
@@ -90,6 +90,7 @@ export default async function AdminProductsPage() {
                           className="flex items-center gap-2"
                         >
                           <input type="hidden" name="productId" value={product.id} />
+                          <input type="hidden" name="previousStock" value={product.stock} />
                           <QuantityStepper
                             id={`stock-${product.id}`}
                             name="stock"
@@ -102,7 +103,11 @@ export default async function AdminProductsPage() {
                           <Button type="submit" variant="secondary" size="sm" className="py-3.5">
                             SAVE
                           </Button>
-                          {product.sold_out && <Badge variant="solid">SOLD OUT</Badge>}
+                          {product.hidden ? (
+                            <Badge>HIDDEN</Badge>
+                          ) : (
+                            product.sold_out && <Badge variant="solid">SOLD OUT</Badge>
+                          )}
                         </form>
                       </td>
                       <td className="px-4 py-3 text-right">

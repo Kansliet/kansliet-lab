@@ -114,7 +114,14 @@ export function ProductForm({ productId, initial, imageUrl, categories }: Produc
       action={formAction}
       className="grid max-w-3xl gap-6"
     >
-      {productId && <input type="hidden" name="productId" value={productId} />}
+      {productId && (
+        <>
+          <input type="hidden" name="productId" value={productId} />
+          {/* The stock the page loaded with (not the retyped value after an
+              error), so the save applies only the change made here. */}
+          <input type="hidden" name="previousStock" value={initial.stock} />
+        </>
+      )}
 
       {state.error && (
         <div role="alert" className="border border-red-500 bg-red-500/5 p-4 text-red-600">
@@ -248,6 +255,19 @@ export function ProductForm({ productId, initial, imageUrl, categories }: Produc
           <input ref={photoInput} type="file" name="photo" hidden />
         </div>
       </Field>
+
+      <label className="flex items-center gap-3 text-sm">
+        <input
+          type="checkbox"
+          name="hidden"
+          defaultChecked={fields.hidden === "on"}
+          className="h-4 w-4 accent-foreground"
+        />
+        <span className="text-caps tracking-wide">HIDE FROM STORE</span>
+        <span className="text-normal-case font-light opacity-60">
+          Drops it from the store; orders and Stripe stay intact.
+        </span>
+      </label>
 
       <div className="flex items-center gap-6 border-t-brutal pt-6">
         <Button type="submit" disabled={pending || photoStatus === "Shrinking photo…"}>

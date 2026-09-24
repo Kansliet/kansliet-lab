@@ -30,6 +30,7 @@ export default async function NewProductPage() {
               tagline: "",
               description: "",
               specs: "",
+              hidden: "",
             }}
           />
         </div>

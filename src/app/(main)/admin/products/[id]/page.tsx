@@ -33,12 +33,14 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
             <h2 className="text-caps text-lg font-light tracking-wider">
               {productRef(product.id)} — {product.name}
             </h2>
-            <Link
-              href={`/store/${product.slug}`}
-              className="text-caps text-sm font-light tracking-wider opacity-60 transition-opacity hover:opacity-100"
-            >
-              VIEW IN STORE →
-            </Link>
+            {!product.hidden && (
+              <Link
+                href={`/store/${product.slug}`}
+                className="text-caps text-sm font-light tracking-wider opacity-60 transition-opacity hover:opacity-100"
+              >
+                VIEW IN STORE →
+              </Link>
+            )}
           </div>
           <ProductForm
             productId={product.id}
@@ -53,6 +55,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
               tagline: product.tagline ?? "",
               description: product.description ?? "",
               specs: specsToText(product.specs),
+              hidden: product.hidden ? "on" : "",
             }}
           />
         </div>

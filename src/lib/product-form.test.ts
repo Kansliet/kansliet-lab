@@ -5,6 +5,7 @@ import {
   parseSpecs,
   parseStock,
   slugify,
+  stockDelta,
   specsToText,
   type ProductFields,
 } from "./product-form";
@@ -18,6 +19,7 @@ const valid: ProductFields = {
   tagline: "  A plan view.  ",
   description: "First paragraph.\n\n\n  Second paragraph.  \n",
   specs: "Size: 30 × 40 cm\nnot a spec\nPaper: 308 g: cotton rag",
+  hidden: "",
 };
 
 describe("slugify", () => {
@@ -86,8 +88,11 @@ describe("parseProductFields", () => {
           { label: "Size", value: "30 × 40 cm" },
           { label: "Paper", value: "308 g: cotton rag" },
         ],
+        hidden: false,
       },
     });
+    const hidden = parseProductFields({ ...valid, hidden: "on" });
+    expect(hidden.ok && hidden.product.hidden).toBe(true);
   });
 
   it("rejects a malformed hand-typed slug", () => {
@@ -105,5 +110,23 @@ describe("parseProductFields", () => {
     const result = parseProductFields({ ...valid, tagline: " ", description: "\n\n" });
     expect(result.ok && result.product.tagline).toBeNull();
     expect(result.ok && result.product.description).toBeNull();
+  });
+});
+
+describe("stockDelta", () => {
+  const form = (previousStock?: string) => {
+    const data = new FormData();
+    if (previousStock !== undefined) data.set("previousStock", previousStock);
+    return data;
+  };
+
+  it("is the change made in the form, not the new total", () => {
+    expect(stockDelta(form("3"), 13)).toBe(10);
+    expect(stockDelta(form("10"), 7)).toBe(-3);
+  });
+
+  it("is 0 when the loaded value is missing or tampered", () => {
+    expect(stockDelta(form(), 50)).toBe(0);
+    expect(stockDelta(form("abc"), 50)).toBe(0);
   });
 });

@@ -11,6 +11,7 @@ import {
   parseProductFields,
   parseStock,
   readProductFields,
+  stockDelta,
   type ParsedProduct,
   type ProductFields,
 } from "@/lib/product-form";
@@ -76,8 +77,8 @@ async function createProduct(product: ParsedProduct, imageUrl: string | null) {
 
     await pool.query(
       `INSERT INTO shop_products
-         (slug, name, tagline, description, specs, image_url, stripe_product_id, stripe_price_id, stock, category)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+         (slug, name, tagline, description, specs, image_url, stripe_product_id, stripe_price_id, stock, category, hidden)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [
         product.slug,
         product.name,
@@ -89,6 +90,7 @@ async function createProduct(product: ParsedProduct, imageUrl: string | null) {
         price.id,
         product.stock,
         product.category,
+        product.hidden,
       ]
     );
   } catch (err) {
@@ -98,7 +100,12 @@ async function createProduct(product: ParsedProduct, imageUrl: string | null) {
   }
 }
 
-async function updateProduct(id: number, product: ParsedProduct, newImageUrl: string | null) {
+async function updateProduct(
+  id: number,
+  product: ParsedProduct,
+  stockChange: number,
+  newImageUrl: string | null
+) {
   const { rows } = await pool.query<{
     slug: string;
     image_url: string | null;
@@ -135,8 +142,9 @@ async function updateProduct(id: number, product: ParsedProduct, newImageUrl: st
   await pool.query(
     `UPDATE shop_products SET
        slug = $1, name = $2, tagline = $3, description = $4, specs = $5,
-       image_url = $6, stripe_price_id = $7, stock = $8, category = $9
-     WHERE id = $10`,
+       image_url = $6, stripe_price_id = $7, stock = GREATEST(stock + $8, 0),
+       category = $9, hidden = $10
+     WHERE id = $11`,
     [
       product.slug,
       product.name,
@@ -145,8 +153,9 @@ async function updateProduct(id: number, product: ParsedProduct, newImageUrl: st
       JSON.stringify(product.specs),
       imageUrl,
       priceId,
-      product.stock,
+      stockChange,
       product.category,
+      product.hidden,
       id,
     ]
   );
@@ -187,7 +196,7 @@ export async function saveProduct(
     if (id === null) {
       await createProduct(product, imageUrl);
     } else {
-      previousSlug = await updateProduct(id, product, imageUrl);
+      previousSlug = await updateProduct(id, product, stockDelta(formData, product.stock), imageUrl);
     }
   } catch (err) {
     console.error("Saving product failed", err);
@@ -208,8 +217,8 @@ export async function setStock(formData: FormData) {
   if (!Number.isInteger(id) || stock === null) return;
 
   const { rows } = await pool.query<{ slug: string }>(
-    "UPDATE shop_products SET stock = $1 WHERE id = $2 RETURNING slug",
-    [stock, id]
+    "UPDATE shop_products SET stock = GREATEST(stock + $1, 0) WHERE id = $2 RETURNING slug",
+    [stockDelta(formData, stock), id]
   );
   if (rows[0]) revalidateStore(rows[0].slug);
 }
