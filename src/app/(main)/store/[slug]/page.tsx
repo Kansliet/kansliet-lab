@@ -195,9 +195,11 @@ export default async function ProductPage({
                   <span className="tabular-nums">{displayPrice}</span>
                 </Button>
               </form>
-              {/* Prices must be stated incl. VAT (prisinformationslagen). */}
+              {/* Prices include VAT (prisinformationslagen) without saying so, the
+                  Swedish norm for consumer shops. Extra delivery costs must be
+                  flagged before purchase, hence this line. */}
               <p className="text-normal-case text-sm font-light opacity-60 sm:text-right">
-                Incl. VAT. Shipping is calculated in the cart.
+                Shipping is calculated in the cart.
               </p>
             </div>
           )}

@@ -6,7 +6,6 @@ import {
   COUNTRY_NAMES,
   DISPATCH_DAYS,
   SHIPPING_REGIONS,
-  VAT_RATE_PERCENT,
   WITHDRAWAL_DAYS,
   formatMoney,
   regionForCountry,
@@ -57,9 +56,10 @@ export function CheckoutPanel({ subtotalCents }: { subtotalCents: number }) {
 
       <div className="text-normal-case space-y-1 text-sm font-light opacity-70">
         <p>
-          {region.customs
-            ? `Exported without Swedish VAT, at the same price. Import VAT, duty and carrier fees in ${COUNTRY_NAMES[country]} are paid by you on delivery.`
-            : `Prices include ${VAT_RATE_PERCENT}% Swedish VAT.`}{" "}
+          {/* One price, VAT included and unsaid (the Swedish norm). Only buyers
+              outside the EU need telling: they pay import VAT on delivery. */}
+          {region.customs &&
+            `Exported without Swedish VAT, at the same price. Import VAT, duty and carrier fees in ${COUNTRY_NAMES[country]} are paid by you on delivery. `}
           Dispatched within {DISPATCH_DAYS} business days, then {min}–{max} business days to{" "}
           {COUNTRY_NAMES[country]}.
         </p>
