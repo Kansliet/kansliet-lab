@@ -1,6 +1,8 @@
 import { projects } from "@/data/projects";
 import { SITE_URL } from "@/lib/site";
-import { Link } from "next-view-transitions";
+import { SpecSheet } from "@/components/spec-sheet";
+import { SiblingRow } from "@/components/sibling-row";
+import { ScrollRail } from "@/components/scroll-rail";
 import { notFound } from "next/navigation";
 import { ProjectCarousel } from "./project-carousel";
 import type { Metadata } from "next";
@@ -56,16 +58,11 @@ export default async function ProjectPage({
   const { id } = await params;
   const project = projects.find((p) => p.id === id);
   const currentIndex = projects.findIndex((p) => p.id === id);
-  const prevProject = currentIndex > 0 ? projects[currentIndex - 1] : null;
-  const nextProject =
-    currentIndex < projects.length - 1 ? projects[currentIndex + 1] : null;
 
   if (!project) {
     notFound();
   }
 
-  const pageNum = currentIndex + 1;
-  const totalPages = projects.length;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -80,7 +77,7 @@ export default async function ProjectPage({
   };
 
   return (
-    <div className="flex flex-col lg:flex-row bg-background w-full min-h-0 lg:h-full">
+    <div className="scroll-pane-scope relative flex flex-col lg:flex-row bg-background w-full min-h-0 lg:h-full">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -92,98 +89,55 @@ export default async function ProjectPage({
         <ProjectCarousel images={project.images} />
       </aside>
 
-      {/* Right: Project info — mobile: flows below carousel; desktop: scrolls in pane */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 lg:h-full lg:overflow-y-auto">
-        {/* Page num strip — flush under header, full width of right column */}
-        <p className="dossier-label tabular-nums w-full rounded-none px-4 lg:px-6 py-2">
-          P. {String(pageNum).padStart(2, "0")} /{" "}
-          {String(totalPages).padStart(2, "0")}
-        </p>
-        <div className="container-kansliet flex flex-col flex-1 py-10 lg:py-20">
-          {/* Title + Category */}
-          <div className="flex flex-col gap-6 lg:gap-8 mb-10 lg:mb-20">
-            <div className="flex flex-col lg:flex-row lg:items-baseline lg:justify-between gap-6">
-              {/* Mobile: text-3xl / Desktop: text-4xl */}
-              <h1 className="text-3xl lg:text-4xl uppercase tracking-tight font-normal">
-                {project.title}
-              </h1>
+      {/* Desktop: the pane scrolls, not the page, so it drives its own rail. */}
+      <ScrollRail source="pane" />
 
-              <div className="flex items-baseline gap-4">
-                <span className="dossier-label">CATEGORY</span>
-                <span className="text-caps text-sm font-light tracking-wider uppercase">
-                  {project.category}
-                </span>
-              </div>
-            </div>
+      {/* Right: the dossier. Centred on the site's axis: identity and spec
+          above, the row of sibling projects on the axis, the text below.
+          Mobile: flows below the carousel; desktop: scrolls in its pane. */}
+      <div className="scroll-pane min-w-0 min-h-0 flex-1 lg:h-full lg:overflow-y-auto">
+        {/* The pane runs to the window's right edge at every width, so it takes
+            the full axis gutter there (clear of the INDEX tab), and only a
+            modest gap on the left, beside the photos. Own padding rather than
+            .container-kansliet, whose desktop gutter assumes a full-width page.
+            Desktop: the sibling row is pinned to the axis (50vh) and the top
+            block hugs it from above, so clicking between projects never
+            shifts the row, whatever each project's text length. The row is
+            4rem tall (h-14 plates + py-1), hence 50vh − 2rem − gap. */}
+        <div className="flex min-h-full flex-col gap-10 px-3 py-12 md:px-6 lg:pt-0 lg:pb-16 lg:pl-10 lg:pr-(--axis-gutter)">
+          <div className="flex flex-col justify-end space-y-6 lg:min-h-[calc(50vh-2rem-2.5rem)]">
+            <h1 className="text-lg uppercase tracking-wide font-normal">{project.title}</h1>
+            <SpecSheet
+              title={`P.${String(currentIndex + 1).padStart(2, "0")} / ${String(projects.length).padStart(2, "0")}`}
+              rows={[
+                ["Category", project.category],
+                ["Year", project.year],
+                ...project.specs
+                  .filter((spec) => spec.label !== "YEAR")
+                  .map((spec): [string, string] => [spec.label, spec.value]),
+              ]}
+            />
           </div>
 
-          {/* Year Line */}
-          <div className="border-b-brutal pb-8 lg:pb-10 mb-8 lg:mb-10">
-            <div className="flex items-baseline gap-4">
-              <span className="dossier-label">YEAR</span>
-              <span className="text-caps text-sm font-light tracking-wider uppercase">
-                {project.year}
-              </span>
-            </div>
-          </div>
+          <SiblingRow
+            label="All works"
+            items={projects.map((p) => ({
+              href: `/works/${p.id}`,
+              label: p.title,
+              image: p.images[0]?.src ?? null,
+              current: p.id === project.id,
+            }))}
+          />
 
-          {/* Bottom Specs Grid */}
-          {project.specs.length > 0 && (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 border-b-brutal pb-8 lg:pb-10 mb-8 lg:mb-10">
-              {project.specs
-                .filter((spec) => spec.label !== "YEAR")
-                .map((spec) => (
-                  <div key={spec.label} className="flex items-baseline gap-3">
-                    <span className="dossier-label shrink-0">{spec.label}</span>
-                    <span className="text-caps text-sm font-light tracking-wider uppercase truncate">
-                      {spec.value}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          )}
-
-          {/* Tagline */}
-          <div className="mb-8 lg:mb-10">
-            <h2 className="uppercase tracking-wide text-xl lg:text-3xl font-light leading-tight max-w-xl">
+          <div className="max-w-xl space-y-6">
+            <h2 className="uppercase tracking-wide text-base font-light leading-snug">
               {project.tagline}
             </h2>
-          </div>
-
-          {/* Description */}
-          <div className="mb-10 lg:mb-12 max-w-xl space-y-6">
             {project.description.map((paragraph: string, index: number) => (
-              <p
-                key={index}
-                className="text-normal-case text-base font-light leading-relaxed"
-              >
+              <p key={index} className="text-normal-case text-base font-light leading-relaxed">
                 {paragraph}
               </p>
             ))}
-          </div>
-
-          {/* Prev/Next */}
-          <div className="pt-10 lg:pt-12 border-t-brutal flex items-center justify-between mt-auto">
-            {prevProject ? (
-              <Link
-                href={`/works/${prevProject.id}`}
-                className="text-caps text-sm font-light tracking-wider hover:opacity-60 transition-opacity"
-              >
-                ← PREVIOUS
-              </Link>
-            ) : (
-              <span aria-hidden />
-            )}
-            {nextProject ? (
-              <Link
-                href={`/works/${nextProject.id}`}
-                className="text-caps text-sm font-light tracking-wider hover:opacity-60 transition-opacity"
-              >
-                NEXT →
-              </Link>
-            ) : (
-              <span aria-hidden />
-            )}
           </div>
         </div>
       </div>

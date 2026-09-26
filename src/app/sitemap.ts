@@ -1,5 +1,6 @@
 import { projects } from "@/data/projects";
 import { SITE_URL } from "@/lib/site";
+import { STORE_ENABLED } from "@/lib/store-flag";
 import type { MetadataRoute } from "next";
 
 // Last meaningful change to static-page copy (studio rewrite, 2026-07-08).
@@ -9,7 +10,8 @@ const LAUNCH_DATE = new Date("2026-07-08");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // 1. Static Routes
-  const routes = ["", "/works", "/studio", "/contact", "/legal"].map((route) => ({
+  // /store only once it's open (see lib/store-flag).
+  const routes = ["", "/works", "/studio", ...(STORE_ENABLED ? ["/store"] : []), "/contact", "/legal", "/terms", "/privacy"].map((route) => ({
     url: `${SITE_URL}${route}`,
     lastModified: LAUNCH_DATE,
     changeFrequency: "monthly" as const,

@@ -3,7 +3,9 @@
 @theme {
   --color-signal: #2f3133;
   --color-white: #ffffff;
-  --color-background: var(--color-white);
+  /* Warm paper, not screen white: the site reads as a printed dossier. */
+  --color-paper: #e9e7e2;
+  --color-background: var(--color-paper);
   --color-foreground: var(--color-signal);
   --color-border: var(--color-signal);
 
@@ -32,23 +34,32 @@
   --spacing-10: 2.5rem;
   --spacing-12: 3rem;
   --spacing-16: 4rem;
+
+  /* Desktop side margin that clears the axis tabs (K(DC) / SECTION is up to
+     ~106px wide), measured from the window edge. */
+  --axis-gutter: 7rem;
 }
 
 @layer base {
+  /* No native page scrollbar: it reserved a 12px strip beside the axis tabs
+     on every page. <ScrollRail> marks the scroll position instead. */
   html {
-    overflow-y: scroll;
-    --dossier-strip-height: 2rem;
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
   }
 
   /* Text selection color */
   ::selection {
     background-color: var(--color-signal);
-    color: var(--color-white);
+    color: var(--color-paper);
   }
 
   ::-moz-selection {
     background-color: var(--color-signal);
-    color: var(--color-white);
+    color: var(--color-paper);
   }
 
   /* Custom scrollbar - Chrome/Safari/Edge */
@@ -57,7 +68,7 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: var(--color-white);
+    background: var(--color-paper);
     margin: 0;
   }
 
@@ -78,13 +89,13 @@
   }
 
   ::-webkit-scrollbar-corner {
-    background: var(--color-white);
+    background: var(--color-paper);
   }
 
   /* Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-signal) var(--color-white);
+    scrollbar-color: var(--color-signal) var(--color-paper);
   }
 
   body {
@@ -101,6 +112,20 @@
   textarea,
   select {
     border-radius: 0;
+  }
+
+  /* Pointer on everything clickable. Tailwind v4's preflight resets buttons
+     to the default arrow; this puts the hand back site-wide. A utility
+     (e.g. lg:cursor-none on the home project rows) still wins. */
+  a[href],
+  button:not(:disabled),
+  [role="button"],
+  summary,
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"] {
+    cursor: pointer;
   }
 }
 
@@ -119,9 +144,20 @@
 
   @media (min-width: 768px) {
     .container-kansliet {
-      /* Desktop: 24px padding */
+      /* Tablet: 24px padding */
       padding-left: var(--spacing-6);
       padding-right: var(--spacing-6);
+    }
+  }
+
+  /* Desktop, where the tabs sit mid-height on the page's edges: keep content
+     clear of them. The gutter is measured from the window edge, so past
+     1536px, where the auto margins already provide the room, it shrinks back
+     to 24px. (100vw is exact: the page has no scrollbar.) */
+  @media (min-width: 1024px) {
+    .container-kansliet {
+      padding-left: max(var(--spacing-6), calc(var(--axis-gutter) - max(0px, (100vw - 1536px) / 2)));
+      padding-right: max(var(--spacing-6), calc(var(--axis-gutter) - max(0px, (100vw - 1536px) / 2)));
     }
   }
   /* -------------------------------- */
@@ -206,6 +242,75 @@
   }
 }
 
+/* --- SCROLL RAIL ---
+   A 2px track on the right edge with a marker tied to scroll position by a
+   scroll-driven animation, no JS. On a page that can't scroll the timeline is
+   inactive, the animation has no effect and the marker stays invisible.
+   Browsers without scroll-driven animations get nothing (scrolling unaffected). */
+.scroll-rail {
+  display: none;
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll-rail {
+    display: block;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 2px;
+    z-index: 200;
+    pointer-events: none;
+    container-type: size;
+  }
+
+  .scroll-rail[data-source="pane"] {
+    position: absolute;
+  }
+
+  .scroll-rail > span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4rem;
+    background-color: var(--color-signal);
+    opacity: 0;
+    animation: scroll-rail-marker linear both;
+    animation-timeline: scroll(root block);
+  }
+
+  .scroll-rail[data-source="pane"] > span {
+    animation-timeline: --pane;
+  }
+}
+
+/* A scrolling pane that feeds its own rail: the pane names the timeline, and
+   .scroll-pane-scope on a shared ancestor lets the sibling rail see it. */
+.scroll-pane-scope {
+  timeline-scope: --pane;
+}
+
+.scroll-pane {
+  scroll-timeline: --pane block;
+  scrollbar-width: none;
+}
+
+.scroll-pane::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes scroll-rail-marker {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 1;
+    translate: 0 calc(100cqh - 100%);
+  }
+}
+
 @keyframes rotate-ping-pong {
   0% {
     transform: rotate(0deg);
@@ -228,43 +333,9 @@
   }
 }
 
-/* Page transitions (dossier / OS feel): the header, footer, and dossier strip
-   stay bolted in place. Every navigation is the same single motion — the new
-   page slides in from the right, snappy, over the previous page which holds
-   still underneath. No fade, no per-section direction, no vertical jump.
-
-   Tuning knobs: --page-in distance (100% = full sheet), duration, easing. */
-::view-transition-old(header),
-::view-transition-new(header),
-::view-transition-old(footer),
-::view-transition-new(footer),
-::view-transition-old(dossier-strip),
-::view-transition-new(dossier-strip) {
-  animation: none;
-}
-
-/* Previous page holds still; new page slides over it from the right. */
-::view-transition-old(root) {
-  animation: none;
-}
-
-::view-transition-new(root) {
-  animation: dossier-page-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  background: var(--color-background);
-}
-
-@keyframes dossier-page-in {
-  from {
-    transform: translateX(80%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
 /* Respect reduced-motion at the CSS level: JS animations already branch on
-   useReducedMotion(), but CSS animations (footer spin) and view transitions
-   did not. Near-instant instead of fully off keeps state changes perceivable. */
+   useReducedMotion(), but CSS animations (footer spin) did not. Near-instant
+   instead of fully off keeps state changes perceivable. */
 @media (prefers-reduced-motion: reduce) {
   *,
   ::before,
@@ -274,10 +345,35 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
 
-  ::view-transition-group(*),
-  ::view-transition-old(*),
-  ::view-transition-new(*) {
-    animation: none !important;
+/* Archive image treatment. Defined with @utility (not @layer utilities) so
+   Tailwind variants apply to them. */
+
+/* Monochrome "catalogue plate": black and white until hovered, focused or
+   marked active, then full colour. */
+@utility plate {
+  filter: grayscale(1) contrast(1.05);
+  transition: filter 150ms;
+
+  &:hover,
+  &:focus-visible,
+  &[data-active="true"] {
+    filter: none;
+  }
+}
+
+/* Film grain over an image. Needs a positioned parent (relative/absolute).
+   The noise is an inline SVG data: URI, which the CSP's img-src allows. */
+@utility grain {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    opacity: 0.14;
+    mix-blend-mode: multiply;
   }
 }

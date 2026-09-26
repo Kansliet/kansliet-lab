@@ -1,0 +1,75 @@
+import type { Metadata } from "next";
+import { login } from "./actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { errorMessage } from "@/lib/error-codes";
+
+export const metadata: Metadata = {
+  title: "KANSLIET (LOGIN)",
+  robots: { index: false },
+};
+
+type LoginPageProps = {
+  searchParams: Promise<{ error?: string; email?: string }>;
+};
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+  const error = errorMessage(params.error);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <section className="py-20">
+        <div className="container-kansliet">
+          <h1 className="dossier-label mb-12">ADMIN LOGIN</h1>
+
+          <form action={login} className="max-w-md space-y-6">
+            {error && (
+              <div
+                role="alert"
+                className="border border-red-500 bg-red-500/5 p-4 text-red-600"
+              >
+                <p className="text-caps text-sm font-bold tracking-wide">
+                  ERROR: {error}
+                </p>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="email" className="dossier-label mb-2 block">
+                EMAIL
+              </label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="username"
+                required
+                defaultValue={params.email ?? ""}
+                className="text-normal-case"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="dossier-label mb-2 block">
+                PASSWORD
+              </label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="text-normal-case"
+              />
+            </div>
+
+            <Button type="submit" className="w-full">
+              LOG IN
+            </Button>
+          </form>
+        </div>
+      </section>
+    </div>
+  );
+}

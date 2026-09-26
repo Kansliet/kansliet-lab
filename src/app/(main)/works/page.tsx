@@ -1,11 +1,6 @@
-import {
-  Grid,
-  GridItem,
-  GridItemTitle,
-  GridItemMeta,
-} from "@/components/ui/grid";
-import Image from "next/image";
 import { projects } from "@/data/projects";
+import { ArchiveColumn } from "@/components/archive/ArchiveColumn";
+import { toArchivePlates } from "@/components/archive/archive-data";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -15,50 +10,12 @@ export const metadata: Metadata = {
 
 export default function ProjectsPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <section className="py-20">
-        <div className="container-kansliet">
-          <h1 className="dossier-label mb-12">
-            SELECTED WORKS
-          </h1>
-
-          <Grid cols={3} gap={6}>
-            {projects.map((project, index) => (
-              <GridItem key={project.id} href={`/works/${project.id}`}>
-                <div className="flex aspect-5/6 flex-col overflow-hidden">
-                  <div className="relative min-h-0 flex-1 bg-foreground/5">
-                    <span className="absolute top-2 left-2 text-dossier text-caps tracking-wider opacity-70 font-mono">
-                      REF: {project.id}
-                    </span>
-                    {project.images[0] ? (
-                      <Image
-                        src={project.images[0].src}
-                        alt={project.images[0].alt}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1400px) 33vw, 400px"
-                        priority={index === 0}
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <span className="text-caps text-sm opacity-40">
-                          IMAGE
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="shrink-0 border-t-brutal bg-background p-4">
-                    <GridItemTitle>{project.title}</GridItemTitle>
-                    <GridItemMeta>
-                      {project.category}, {project.year}
-                    </GridItemMeta>
-                  </div>
-                </div>
-              </GridItem>
-            ))}
-          </Grid>
-        </div>
-      </section>
-    </div>
+    <>
+      <h1 className="sr-only">Works</h1>
+      <ArchiveColumn
+        plates={toArchivePlates(projects)}
+        projects={projects.map((p) => ({ id: p.id, title: p.title }))}
+      />
+    </>
   );
 }

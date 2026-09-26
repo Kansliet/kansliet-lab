@@ -22,7 +22,7 @@ export function ProjectCarousel({ images }: ProjectCarouselProps) {
         images={images}
         autoplay={false}
         variant="fullHeight"
-        className="h-full flex-1 min-h-0 border-0 border-b-0 border-r-0 rounded-none"
+        className="grain h-full flex-1 min-h-0 border-0 border-b-0 border-r-0 rounded-none"
       />
     </div>
   );
