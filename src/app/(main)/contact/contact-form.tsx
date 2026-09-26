@@ -14,7 +14,7 @@ function SubmitButton() {
     <Button
       type="submit"
       disabled={pending}
-      className="w-full transition-all duration-200 border border-signal hover:bg-signal hover:text-white"
+      className="w-full transition-all duration-200 border border-signal hover:bg-signal hover:text-background"
     >
       {pending ? (
         <span className="animate-pulse">SENDING...</span>
@@ -33,6 +33,10 @@ export function ContactForm({ formToken }: { formToken: string }) {
 
   return (
     <form action={formAction} className="space-y-6">
+      {/* Typed-form flavour: a form code, and numbered fields below. */}
+      <p aria-hidden className="text-dossier uppercase tracking-wider opacity-60">
+        FORM K(DC)-01 · ENQUIRY · 1 COPY
+      </p>
       {/* Honeypot: hidden from real users, bots fill it in */}
       <input
         type="text"
@@ -60,7 +64,7 @@ export function ContactForm({ formToken }: { formToken: string }) {
           htmlFor="name"
           className="dossier-label block mb-2"
         >
-          NAME
+          01 — NAME
         </label>
         <Input
           id="name"
@@ -77,7 +81,7 @@ export function ContactForm({ formToken }: { formToken: string }) {
           htmlFor="email"
           className="dossier-label block mb-2"
         >
-          EMAIL
+          02 — EMAIL
         </label>
         <Input
           id="email"
@@ -94,7 +98,7 @@ export function ContactForm({ formToken }: { formToken: string }) {
           htmlFor="company"
           className="dossier-label block mb-2"
         >
-          COMPANY (OPTIONAL)
+          03 — COMPANY (OPTIONAL)
         </label>
         <Input
           id="company"
@@ -110,7 +114,7 @@ export function ContactForm({ formToken }: { formToken: string }) {
           htmlFor="message"
           className="dossier-label block mb-2"
         >
-          MESSAGE
+          04 — MESSAGE
         </label>
         <Textarea
           id="message"

@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1400, 1920, 2048],
+    // Next's defaults plus 16: the works archive's pixelated preview starts
+    // from a 16 px wide version of the image.
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year — portfolio images never change
     // Remote store product images. Fetched server-side by the image
     // optimizer and served from /_next/image, so CSP img-src 'self' covers
@@ -52,6 +55,16 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+    ];
+  },
+  // store.kansliet.co is a vanity address only: the store lives at
+  // kansliet.co/store, inside the one site. Permanent, and path-preserving,
+  // so store.kansliet.co/desk-tray lands on that product.
+  async redirects() {
+    const storeHost = [{ type: "host" as const, value: "store.kansliet.co" }];
+    return [
+      { source: "/", has: storeHost, destination: "https://kansliet.co/store", permanent: true },
+      { source: "/:path+", has: storeHost, destination: "https://kansliet.co/store/:path+", permanent: true },
     ];
   },
 };

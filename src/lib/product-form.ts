@@ -3,9 +3,6 @@ import type { ProductSpec } from "@/lib/products";
 // Parsing for the /admin/products form. Pure (no server imports) so the
 // client form can share the constants and the rules stay unit-testable.
 
-/** Every store price is in this currency, same as seed-store-products.mjs. */
-export const STORE_CURRENCY = "eur";
-
 /**
  * Stripe caps uploads with a linkable purpose (business_logo) at 512 KB; the
  * form shrinks photos below this in the browser before submitting.
@@ -13,6 +10,29 @@ export const STORE_CURRENCY = "eur";
 export const MAX_PHOTO_BYTES = 500 * 1024;
 
 export const MAX_STOCK = 100_000;
+
+/** Photos per product. */
+export const MAX_IMAGES = 6;
+
+/** Every photo the admin uploads lands here (Stripe Files public links). */
+export const PHOTO_URL_PREFIX = "https://files.stripe.com/links/";
+
+/**
+ * The admin form submits the photo list as JSON URLs, in display order.
+ * Photos are uploaded one by one as they're picked, so a URL is either one
+ * the product already had or a fresh Stripe file link; anything else is
+ * dropped, so the form can't attach arbitrary images.
+ */
+export function sanitizeImages(submitted: unknown, existing: readonly string[]): string[] {
+  if (!Array.isArray(submitted)) return [...existing];
+  const result: string[] = [];
+  for (const url of submitted) {
+    if (typeof url !== "string") continue;
+    if (!existing.includes(url) && !url.startsWith(PHOTO_URL_PREFIX)) continue;
+    if (!result.includes(url)) result.push(url);
+  }
+  return result.slice(0, MAX_IMAGES);
+}
 
 /** "Desk Print — No. 03" → "desk-print-no-03". */
 export function slugify(name: string): string {
@@ -44,7 +64,7 @@ export function specsToText(specs: ProductSpec[]): string {
   return specs.map((spec) => `${spec.label}: ${spec.value}`).join("\n");
 }
 
-/** "45", "45.5", "45,50" → cents. Null for anything else or non-positive. */
+/** "450", "450.5", "450,50" → öre (the smallest unit, like cents). Null for anything else or non-positive. */
 export function parsePriceToCents(input: string): number | null {
   const normalized = input.trim().replace(",", ".");
   if (!/^\d+(\.\d{1,2})?$/.test(normalized)) return null;

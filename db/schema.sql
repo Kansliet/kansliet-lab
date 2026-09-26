@@ -127,6 +127,7 @@ CREATE TABLE public.shop_products (
     specs jsonb DEFAULT '[]'::jsonb NOT NULL,
     stock integer DEFAULT 0 NOT NULL,
     hidden boolean DEFAULT false NOT NULL,
+    images jsonb DEFAULT '[]'::jsonb NOT NULL,
     CONSTRAINT shop_products_stock_check CHECK ((stock >= 0))
 );
 

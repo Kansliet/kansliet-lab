@@ -1,11 +1,11 @@
-import { Link } from "next-view-transitions";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { getCart, maxLineQuantity } from "@/lib/cart";
 import { getProductsByIds } from "@/lib/products";
 import { getPrice, formatPrice } from "@/lib/stripe";
 import { errorMessage } from "@/lib/error-codes";
-import { updateQuantity, removeFromCart, checkoutCart } from "./actions";
-import { Button } from "@/components/ui/button";
+import { updateQuantity, removeFromCart } from "./actions";
+import { CheckoutPanel } from "./checkout-panel";
 import { ProductImage } from "@/components/store/ProductImage";
 
 export const metadata: Metadata = {
@@ -63,7 +63,6 @@ export default async function CartPage({ searchParams }: CartPageProps) {
       })
   );
 
-  const currency = lines[0]?.currency ?? "EUR";
   const total = lines.reduce((sum, line) => sum + line.amount * line.item.quantity, 0);
   const itemCount = lines.reduce((sum, line) => sum + line.item.quantity, 0);
 
@@ -113,6 +112,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                         id={product.id}
                         name={product.name}
                         imageUrl={product.image_url}
+                        tone="plate"
                         className="aspect-5/6 w-16 md:w-20"
                         sizes="80px"
                         compact
@@ -175,19 +175,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                 ))}
               </ul>
 
-              <div className="mt-8 flex items-baseline justify-between gap-6 border-b-brutal pb-8">
-                <span className="dossier-label">TOTAL</span>
-                <span className="text-lg tabular-nums">{formatPrice(total, currency)}</span>
-              </div>
-              <p className="text-normal-case mt-3 text-sm font-light opacity-60">
-                Payment and shipping address on the next step (Stripe).
-              </p>
-
-              <form action={checkoutCart} className="mt-8 flex justify-end">
-                <Button type="submit" size="lg" className="w-full md:w-auto">
-                  CHECKOUT →
-                </Button>
-              </form>
+              <CheckoutPanel subtotalCents={Math.round(total * 100)} />
             </>
           )}
         </div>

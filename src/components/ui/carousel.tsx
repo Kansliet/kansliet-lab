@@ -121,12 +121,16 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1400px) 80vw, 1120px"
                   className="object-cover"
-                  priority={index === 0}
+                  // The first slide is the page's main (LCP) image: fetch it
+                  // straight away, first. (Next 16 deprecates `priority`.)
+                  loading={index === 0 ? "eager" : undefined}
+                  fetchPriority={index === 0 ? "high" : undefined}
                 />
               )}
             </div>
           ))}
-          {/* Minimal / fullHeight: dots + prev/next over image */}
+          {/* Minimal / fullHeight: dots + prev/next over image, in the bottom
+              corners — the vertical middle belongs to the site's axis tabs. */}
           {(variant === "minimal" || variant === "fullHeight") && (
             <>
               <button
@@ -135,7 +139,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
                   e.stopPropagation();
                   prev();
                 }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center bg-background/80 text-foreground text-sm transition-opacity hover:opacity-80"
+                className="absolute left-2 bottom-2 z-10 flex h-8 w-8 items-center justify-center bg-background/80 text-foreground text-sm transition-opacity hover:opacity-80"
                 aria-label="Previous"
               >
                 ←
@@ -146,12 +150,12 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
                   e.stopPropagation();
                   next();
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center bg-background/80 text-foreground text-sm transition-opacity hover:opacity-80"
+                className="absolute right-2 bottom-2 z-10 flex h-8 w-8 items-center justify-center bg-background/80 text-foreground text-sm transition-opacity hover:opacity-80"
                 aria-label="Next"
               >
                 →
               </button>
-              <div className="absolute bottom-2 left-0 right-0 z-10 flex justify-center gap-1.5">
+              <div className="absolute bottom-5 left-0 right-0 z-10 flex justify-center gap-1.5">
                 {images.map((_, index) => (
                   <button
                     key={index}

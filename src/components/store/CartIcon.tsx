@@ -1,20 +1,21 @@
-import { Link } from "next-view-transitions";
-import { getCart } from "@/lib/cart";
+import Link from "next/link";
+import { cartItemCount, getCart } from "@/lib/cart";
 
-// Persistent, fixed to the lower-right corner, visible on scroll across every
-// store page — the store's one cart affordance, so it lives once in the store
-// layout rather than being repeated per-page. Sits below the cookie banner
-// (z-100) so the banner stays on top until it's dismissed.
+// A small tab pinned to the top-right corner of every store page, in the same
+// style as the axis tabs — the store's one cart affordance, so it lives once in
+// the store layout rather than being repeated per-page.
 export async function CartIcon() {
-  const count = (await getCart()).reduce((sum, item) => sum + item.quantity, 0);
+  const count = cartItemCount(await getCart());
 
   return (
     <Link
       href="/store/cart"
       aria-label={count > 0 ? `Cart, ${count} items` : "Cart"}
-      className="text-caps fixed right-3 bottom-3 z-50 border-brutal bg-background px-4 py-3 text-sm font-light tracking-wider tabular-nums transition-colors hover:bg-foreground hover:text-background md:right-6 md:bottom-6"
+      // flex! because .dossier-label's own display: inline-block would otherwise
+      // win and leave the text in the tab's top-left corner (as in axis-nav).
+      className="dossier-label fixed top-0 right-0 z-201 flex! h-6 items-center justify-center px-2 tabular-nums transition-opacity hover:opacity-80 print:hidden"
     >
-      CART [{String(count).padStart(2, "0")}]
+      CART ({count})
     </Link>
   );
 }

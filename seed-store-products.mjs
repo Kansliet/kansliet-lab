@@ -7,8 +7,9 @@
 // new price in the dashboard.
 // Day-to-day catalog edits (new products, stock, photos) belong in
 // /admin/products; this script only bootstraps a fresh database.
-// image_url is left NULL: the store renders a typographic placeholder until a
-// real photo URL is set on the row. All copy below is placeholder.
+// Products start without photos (the store renders a typographic placeholder)
+// until they're added in /admin/products. Amounts are öre (SEK × 100). All
+// copy below is placeholder.
 import nextEnv from "@next/env";
 import pg from "pg";
 import Stripe from "stripe";
@@ -25,7 +26,7 @@ const products = [
     slug: "canvas-tote",
     name: "Canvas Tote",
     category: "bags",
-    amount: 3500,
+    amount: 39000,
     soldOut: false,
     tagline: "A carry-all cut from the same canvas we wrap our models in.",
     description: [
@@ -45,7 +46,7 @@ const products = [
     slug: "grid-notebook",
     name: "Grid Notebook A5",
     category: "stationery",
-    amount: 1800,
+    amount: 20000,
     soldOut: false,
     tagline: "The notebook every Kansliet project starts in.",
     description: [
@@ -64,7 +65,7 @@ const products = [
     slug: "desk-print-01",
     name: "Desk Print — No. 01",
     category: "prints",
-    amount: 4500,
+    amount: 50000,
     soldOut: false,
     tagline: "A plan view of the studio desk, drawn at 1:5.",
     description: [
@@ -83,7 +84,7 @@ const products = [
     slug: "ceramic-mug",
     name: "Ceramic Mug",
     category: "homeware",
-    amount: 2200,
+    amount: 24000,
     soldOut: false,
     tagline: "A cylinder, a handle, and nothing else.",
     description: [
@@ -94,7 +95,6 @@ const products = [
       { label: "Material", value: "Stoneware" },
       { label: "Volume", value: "300 ml" },
       { label: "Dimensions", value: "Ø 8 × 9.5 cm" },
-      { label: "Finish", value: "Matte out, gloss in" },
       { label: "Care", value: "Dishwasher safe" },
     ],
   },
@@ -102,7 +102,7 @@ const products = [
     slug: "sticker-pack",
     name: "Sticker Pack",
     category: "stationery",
-    amount: 900,
+    amount: 10000,
     soldOut: true,
     tagline: "Six marks from six projects.",
     description: [
@@ -120,7 +120,7 @@ const products = [
     slug: "wool-beanie",
     name: "Wool Beanie",
     category: "apparel",
-    amount: 4000,
+    amount: 44000,
     soldOut: false,
     tagline: "Worn on every site visit from October to April.",
     description: [
@@ -140,7 +140,7 @@ const products = [
     slug: "desk-print-02",
     name: "Desk Print — No. 02",
     category: "prints",
-    amount: 4500,
+    amount: 50000,
     soldOut: false,
     tagline: "Section drawings from the studio archive.",
     description: [
@@ -159,7 +159,7 @@ const products = [
     slug: "dossier-poster",
     name: "Dossier Poster 50x70",
     category: "prints",
-    amount: 3200,
+    amount: 35000,
     soldOut: false,
     tagline: "The studio's reference sheet, in full.",
     description: [
@@ -178,7 +178,7 @@ const products = [
     slug: "work-shirt",
     name: "Work Shirt",
     category: "apparel",
-    amount: 9500,
+    amount: 105000,
     soldOut: false,
     tagline: "A studio uniform, cut boxy enough to layer.",
     description: [
@@ -198,7 +198,7 @@ const products = [
     slug: "logo-tee",
     name: "Logo Tee",
     category: "apparel",
-    amount: 3800,
+    amount: 42000,
     soldOut: true,
     tagline: "The K(DC) mark, small, on the chest.",
     description: [
@@ -217,7 +217,7 @@ const products = [
     slug: "document-folder",
     name: "Document Folder",
     category: "stationery",
-    amount: 2400,
+    amount: 26000,
     soldOut: false,
     tagline: "For drawings that shouldn't be folded.",
     description: [
@@ -235,7 +235,7 @@ const products = [
     slug: "brass-pen-tray",
     name: "Brass Pen Tray",
     category: "objects",
-    amount: 6500,
+    amount: 72000,
     soldOut: false,
     tagline: "A single piece of brass, machined and left to age.",
     description: [
@@ -254,7 +254,7 @@ const products = [
     slug: "concrete-bookend",
     name: "Concrete Bookend",
     category: "objects",
-    amount: 5500,
+    amount: 61000,
     soldOut: false,
     tagline: "Cast by hand. Each one is slightly different.",
     description: [
@@ -273,7 +273,7 @@ const products = [
     slug: "desk-tray",
     name: "Desk Tray",
     category: "homeware",
-    amount: 4800,
+    amount: 53000,
     soldOut: false,
     tagline: "Folded from one sheet of steel.",
     description: [
@@ -282,9 +282,7 @@ const products = [
     ],
     specs: [
       { label: "Material", value: "1.5 mm steel" },
-      { label: "Finish", value: "Powder-coated, signal grey" },
       { label: "Dimensions", value: "330 × 250 × 30 mm" },
-      { label: "Fits", value: "A4, stackable" },
       { label: "Made in", value: "Sweden" },
     ],
   },
@@ -319,17 +317,17 @@ async function main() {
       const stripePrice = await stripe.prices.create({
         product: stripeProduct.id,
         unit_amount: product.amount,
-        currency: "eur",
+        currency: "sek",
       });
       stripeProductId = stripeProduct.id;
       stripePriceId = stripePrice.id;
     }
 
     const { rows } = await pool.query(
-      // stock and image_url are set on first insert only; after that /admin/products and
+      // stock and photos are set on first insert only; after that /admin/products and
       // paid orders own them, so a re-run never resets live stock or photos.
-      `INSERT INTO shop_products (slug, name, tagline, description, specs, image_url, stripe_product_id, stripe_price_id, stock, category)
-       VALUES ($1, $2, $3, $4, $5, NULL, $6, $7, $8, $9)
+      `INSERT INTO shop_products (slug, name, tagline, description, specs, stripe_product_id, stripe_price_id, stock, category)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        ON CONFLICT (slug) DO UPDATE SET
          name = EXCLUDED.name,
          tagline = EXCLUDED.tagline,

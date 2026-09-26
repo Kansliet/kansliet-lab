@@ -1,17 +1,19 @@
 import { notFound } from "next/navigation";
-import { Link } from "next-view-transitions";
 import type { Metadata } from "next";
 import { getPrice, formatPrice } from "@/lib/stripe";
 import { SITE_URL } from "@/lib/site";
 import { productRef } from "@/components/store/ProductImage";
 import { errorMessage } from "@/lib/error-codes";
-import { getCatalogSlugs, getProductBySlug } from "@/lib/products";
+import { getProductBySlug, getProducts } from "@/lib/products";
 import { addToCart } from "@/app/(main)/store/cart/actions";
-import { buyNow } from "./actions";
 import { Button } from "@/components/ui/button";
 import { ProductImage } from "@/components/store/ProductImage";
+import { Carousel } from "@/components/ui/carousel";
 import { QuantityStepper } from "@/components/store/QuantityStepper";
 import { maxLineQuantity } from "@/lib/cart";
+import { SpecSheet } from "@/components/spec-sheet";
+import { SiblingRow } from "@/components/sibling-row";
+import { ScrollRail } from "@/components/scroll-rail";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -40,15 +42,6 @@ function paragraphs(text: string | null): string[] {
     .filter(Boolean);
 }
 
-function Spec({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-baseline gap-4">
-      <span className="dossier-label shrink-0">{label}</span>
-      <span className="text-caps text-sm font-light tracking-wider">{children}</span>
-    </div>
-  );
-}
-
 export default async function ProductPage({
   params,
   searchParams,
@@ -61,15 +54,11 @@ export default async function ProductPage({
     notFound();
   }
 
-  const [price, slugs] = await Promise.all([
+  const [price, catalog] = await Promise.all([
     getPrice(product.stripe_price_id),
-    getCatalogSlugs(),
+    getProducts(),
   ]);
   const displayPrice = formatPrice(price.amount, price.currency);
-  const currentIndex = slugs.indexOf(product.slug);
-  const prevSlug = currentIndex > 0 ? slugs[currentIndex - 1] : null;
-  const nextSlug =
-    currentIndex >= 0 && currentIndex < slugs.length - 1 ? slugs[currentIndex + 1] : null;
 
   // Product structured data, so search results can show price and stock.
   const jsonLd = {
@@ -79,7 +68,7 @@ export default async function ProductPage({
     description: product.tagline ?? paragraphs(product.description)[0],
     sku: productRef(product.id),
     category: product.category,
-    ...(product.image_url ? { image: product.image_url } : {}),
+    ...(product.images.length ? { image: product.images } : {}),
     brand: { "@type": "Brand", name: "Kansliet" },
     offers: {
       "@type": "Offer",
@@ -95,94 +84,100 @@ export default async function ProductPage({
   return (
     // Same split as /works/[id]: MainLayoutShell locks this to one viewport
     // on desktop, so the image fills the left half and the info pane scrolls.
-    <div className="flex min-h-0 w-full flex-col bg-background lg:h-full lg:flex-row">
+    <div className="scroll-pane-scope relative flex min-h-0 w-full flex-col bg-background lg:h-full lg:flex-row">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
         }}
       />
-      {/* Only one image per product today (shop_products.image_url is a
-          single column), so no carousel like /works/[id] has. */}
       <aside className="flex aspect-4/5 min-h-0 w-full shrink-0 flex-col lg:aspect-auto lg:h-full lg:w-1/2 lg:border-r lg:border-foreground">
-        <ProductImage
-          id={product.id}
-          name={product.name}
-          imageUrl={product.image_url}
-          className="h-full w-full"
-          sizes="(max-width: 1024px) 100vw, 50vw"
-          priority
-        />
+        {product.images.length > 1 ? (
+          // Same carousel as /works/[id]: click or arrows to advance, dots below.
+          <Carousel
+            images={product.images.map((src, index) => ({
+              src,
+              alt: `${product.name}, photo ${index + 1} of ${product.images.length}`,
+            }))}
+            variant="fullHeight"
+            aria-label={`${product.name} photos`}
+            className="grain h-full min-h-0 flex-1"
+          />
+        ) : (
+          <ProductImage
+            id={product.id}
+            name={product.name}
+            imageUrl={product.image_url}
+            tone="grain"
+            className="h-full w-full"
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            priority
+          />
+        )}
       </aside>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:h-full lg:overflow-y-auto">
-        <p className="dossier-label w-full rounded-none px-4 py-2 tabular-nums lg:px-6">
-          P. {String(currentIndex + 1).padStart(2, "0")} /{" "}
-          {String(slugs.length).padStart(2, "0")}
-        </p>
+      {/* Desktop: the pane scrolls, not the page, so it drives its own rail. */}
+      <ScrollRail source="pane" />
 
-        <div className="container-kansliet flex flex-1 flex-col py-10 lg:py-20">
-          <Link
-            href="/store"
-            className="text-caps text-sm font-light tracking-wider mb-10 self-start transition-opacity hover:opacity-60"
-          >
-            ← STORE
-          </Link>
-
-          <h1 className="mb-10 text-3xl font-normal uppercase tracking-tight lg:mb-12 lg:text-4xl">
-            {product.name}
-          </h1>
-
-          <div className="mb-8 grid gap-6 border-b-brutal pb-8 sm:grid-cols-2 lg:mb-10 lg:grid-cols-3 lg:pb-10">
-            <Spec label="PRICE">{displayPrice}</Spec>
-            <Spec label="CATEGORY">{product.category}</Spec>
-            <Spec label="STATUS">{product.sold_out ? "SOLD OUT" : "IN STOCK"}</Spec>
+      {/* Right: centred on the site's axis — identity and spec above, the
+          row of sibling products on the axis, text and buying below. */}
+      <div className="scroll-pane min-h-0 min-w-0 flex-1 lg:h-full lg:overflow-y-auto">
+        {/* The pane runs to the window's right edge at every width, so it takes
+            the full axis gutter there (clear of the INDEX tab), and only a
+            modest gap on the left, beside the photos. Own padding rather than
+            .container-kansliet, whose desktop gutter assumes a full-width page.
+            Desktop: the sibling row is pinned to the axis (50vh) and the top
+            block hugs it from above, so clicking between products never
+            shifts the row, whatever each product's text length. The row is
+            4rem tall (h-14 plates + py-1), hence 50vh − 2rem − gap. */}
+        <div className="flex min-h-full flex-col gap-10 px-3 py-12 md:px-6 lg:pt-0 lg:pb-16 lg:pl-10 lg:pr-(--axis-gutter)">
+          <div className="flex flex-col justify-end space-y-6 lg:min-h-[calc(50vh-2rem-2.5rem)]">
+            <h1 className="text-lg font-normal uppercase tracking-wide">{product.name}</h1>
+            <SpecSheet
+              title={`SPEC — ${productRef(product.id)}`}
+              rows={[
+                ["Status", product.sold_out ? "Sold out" : "In stock"],
+                ["Category", product.category],
+                ...product.specs.map((spec): [string, string] => [spec.label, spec.value]),
+              ]}
+            />
           </div>
 
-          {product.specs.length > 0 && (
-            <div className="mb-8 grid gap-6 border-b-brutal pb-8 sm:grid-cols-2 lg:mb-10 lg:grid-cols-3 lg:pb-10">
-              {product.specs.map((spec) => (
-                <Spec key={spec.label} label={spec.label.toUpperCase()}>
-                  {spec.value}
-                </Spec>
-              ))}
-            </div>
-          )}
+          <SiblingRow
+            label="All objects"
+            items={catalog.map((item) => ({
+              href: `/store/${item.slug}`,
+              label: item.name,
+              image: item.image_url,
+              current: item.id === product.id,
+            }))}
+          />
 
-          {product.tagline && (
-            <h2 className="mb-8 max-w-xl text-xl font-light uppercase leading-tight tracking-wide lg:mb-10 lg:text-3xl">
-              {product.tagline}
-            </h2>
-          )}
-
-          {product.description && (
-            <div className="mb-10 max-w-xl space-y-6 lg:mb-12">
-              {paragraphs(product.description).map((paragraph) => (
-                <p
-                  key={paragraph}
-                  className="text-normal-case text-base font-light leading-relaxed"
-                >
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          )}
+          <div className="max-w-xl space-y-6">
+            {product.tagline && (
+              <h2 className="text-base font-light uppercase leading-snug tracking-wide">
+                {product.tagline}
+              </h2>
+            )}
+            {paragraphs(product.description).map((paragraph) => (
+              <p key={paragraph} className="text-normal-case text-base font-light leading-relaxed">
+                {paragraph}
+              </p>
+            ))}
+          </div>
 
           {error && (
-            <div
-              role="alert"
-              className="mb-6 max-w-xl border border-red-500 bg-red-500/5 p-4 text-red-600"
-            >
+            <div role="alert" className="max-w-xl border border-red-500 bg-red-500/5 p-4 text-red-600">
               <p className="text-caps text-sm font-bold tracking-wide">ERROR: {error}</p>
             </div>
           )}
 
           {product.sold_out ? (
-            <Button type="button" disabled className="mb-10 w-full max-w-xl lg:mb-12">
-              SOLD OUT
+            <Button type="button" disabled className="w-full max-w-xl">
+              SOLD OUT — {displayPrice}
             </Button>
           ) : (
-            <div className="mb-10 flex max-w-xl flex-col gap-3 lg:mb-12">
+            <div className="flex max-w-xl flex-col gap-2">
               <form action={addToCart} className="flex items-end gap-3">
                 <input type="hidden" name="productId" value={product.id} />
                 <div className="w-32 shrink-0">
@@ -195,41 +190,17 @@ export default async function ProductPage({
                     max={maxLineQuantity(product.stock)}
                   />
                 </div>
-                <Button type="submit" className="flex-1 py-3.5">
-                  ADD TO CART
+                <Button type="submit" className="flex-1 justify-between gap-4 py-3.5">
+                  <span>ADD TO CART</span>
+                  <span className="tabular-nums">{displayPrice}</span>
                 </Button>
               </form>
-              <form action={buyNow}>
-                <input type="hidden" name="productId" value={product.id} />
-                <Button type="submit" variant="secondary" className="w-full">
-                  BUY NOW
-                </Button>
-              </form>
+              {/* Prices must be stated incl. VAT (prisinformationslagen). */}
+              <p className="text-normal-case text-sm font-light opacity-60 sm:text-right">
+                Incl. VAT. Shipping is calculated in the cart.
+              </p>
             </div>
           )}
-
-          <div className="mt-auto flex items-center justify-between border-t-brutal pt-10 lg:pt-12">
-            {prevSlug ? (
-              <Link
-                href={`/store/${prevSlug}`}
-                className="text-caps text-sm font-light tracking-wider transition-opacity hover:opacity-60"
-              >
-                ← PREVIOUS
-              </Link>
-            ) : (
-              <span aria-hidden />
-            )}
-            {nextSlug ? (
-              <Link
-                href={`/store/${nextSlug}`}
-                className="text-caps text-sm font-light tracking-wider transition-opacity hover:opacity-60"
-              >
-                NEXT →
-              </Link>
-            ) : (
-              <span aria-hidden />
-            )}
-          </div>
         </div>
       </div>
     </div>

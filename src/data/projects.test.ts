@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import fs from "fs";
 import path from "path";
 import { projects } from "@/data/projects";
-import { trailImages } from "@/data/trail-images";
 
 /** Resolve a public-relative src ("/images/...") to an absolute disk path. */
 function publicPath(src: string): string {
@@ -12,10 +11,7 @@ function publicPath(src: string): string {
 }
 
 describe("project image paths", () => {
-  const allSrcs = [
-    ...projects.flatMap((p) => p.images.map((img) => img.src)),
-    ...trailImages.map((img) => img.src),
-  ];
+  const allSrcs = projects.flatMap((p) => p.images.map((img) => img.src));
 
   it.each(allSrcs)("resolves to a file on disk: %s", (src) => {
     expect(fs.existsSync(publicPath(src)), `missing file: public${src}`).toBe(

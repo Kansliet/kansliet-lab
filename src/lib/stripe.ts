@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
+import { formatMoney } from "@/lib/shop-info";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("STRIPE_SECRET_KEY is not set");
@@ -45,7 +46,7 @@ export async function getPrice(stripePriceId: string): Promise<Price> {
 }
 
 export function formatPrice(amount: number, currency: string): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
+  return formatMoney(Math.round(amount * 100), currency);
 }
 
 export async function getDisplayPrice(stripePriceId: string): Promise<string> {

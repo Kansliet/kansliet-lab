@@ -4,6 +4,7 @@ import {
   parseProductFields,
   parseSpecs,
   parseStock,
+  sanitizeImages,
   slugify,
   stockDelta,
   specsToText,
@@ -128,5 +129,33 @@ describe("stockDelta", () => {
   it("is 0 when the loaded value is missing or tampered", () => {
     expect(stockDelta(form(), 50)).toBe(0);
     expect(stockDelta(form("abc"), 50)).toBe(0);
+  });
+});
+
+describe("sanitizeImages", () => {
+  const link = (id: string) => `https://files.stripe.com/links/${id}`;
+  const existing = ["https://files.stripe.com/files/legacy", link("a")];
+
+  it("keeps the submitted order of existing and freshly uploaded photos", () => {
+    expect(sanitizeImages([link("new"), link("a")], existing)).toEqual([link("new"), link("a")]);
+  });
+
+  it("drops unknown hosts, duplicates and non-strings", () => {
+    expect(
+      sanitizeImages(["https://evil.example/x.jpg", link("a"), link("a"), 42], existing)
+    ).toEqual([link("a")]);
+  });
+
+  it("keeps an existing photo even from an older URL shape", () => {
+    expect(sanitizeImages([existing[0]], existing)).toEqual([existing[0]]);
+  });
+
+  it("keeps the current photos when the list is missing or malformed", () => {
+    expect(sanitizeImages(null, existing)).toEqual(existing);
+  });
+
+  it("caps the count", () => {
+    const many = Array.from({ length: 10 }, (_, i) => link(String(i)));
+    expect(sanitizeImages(many, [])).toHaveLength(6);
   });
 });

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Link } from "next-view-transitions";
+import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { getAdminProducts } from "@/lib/products";
 import { getDisplayPrice } from "@/lib/stripe";

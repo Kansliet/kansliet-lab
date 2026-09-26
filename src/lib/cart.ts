@@ -54,3 +54,7 @@ export const cartCookieOptions = {
   path: "/",
   maxAge: CART_COOKIE_MAX_AGE_S,
 };
+
+export function cartItemCount(cart: CartItem[]): number {
+  return cart.reduce((sum, item) => sum + item.quantity, 0);
+}

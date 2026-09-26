@@ -1,12 +1,10 @@
-import { Link } from "next-view-transitions";
-import NextLink from "next/link";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { getDisplayPrice } from "@/lib/stripe";
 import { getCategories, getProducts } from "@/lib/products";
 import { quickAddToCart } from "@/app/(main)/store/cart/actions";
 import { Grid, GridItem, GridItemTitle, GridItemMeta } from "@/components/ui/grid";
 import { ProductImage } from "@/components/store/ProductImage";
-import { CategoryTransition } from "@/components/store/CategoryTransition";
 
 export const metadata: Metadata = {
   title: "KANSLIET (STORE)",
@@ -36,11 +34,9 @@ function FilterLink({
   active: boolean;
   children: React.ReactNode;
 }) {
-  // Plain next/link on purpose: switching category skips the site-wide page
-  // slide (which would move the heading and this bar too). The grid below
-  // replays the same motion on its own instead — see CategoryTransition.
+  // scroll={false}: switching category keeps your place on the page.
   return (
-    <NextLink
+    <Link
       href={href}
       scroll={false}
       aria-current={active ? "page" : undefined}
@@ -49,7 +45,7 @@ function FilterLink({
       }`}
     >
       {children}
-    </NextLink>
+    </Link>
   );
 }
 
@@ -90,7 +86,7 @@ export default async function StorePage({ searchParams }: StorePageProps) {
             ))}
           </nav>
 
-          <CategoryTransition category={category ?? ""}>
+          <div>
             {products.length === 0 ? (
               <p className="text-caps text-sm font-light tracking-wider opacity-60">
                 NOTHING HERE YET.
@@ -108,6 +104,7 @@ export default async function StorePage({ searchParams }: StorePageProps) {
                           id={product.id}
                           name={product.name}
                           imageUrl={product.image_url}
+                          tone="plate"
                           className="h-full"
                           sizes="(max-width: 768px) 100vw, (max-width: 1400px) 33vw, 400px"
                           priority={index === 0}
@@ -146,7 +143,7 @@ export default async function StorePage({ searchParams }: StorePageProps) {
                 ))}
               </Grid>
             )}
-          </CategoryTransition>
+          </div>
         </div>
       </section>
     </div>

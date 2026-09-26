@@ -4,6 +4,8 @@ import { requireSession } from "@/lib/auth";
 import { formatPrice } from "@/lib/stripe";
 import { markShipped } from "./actions";
 import { AdminNav } from "../admin-nav";
+import Link from "next/link";
+import { orderRef } from "@/lib/order-email";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -72,7 +74,7 @@ export default async function StoreOrdersPage() {
               <table className="w-full text-left text-sm">
                 <thead className="border-b-brutal">
                   <tr>
-                    <th className={TH}>DATE</th>
+                    <th className={TH}>ORDER</th>
                     <th className={TH}>CUSTOMER</th>
                     <th className={TH}>SHIPPING ADDRESS</th>
                     <th className={TH}>AMOUNT</th>
@@ -86,7 +88,8 @@ export default async function StoreOrdersPage() {
                   {orders.map((order, index) => (
                     <tr key={order.id} className={index > 0 ? "border-t-brutal" : ""}>
                       <td className="px-4 py-3 tabular-nums whitespace-nowrap">
-                        {formatDate(order.created_at)}
+                        <div>{orderRef(order.id)}</div>
+                        <div className="font-light opacity-60">{formatDate(order.created_at)}</div>
                       </td>
                       <td className="px-4 py-3">
                         <div>{order.shipping_name ?? "—"}</div>
@@ -106,15 +109,23 @@ export default async function StoreOrdersPage() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {order.fulfillment_status === "paid" && (
-                          <form action={markShipped}>
-                            <input type="hidden" name="orderId" value={order.id} />
-                            <input type="hidden" name="status" value="shipped" />
-                            <Button type="submit" variant="secondary" size="sm" className="whitespace-nowrap">
-                              MARK SHIPPED
-                            </Button>
-                          </form>
-                        )}
+                        <div className="flex items-center justify-end gap-4">
+                          <Link
+                            href={`/admin/orders/${order.id}/slip`}
+                            className="text-caps text-sm font-light tracking-wider whitespace-nowrap transition-opacity hover:opacity-60"
+                          >
+                            SLIP
+                          </Link>
+                          {order.fulfillment_status === "paid" && (
+                            <form action={markShipped}>
+                              <input type="hidden" name="orderId" value={order.id} />
+                              <input type="hidden" name="status" value="shipped" />
+                              <Button type="submit" variant="secondary" size="sm" className="whitespace-nowrap">
+                                MARK SHIPPED
+                              </Button>
+                            </form>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

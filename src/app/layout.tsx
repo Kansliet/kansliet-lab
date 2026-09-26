@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Martian_Mono } from "next/font/google";
-import { ViewTransitions } from "next-view-transitions";
 import "./globals.css";
 import { CookieBanner } from "@/components/cookie-banner";
-import { DossierStrip } from "@/components/dossier-strip";
 import { AnalyticsConsent } from "@/components/analytics-consent";
 import { SITE_URL } from "@/lib/site";
 
@@ -14,7 +12,7 @@ const martianMono = Martian_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#e9e7e2",
 };
 
 export const metadata: Metadata = {
@@ -124,12 +122,7 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
-        <div className="sticky top-0 z-202 shrink-0 h-8 bg-background [--dossier-strip-height:2rem] [view-transition-name:dossier-strip]">
-          <DossierStrip />
-        </div>
-        <ViewTransitions>
-          <div className="flex flex-col flex-1 min-h-0">{children}</div>
-        </ViewTransitions>
+        <div className="flex flex-col flex-1 min-h-0">{children}</div>
         <CookieBanner />
         {gaId ? <AnalyticsConsent gaId={gaId} /> : null}
       </body>

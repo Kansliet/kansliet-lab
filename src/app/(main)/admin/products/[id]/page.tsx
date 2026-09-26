@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Link } from "next-view-transitions";
+import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { getCategories, getProductById } from "@/lib/products";
 import { getPrice } from "@/lib/stripe";
@@ -44,7 +44,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           </div>
           <ProductForm
             productId={product.id}
-            imageUrl={product.image_url}
+            images={product.images}
             categories={categories}
             initial={{
               name: product.name,

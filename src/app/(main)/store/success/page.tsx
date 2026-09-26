@@ -1,4 +1,4 @@
-import { Link } from "next-view-transitions";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import type Stripe from "stripe";
@@ -58,7 +58,7 @@ export default async function StoreSuccessPage({ searchParams }: SuccessPageProp
           <h1 className="dossier-label mb-12">
             {isPaid ? "ORDER CONFIRMED" : "ORDER RECEIVED"}
           </h1>
-          <p className="mb-6 text-3xl font-normal uppercase tracking-tight lg:text-4xl">
+          <p className="mb-6 text-lg font-normal uppercase tracking-wide">
             THANK YOU.
           </p>
           <p className="text-normal-case mb-10 max-w-xl text-base font-light leading-relaxed">

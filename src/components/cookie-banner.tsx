@@ -30,7 +30,7 @@ export function CookieBanner() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-100 border-t-brutal bg-background p-6">
+    <div className="fixed bottom-0 left-0 right-0 z-100 border-t-brutal bg-background p-6 print:hidden">
       <div className="container-kansliet flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <p className="text-normal-case text-sm font-light">
           WE USE ANALYTICS COOKIES TO UNDERSTAND HOW THE SITE IS USED.{" "}

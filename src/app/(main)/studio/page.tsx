@@ -29,8 +29,7 @@ export default function StudioPage() {
     // Mobile: py-10 / Desktop: py-20
     <div className="flex-1 bg-background flex flex-col py-10 lg:py-20">
       <div className="container-kansliet">
-        {/* Mobile: text-3xl / Desktop: text-4xl */}
-        <h1 className="text-3xl lg:text-4xl uppercase tracking-tight font-normal mb-10 lg:mb-20">
+        <h1 className="text-lg uppercase tracking-wide font-normal mb-10 lg:mb-20">
           STUDIO
         </h1>
 

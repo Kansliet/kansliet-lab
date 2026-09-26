@@ -1,49 +1,86 @@
 import type { Metadata } from "next";
+import { COMPANY, TERMS_VERSION } from "@/lib/shop-info";
+import { LegalDoc, LegalSection, MailLink, TextLink } from "@/components/legal/LegalDoc";
+import { CookieSettings } from "@/components/legal/CookieSettings";
 
 export const metadata: Metadata = {
   title: "KANSLIET (LEGAL)",
-  description: "Legal information and cookie policy for Kansliet.",
+  description: "Company information and cookie policy for Kansliet.",
   alternates: { canonical: "/legal" },
 };
 
+// Plain uppercase, not .text-caps: its display: inline-block breaks table cell layout.
+const TH = "py-2 pr-4 align-top text-sm font-light uppercase tracking-wider opacity-60";
+const TD = "py-3 pr-4 align-top";
+
+const COOKIES = [
+  { name: "cart", purpose: "Remembers what's in your cart", type: "Necessary", lasts: "30 days" },
+  { name: "session", purpose: "Keeps our staff logged in to the admin", type: "Necessary", lasts: "30 days" },
+  { name: "cookie-consent", purpose: "Remembers your cookie choice (stored in your browser, not sent to us)", type: "Necessary", lasts: "Until you clear it" },
+  { name: "_ga, _ga_*", purpose: "Google Analytics: counts visits and how the site is used", type: "Analytics, only with consent", lasts: "Up to 2 years" },
+];
+
 export default function LegalPage() {
   return (
-    <div className="flex-1 bg-background flex flex-col py-10 lg:py-20">
-      <div className="container-kansliet max-w-2xl">
-        <h1 className="text-3xl lg:text-4xl uppercase tracking-tight font-normal mb-10 lg:mb-20">
-          LEGAL
-        </h1>
-        <div className="space-y-10 text-normal-case text-base font-light leading-relaxed">
-          <section>
-            <h2 className="dossier-label mb-4">
-              COOKIES
-            </h2>
-            <p>
-              We use analytics cookies (Google Analytics) to understand how
-              visitors use this site. These cookies are only set after you
-              explicitly accept via the consent banner. You can decline at any
-              time and no analytics data will be collected. You can also clear
-              previously given consent by clearing your browser&apos;s local
-              storage for this site.
-            </p>
-          </section>
-          <section>
-            <h2 className="dossier-label mb-4">
-              CONTACT
-            </h2>
-            <p>
-              For questions about data or this policy, contact{" "}
-              <a
-                href="mailto:desk@kansliet.co"
-                className="underline hover:opacity-60"
-              >
-                desk@kansliet.co
-              </a>
-              .
-            </p>
-          </section>
+    <LegalDoc title="LEGAL" updated={TERMS_VERSION}>
+      <LegalSection id="company" title="COMPANY INFORMATION">
+        <p>
+          {COMPANY.legalName}
+          <br />
+          Org.nr {COMPANY.orgNr}
+          <br />
+          VAT {COMPANY.vatNr}
+          <br />
+          {COMPANY.address.map((line) => (
+            <span key={line}>
+              {line}
+              <br />
+            </span>
+          ))}
+          <MailLink />
+        </p>
+        <p>
+          Store purchases are covered by our <TextLink href="/terms">terms of sale</TextLink>, and
+          personal data by our <TextLink href="/privacy">privacy policy</TextLink>.
+        </p>
+      </LegalSection>
+
+      <LegalSection id="cookies" title="COOKIES">
+        <p>
+          Necessary cookies make the store work and are always on. Analytics cookies (Google
+          Analytics) are only set after you accept them in the banner, and you can change your
+          choice here at any time.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[32rem] text-left text-sm">
+            <thead className="border-b-brutal">
+              <tr>
+                <th className={TH}>NAME</th>
+                <th className={TH}>PURPOSE</th>
+                <th className={TH}>TYPE</th>
+                <th className={TH}>LASTS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {COOKIES.map((cookie) => (
+                <tr key={cookie.name} className="border-b border-foreground/10">
+                  <td className={`${TD} whitespace-nowrap`}>{cookie.name}</td>
+                  <td className={TD}>{cookie.purpose}</td>
+                  <td className={TD}>{cookie.type}</td>
+                  <td className={TD}>{cookie.lasts}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
-    </div>
+        <CookieSettings />
+      </LegalSection>
+
+      <LegalSection id="contact" title="CONTACT">
+        <p>
+          Questions about data, cookies or an order: <MailLink />.
+        </p>
+      </LegalSection>
+    </LegalDoc>
   );
 }

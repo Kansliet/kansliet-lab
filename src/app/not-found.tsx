@@ -1,4 +1,4 @@
-import { Link } from "next-view-transitions";
+import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -11,7 +11,8 @@ export default function NotFound() {
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="container-kansliet text-center">
         <h1 className="text-caps text-5xl font-light mb-6">
-          404
+          {/* The space: <br> alone would make the heading read "404NOT FOUND". */}
+          404{" "}
           <br />
           NOT FOUND
         </h1>

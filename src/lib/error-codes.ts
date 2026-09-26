@@ -6,6 +6,8 @@ const ERROR_MESSAGES = {
   sold_out: "This item is sold out.",
   unavailable: "An item in your cart is no longer available. Remove it to continue.",
   insufficient_stock: "Your cart holds more of an item than is in stock. Lower the quantity to continue.",
+  terms_required: "Please accept the terms of sale to continue.",
+  unsupported_country: "We don't ship to that country yet.",
   checkout_failed: "Something went wrong starting checkout. Try again.",
   missing_credentials: "Email and password are required.",
   invalid_credentials: "Invalid email or password.",

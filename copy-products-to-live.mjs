@@ -9,7 +9,7 @@
 //   node copy-products-to-live.mjs            # dry run
 //   node copy-products-to-live.mjs --apply    # do it
 //
-// Per product: read the source price, re-upload the photo to the target's
+// Per product: read the source price, re-upload the photos to the target's
 // Stripe Files (test-mode files vanish if test data is ever deleted), create
 // the target product + price, then update that one row. Safe to re-run after
 // a failure: rows whose product already exists in the target are skipped.
@@ -81,7 +81,7 @@ async function main() {
   console.log(`${apply ? "APPLYING" : "DRY RUN"} against database ${dbHost}\n`);
 
   const { rows } = await pool.query(
-    `SELECT id, slug, name, tagline, image_url, stripe_product_id, stripe_price_id
+    `SELECT id, slug, name, tagline, images, stripe_product_id, stripe_price_id
      FROM shop_products ORDER BY id`
   );
 
@@ -97,16 +97,17 @@ async function main() {
     const price = await source.prices.retrieve(row.stripe_price_id);
     const amount = `${(price.unit_amount / 100).toFixed(2)} ${price.currency.toUpperCase()}`;
     if (!apply) {
-      console.log(`copy  ${row.slug}: ${amount}${row.image_url ? " + photo" : ""}`);
+      console.log(`copy  ${row.slug}: ${amount} + ${row.images.length} photo(s)`);
       copied++;
       continue;
     }
 
-    const imageUrl = row.image_url ? await copyPhoto(row.image_url) : null;
+    const images = [];
+    for (const url of row.images) images.push(await copyPhoto(url));
     const product = await target.products.create({
       name: row.name,
       description: row.tagline ?? undefined,
-      images: imageUrl ? [imageUrl] : undefined,
+      images: images.slice(0, 8),
     });
     const newPrice = await target.prices.create({
       product: product.id,
@@ -114,8 +115,8 @@ async function main() {
       currency: price.currency,
     });
     await pool.query(
-      "UPDATE shop_products SET stripe_product_id = $1, stripe_price_id = $2, image_url = $3 WHERE id = $4",
-      [product.id, newPrice.id, imageUrl, row.id]
+      "UPDATE shop_products SET stripe_product_id = $1, stripe_price_id = $2, images = $3 WHERE id = $4",
+      [product.id, newPrice.id, JSON.stringify(images), row.id]
     );
     console.log(`done  ${row.slug}: ${amount} → ${product.id}`);
     copied++;

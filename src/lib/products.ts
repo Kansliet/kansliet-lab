@@ -16,6 +16,9 @@ export type Product = {
   /** Paragraphs separated by a blank line. */
   description: string | null;
   specs: ProductSpec[];
+  /** Ordered photo URLs; the first is the cover. */
+  images: string[];
+  /** Derived: images[0], the cover used by the grid, cart and Checkout. */
   image_url: string | null;
   stripe_price_id: string;
   /** Units on hand. Paid orders decrement it (Stripe webhook). */
@@ -28,7 +31,7 @@ export type Product = {
 };
 
 const COLUMNS =
-  "id, slug, name, tagline, description, specs, image_url, stripe_price_id, stock, hidden, (stock <= 0 OR hidden) AS sold_out, category";
+  "id, slug, name, tagline, description, specs, images, images->>0 AS image_url, stripe_price_id, stock, hidden, (stock <= 0 OR hidden) AS sold_out, category";
 
 // Newest first; id breaks ties between rows seeded in the same instant.
 const CATALOG_ORDER = "ORDER BY created_at DESC, id DESC";
@@ -92,12 +95,4 @@ export async function getProductsByIds(ids: number[]): Promise<Product[]> {
     [ids]
   );
   return rows;
-}
-
-/** Slugs in grid order, for a product page's P. xx / yy strip and prev/next. */
-export async function getCatalogSlugs(): Promise<string[]> {
-  const { rows } = await pool.query<{ slug: string }>(
-    `SELECT slug FROM shop_products WHERE NOT hidden ${CATALOG_ORDER}`
-  );
-  return rows.map((row) => row.slug);
 }

@@ -1,4 +1,4 @@
-import { Link } from "next-view-transitions";
+import Link from "next/link";
 import { logout } from "@/app/(main)/login/actions";
 import { Button } from "@/components/ui/button";
 

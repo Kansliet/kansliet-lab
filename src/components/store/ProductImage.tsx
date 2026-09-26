@@ -14,6 +14,8 @@ type ProductImageProps = {
   priority?: boolean;
   /** Small thumbnails (cart) skip the REF / name overlay. */
   compact?: boolean;
+  /** "plate": black and white until hovered (grids, cart). "grain": full colour with film grain (detail page). */
+  tone?: "plate" | "grain";
   className?: string;
 };
 
@@ -29,10 +31,11 @@ export function ProductImage({
   sizes,
   priority,
   compact,
+  tone,
   className,
 }: ProductImageProps) {
   return (
-    <div className={cn("relative overflow-hidden bg-foreground/5", className)}>
+    <div className={cn("relative overflow-hidden bg-foreground/5", tone, className)}>
       {imageUrl ? (
         <Image
           src={imageUrl}
@@ -40,7 +43,10 @@ export function ProductImage({
           fill
           className="object-cover"
           sizes={sizes}
-          priority={priority}
+          // Next 16 deprecates `priority`; its docs recommend eager + high
+          // fetch priority for the above-the-fold (LCP) image instead.
+          loading={priority ? "eager" : undefined}
+          fetchPriority={priority ? "high" : undefined}
         />
       ) : (
         !compact && (
