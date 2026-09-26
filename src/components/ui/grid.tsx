@@ -48,7 +48,7 @@ const GridItem = React.forwardRef<HTMLDivElement, GridItemProps>(
       <div
         ref={ref}
         className={cn(
-          "border-brutal group relative overflow-hidden bg-background transition-opacity hover:opacity-80",
+          "border-brutal group relative overflow-hidden bg-background",
           href && "cursor-pointer",
           className,
         )}

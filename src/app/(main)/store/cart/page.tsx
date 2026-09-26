@@ -112,7 +112,6 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                         id={product.id}
                         name={product.name}
                         imageUrl={product.image_url}
-                        tone="plate"
                         className="aspect-5/6 w-16 md:w-20"
                         sizes="80px"
                         compact

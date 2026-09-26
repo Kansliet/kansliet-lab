@@ -104,7 +104,6 @@ export default async function StorePage({ searchParams }: StorePageProps) {
                           id={product.id}
                           name={product.name}
                           imageUrl={product.image_url}
-                          tone="plate"
                           className="h-full"
                           sizes="(max-width: 768px) 100vw, (max-width: 1400px) 33vw, 400px"
                           priority={index === 0}
