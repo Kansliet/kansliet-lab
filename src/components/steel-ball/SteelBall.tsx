@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { clampToBounds, createBall, isAtRest, speed, step, strike, type Params } from "./physics";
 import { inverseMatrix } from "./quaternion";
-import { createBallRenderer, type BallRenderer } from "./shader";
+import { BALL_PAD, createBallRenderer, type BallRenderer } from "./shader";
 
 const PHOTO = "/kansliet-button-final-lores.png";
 const MATCAP = "/ball/matcap.png";
@@ -100,14 +100,18 @@ export function SteelBall({ readoutRef }: { readoutRef: React.RefObject<HTMLElem
 
     const sizeElements = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      ballEl.style.width = ballEl.style.height = `${diameter}px`;
-      renderer?.resize(Math.round(diameter * dpr));
+      // The canvas carries a margin round the ball for the soft (depth of
+      // field) edge; the fallback photo fills it minus that margin.
+      const box = diameter * BALL_PAD;
+      ballEl.style.width = ballEl.style.height = `${box}px`;
+      ballEl.style.padding = renderer ? "0" : `${(box - diameter) / 2}px`;
+      renderer?.resize(Math.round(box * dpr));
       shadow.style.width = shadow.style.height = `${diameter * SHADOW_SIZE}px`;
     };
 
     const render = () => {
-      const r = diameter / 2;
-      ballEl.style.transform = `translate3d(${ball.x - r}px, ${ball.y - r}px, 0)`;
+      const half = (diameter * BALL_PAD) / 2;
+      ballEl.style.transform = `translate3d(${ball.x - half}px, ${ball.y - half}px, 0)`;
       const sh = diameter * SHADOW_SIZE;
       const sx = ball.x + diameter * SHADOW_OFFSET_X - sh / 2;
       const sy = ball.y + diameter * SHADOW_OFFSET_Y - sh / 2;

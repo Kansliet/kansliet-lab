@@ -14,23 +14,24 @@ void main() {
 
 const FRAGMENT = `
 precision highp float;
-varying vec2 vPos;            // -1..1, y up
+varying vec2 vPos;            // -1..1 across the canvas, y up
 uniform sampler2D uMatcap;    // the cleaned photo
 uniform sampler2D uImp;       // R specks/scratches, G pits, B smudges
 uniform sampler2D uPrints;    // fingerprints, light on black (same wrap, 2× res)
 uniform mat3 uInv;            // world -> ball
 uniform float uEdge;          // antialiasing width, in radii
+uniform float uPad;           // canvas half-width in ball radii (room for the soft edge)
+uniform float uDof;           // depth of field: blur radius at the rim, in radii
 // Toward the cast shadow (down-right, ~48°), y up. Matches SHADOW_OFFSET_* in SteelBall.tsx.
 const vec2 SHADOW_DIR = vec2(0.664, -0.747);
 
-void main() {
-  float r2 = dot(vPos, vPos);
-  float alpha = 1.0 - smoothstep(1.0 - uEdge, 1.0, sqrt(r2));
-  if (alpha <= 0.0) {
-    gl_FragColor = vec4(0.0);
-    return;
-  }
-  vec3 n = vec3(vPos, sqrt(max(0.0, 1.0 - r2)));
+// The ball's colour at point p (in radii; clamped just inside the rim, so a
+// blur tap past the edge reads the rim rather than empty paper).
+vec3 shade(vec2 p) {
+  float r = length(p);
+  if (r > 0.999) p *= 0.999 / r;
+  float r2 = dot(p, p);
+  vec3 n = vec3(p, sqrt(max(0.0, 1.0 - r2)));
 
   // 0.985: stay inside the photo's own soft, semi-transparent rim.
   vec3 base = texture2D(uMatcap, vec2(n.x, -n.y) * (0.5 * 0.985) + 0.5).rgb;
@@ -59,9 +60,47 @@ void main() {
   float rim = smoothstep(0.9, 1.0, sqrt(r2));
   float facing = clamp(0.1 + 1.2 * dot(n.xy, SHADOW_DIR), 0.0, 1.0);
   col *= 1.0 - 0.48 * rim * facing;
+  return col;
+}
 
+void main() {
+  vec2 p = vPos * uPad;
+  float r = length(p);
+  // Depth of field, focused on the top of the ball (nearest the camera): the
+  // surface falls away by 1 − n.z towards the rim, so the blur circle grows
+  // from nothing at the top to uDof at the rim.
+  float depth = r < 1.0 ? 1.0 - sqrt(1.0 - r * r) : 1.0;
+  float coc = uDof * depth * depth;
+  // The silhouette is a circle, so its defocus is exact: an edge that widens
+  // with the blur circle (no sampled copies of the outline).
+  float soft = max(uEdge, coc);
+  float alpha = 1.0 - smoothstep(1.0 - soft, 1.0 + soft, r);
+  if (alpha <= 0.0) {
+    gl_FragColor = vec4(0.0);
+    return;
+  }
+  vec3 col = shade(p);
+  // The surface detail inside: averaged over the blur circle, a centre plus
+  // a ring of six (skipped where the blur is under a pixel's worth).
+  if (coc > 0.002) {
+    col *= 1.5;
+    for (int i = 0; i < 6; i++) {
+      float a = float(i) * 1.0471976 + 0.3;
+      col += shade(p + coc * vec2(cos(a), sin(a)));
+    }
+    col /= 7.5;
+  }
   gl_FragColor = vec4(col * alpha, alpha); // premultiplied
 }`;
+
+/**
+ * The canvas is this much wider than the ball (in radii, each side), so the
+ * depth-of-field blur has room past the silhouette instead of being clipped
+ * where the ball touches the canvas edge. The component sizes the canvas to match.
+ */
+export const BALL_PAD = 1.04;
+/** Depth of field: blur radius at the rim, in ball radii. 0 = everything sharp. */
+const DOF = 0.014;
 
 export type BallRenderer = {
   draw(inverse: Float32Array): void;
@@ -128,13 +167,16 @@ export function createBallRenderer(
   gl.uniform1i(gl.getUniformLocation(program, "uPrints"), 2);
   const uInv = gl.getUniformLocation(program, "uInv");
   const uEdge = gl.getUniformLocation(program, "uEdge");
+  gl.uniform1f(gl.getUniformLocation(program, "uPad"), BALL_PAD);
+  gl.uniform1f(gl.getUniformLocation(program, "uDof"), DOF);
 
   return {
     resize(pixels) {
       canvas.width = canvas.height = pixels;
       gl.viewport(0, 0, pixels, pixels);
-      // About 1.5 device pixels of edge softening at any size.
-      gl.uniform1f(uEdge, 3 / pixels);
+      // About 1.5 device pixels of edge softening at any size (the depth of
+      // field adds its own softening on top).
+      gl.uniform1f(uEdge, (3 * BALL_PAD) / pixels);
     },
     draw(inverse) {
       gl.uniformMatrix3fv(uInv, false, inverse);
