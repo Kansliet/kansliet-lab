@@ -27,6 +27,7 @@ type Order = {
     country?: string;
   } | null;
   amount_total: number;
+  amount_refunded: number;
   currency: string;
   fulfillment_status: string;
   created_at: string;
@@ -34,7 +35,7 @@ type Order = {
 
 async function getOrders(): Promise<Order[]> {
   const { rows } = await pool.query<Order>(
-    "SELECT id, stripe_checkout_session_id, customer_email, shipping_name, shipping_address, amount_total, currency, fulfillment_status, created_at FROM shop_orders ORDER BY created_at DESC"
+    "SELECT id, stripe_checkout_session_id, customer_email, shipping_name, shipping_address, amount_total, amount_refunded, currency, fulfillment_status, created_at FROM shop_orders ORDER BY created_at DESC"
   );
   return rows;
 }
@@ -102,6 +103,11 @@ export default async function StoreOrdersPage() {
                       </td>
                       <td className="px-4 py-3 tabular-nums whitespace-nowrap">
                         {formatPrice(order.amount_total / 100, order.currency.toUpperCase())}
+                        {order.amount_refunded > 0 && (
+                          <div className="font-light opacity-60">
+                            −{formatPrice(order.amount_refunded / 100, order.currency.toUpperCase())} REFUNDED
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <Badge variant={order.fulfillment_status === "paid" ? "solid" : "default"}>

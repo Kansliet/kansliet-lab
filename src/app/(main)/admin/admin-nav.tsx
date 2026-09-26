@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 const SECTIONS = [
   { href: "/admin/orders", label: "ORDERS" },
   { href: "/admin/products", label: "PRODUCTS" },
+  { href: "/admin/moms", label: "MOMS" },
 ] as const;
 
 /** Header shared by the admin pages: section tabs, then log out. */

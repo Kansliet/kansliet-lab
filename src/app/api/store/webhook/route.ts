@@ -24,8 +24,9 @@ async function recordOrder(
       shipping_name,
       shipping_address,
       amount_total,
-      currency
-    ) VALUES ($1, $2, $3, $4, $5, $6)
+      currency,
+      stripe_payment_intent_id
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
     ON CONFLICT (stripe_checkout_session_id) DO NOTHING
     RETURNING id`,
     [
@@ -35,6 +36,8 @@ async function recordOrder(
       shippingDetails?.address ? JSON.stringify(shippingDetails.address) : null,
       session.amount_total ?? 0,
       session.currency ?? "usd",
+      // Refund events (charge.refunded) refer to the PaymentIntent, not the session.
+      typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent?.id ?? null),
     ]
   );
 
@@ -114,6 +117,62 @@ async function recordOrder(
     shippingName: shippingDetails?.name ?? null,
     shippingAddress: shippingDetails?.address ?? null,
   };
+}
+
+/**
+ * A refund made in the Stripe dashboard (charge.refunded). Records the
+ * cumulative refunded amount and when, so the moms report books it in the
+ * right month. A full refund marks the order "refunded", and if nothing had
+ * shipped yet puts the stock back; for a shipped order the goods are still out
+ * there, so stock is left for the admin to restore when they come back.
+ * Idempotent: the refunded amount only ever moves forward, so a redelivered
+ * or out-of-order event changes nothing.
+ */
+async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedAt: number) {
+  const paymentIntent =
+    typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+  if (!paymentIntent) return;
+
+  type Row = { id: number; fulfillment_status: string; amount_refunded: number };
+  let { rows } = await client.query<Row>(
+    "SELECT id, fulfillment_status, amount_refunded FROM shop_orders WHERE stripe_payment_intent_id = $1 FOR UPDATE",
+    [paymentIntent]
+  );
+  if (rows.length === 0) {
+    // Orders recorded before payment intents were stored: find the session
+    // that owns this payment and fill the id in (the UPDATE also locks the row).
+    const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntent, limit: 1 });
+    const sessionId = sessions.data[0]?.id;
+    if (!sessionId) return; // not a store payment
+    ({ rows } = await client.query<Row>(
+      `UPDATE shop_orders SET stripe_payment_intent_id = $1
+       WHERE stripe_checkout_session_id = $2
+       RETURNING id, fulfillment_status, amount_refunded`,
+      [paymentIntent, sessionId]
+    ));
+    if (rows.length === 0) return;
+  }
+
+  const order = rows[0];
+  if (charge.amount_refunded <= order.amount_refunded) return; // already recorded
+
+  const fullyRefunded = charge.refunded;
+  await client.query(
+    `UPDATE shop_orders
+     SET amount_refunded = $1,
+         refunded_at = to_timestamp($2),
+         fulfillment_status = CASE WHEN $3 THEN 'refunded' ELSE fulfillment_status END
+     WHERE id = $4`,
+    [charge.amount_refunded, refundedAt, fullyRefunded, order.id]
+  );
+  if (fullyRefunded && order.fulfillment_status === "paid") {
+    await client.query(
+      `UPDATE shop_products p SET stock = p.stock + i.quantity
+       FROM shop_order_items i
+       WHERE i.shop_order_id = $1 AND i.shop_product_id = p.id`,
+      [order.id]
+    );
+  }
 }
 
 /**
@@ -204,6 +263,9 @@ export async function POST(req: Request) {
 
       if (event.type === "checkout.session.async_payment_succeeded") {
         confirmation = await recordOrder(client, event.data.object as Stripe.Checkout.Session);
+      }
+      if (event.type === "charge.refunded") {
+        await recordRefund(client, event.data.object as Stripe.Charge, event.created);
       }
     }
 

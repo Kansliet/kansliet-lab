@@ -84,7 +84,10 @@ CREATE TABLE public.shop_orders (
     currency text NOT NULL,
     fulfillment_status text DEFAULT 'paid'::text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    user_id integer
+    user_id integer,
+    stripe_payment_intent_id text,
+    amount_refunded integer DEFAULT 0 NOT NULL,
+    refunded_at timestamp with time zone
 );
 
 
@@ -336,7 +339,12 @@ ALTER TABLE ONLY public.shop_orders
 
 
 --
--- PostgreSQL database dump complete
+-- Name: shop_orders_payment_intent_key; Type: INDEX; Schema: public; Owner: -
 --
 
+CREATE UNIQUE INDEX shop_orders_payment_intent_key ON public.shop_orders USING btree (stripe_payment_intent_id) WHERE (stripe_payment_intent_id IS NOT NULL);
 
+
+--
+-- PostgreSQL database dump complete
+--
