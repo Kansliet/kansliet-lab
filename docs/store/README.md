@@ -10,7 +10,7 @@ Webstore at `/store`, with the orders admin at `/admin/orders` (login at `/login
 
 ## Local setup
 1. Postgres 17 runs in Docker (container `kansliet-pg`, db `kansliet`). On a fresh database, load the schema: `docker exec -i kansliet-pg psql -U postgres -d kansliet < db/schema.sql`
-2. Fill in the store vars in `.env.local`. Locally, `STRIPE_WEBHOOK_SECRET` is the Stripe CLI's signing secret (`stripe listen --print-secret`), not a dashboard endpoint's. Without it the webhook route throws on load and every event gets a 500, so no orders are recorded.
+2. Fill in the store vars in `.env.local`. Locally, `STRIPE_WEBHOOK_SECRET` is the Stripe CLI's signing secret (`stripe listen --print-secret`), not a dashboard endpoint's. Without it every webhook event gets a 500 (checked per request), so no orders are recorded.
 3. Seed a new database: `node seed-store-products.mjs` (creates Stripe test products and prices, plus the DB rows; safe to re-run) and `node seed-admin.mjs` (creates the one admin user).
 4. `npm run dev`. For the webhook: `stripe listen --forward-to localhost:3000/api/store/webhook`
 5. Test card: `4242 4242 4242 4242`, any future expiry, any CVC.
@@ -27,7 +27,7 @@ Webstore at `/store`, with the orders admin at `/admin/orders` (login at `/login
 
 **Infrastructure (Vercel):**
 1. Hosted Postgres (e.g. Neon via Vercel Marketplace). Load `db/schema.sql`, run `node seed-store-products.mjs` and `node seed-admin.mjs <email>` against it (prompts for a 16+ char password).
-2. Env vars for **Production and Preview** (the build evaluates the webhook, DB and Stripe modules, so a missing var fails the build): `DATABASE_URL` (the *pooled* connection string), `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`. Plus the portfolio's `CONTACT_FORM_SECRET` (the contact form refuses submissions on production without it) and `RESEND_*`.
+2. Env vars for **Production and Preview** (the build evaluates the DB and Stripe modules, so a missing var fails the build): `DATABASE_URL` (the *pooled* connection string) and `STRIPE_SECRET_KEY` (live in Production, test in Preview, so a preview can never take a real payment). `STRIPE_WEBHOOK_SECRET` is **Production only**: Stripe only ever calls kansliet.co, and the webhook checks the secret per request, so its absence doesn't break preview builds. Plus the portfolio's `CONTACT_FORM_SECRET` (the contact form refuses submissions on production without it) and `RESEND_*`.
 3. Stripe dashboard: add a webhook endpoint `https://kansliet.co/api/store/webhook` for `checkout.session.completed` and `checkout.session.async_payment_succeeded`; its signing secret is the production `STRIPE_WEBHOOK_SECRET`. Test mode and live mode are separate endpoints with separate secrets.
 4. Stripe settings: turn on **Adaptive Pricing** (Settings → Payments), if offered for the account, so EU/Norwegian customers can pay in EUR/DKK/NOK while payouts stay SEK. Payment notification emails to desk@kansliet.co are optional: the site already sends the order confirmation and BCCs desk@. Stripe's own receipt emails can stay on as a payment receipt.
 5. Vercel Firewall: rate-limit `POST /login` (e.g. 10/min per IP).

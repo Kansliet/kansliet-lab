@@ -1,5 +1,8 @@
 # DNS: Squarespace → Vercel (before cancelling Framer)
 
+> **Where kansliet.co's DNS actually lives (2026-09-26):** the nameservers are `ns-cloud-b*.googledomains.com`, but the records are edited in **Squarespace → Domains → kansliet.co → DNS Settings**. Squarespace bought Google Domains in 2023 and kept Google's nameservers, so the Google-looking nameservers are expected. Current records include `www` and `store` as CNAMEs to Vercel; `store.kansliet.co` is a vanity address that the app redirects to `kansliet.co/store` (see `redirects()` in `next.config.ts`).
+
+
 Do the DNS change **first**, confirm kansliet.co loads from Vercel, **then** cancel Framer. That way there’s no gap.
 
 ---

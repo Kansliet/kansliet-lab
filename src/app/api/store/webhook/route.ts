@@ -6,10 +6,6 @@ import { stripe } from "@/lib/stripe";
 import { COMPANY } from "@/lib/shop-info";
 import { buildOrderEmail, orderRef, type OrderEmailInput } from "@/lib/order-email";
 
-if (!process.env.STRIPE_WEBHOOK_SECRET) {
-  throw new Error("STRIPE_WEBHOOK_SECRET is not set");
-}
-
 // shop_orders.shop_product_id is no longer set — it assumed one product per
 // order, which a multi-item cart breaks. shop_order_items (one row per
 // purchased line) is now the source of truth for what was bought, for both
@@ -149,6 +145,15 @@ async function sendOrderConfirmation(order: OrderEmailInput & { to: string }) {
 }
 
 export async function POST(req: Request) {
+  // Checked per request, not at module load: Next loads this module during the
+  // build, and Preview deployments (which never receive Stripe's webhooks)
+  // don't carry the secret. Without it here, fail loudly so Stripe retries.
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret) {
+    console.error("store webhook: STRIPE_WEBHOOK_SECRET is not set");
+    return new Response("Webhook not configured", { status: 500 });
+  }
+
   const body = await req.text();
   const signature = req.headers.get("stripe-signature");
 
@@ -161,7 +166,7 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(
       body,
       signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
+      secret
     );
   } catch {
     return new Response("Invalid signature", { status: 400 });
