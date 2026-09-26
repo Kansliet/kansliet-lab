@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { clampToBounds, createBall, isAtRest, speed, step, strike, type Params } from "./physics";
+import { clampToBounds, createBall, hold, isAtRest, release, speed, step, strike, type Params } from "./physics";
 import { inverseMatrix } from "./quaternion";
 import { BALL_PAD, createBallRenderer, type BallRenderer } from "./shader";
 
@@ -59,8 +59,10 @@ function loadImage(src: string) {
 
 /**
  * The logomark as an object on the desk: a steel ball that rolls around the
- * window when the cursor (or a finger) pushes it, and bounces off the window
- * edges. A slow cursor nudges it along; a fast stroke knocks it away. Rendered
+ * window when the cursor pushes it, and bounces off the window edges. A slow
+ * cursor nudges it along; a fast stroke knocks it away. On touch screens a
+ * finger on the ball holds it (drag it around, flick it off), and a finger
+ * swiping in from beside it pushes it like the cursor. Rendered
  * by a small WebGL shader (see shader.ts) so the reflections stay put while
  * the surface marks roll. Without WebGL it's the plain photo, still pushable.
  *
@@ -133,9 +135,10 @@ export function SteelBall({ readoutRef }: { readoutRef: React.RefObject<HTMLElem
       // performance.now() taken when the loop was woken: never step backwards.
       const dt = Math.min(Math.max((now - last) / 1000, 0), 1 / 30);
       last = now;
+      if (held) hold(ball, params, held.x - held.dx, held.y - held.dy);
       step(ball, dt, bounds, params);
       render();
-      frame = isAtRest(ball) ? 0 : requestAnimationFrame(tick);
+      frame = isAtRest(ball) && !held ? 0 : requestAnimationFrame(tick);
     };
     const wake = () => {
       if (frame || disposed) return;
@@ -175,17 +178,60 @@ export function SteelBall({ readoutRef }: { readoutRef: React.RefObject<HTMLElem
       }
       moveTo(e.clientX, e.clientY);
     };
-    // Touch through touch events: they keep coming even when the browser
-    // treats the swipe as a scroll, which pointer events don't. A touch that
-    // starts in a safe zone is ignored until it lifts.
+    // Touch. A finger that lands on the ball holds it: the ball follows the
+    // finger (rolling, with a touch of lag) and is flicked off at the finger's
+    // speed when it lifts. A finger that lands beside the ball pushes it, as
+    // the cursor does. Touch events, not pointer events: they keep coming even
+    // when the browser treats the swipe as a scroll. A touch that starts in a
+    // safe zone is ignored until it lifts.
     let touchSafe = false;
+    let held: { id: number; x: number; y: number; dx: number; dy: number } | null = null;
+    const touchOf = (list: TouchList, id: number) => Array.from(list).find((t) => t.identifier === id);
     const onTouchStart = (e: TouchEvent) => {
       touchSafe = inSafeZone(e.target);
       pusher.time = -Infinity; // a new finger starts from rest
-      if (!touchSafe) moveTo(e.touches[0].clientX, e.touches[0].clientY);
+      if (touchSafe || held) return;
+      const t = e.changedTouches[0];
+      // Fingers are broad: a touch just off the rim still counts as on the ball.
+      if (Math.hypot(t.clientX - ball.x, t.clientY - ball.y) <= params.radius * 1.15) {
+        held = { id: t.identifier, x: t.clientX, y: t.clientY, dx: t.clientX - ball.x, dy: t.clientY - ball.y };
+        track(t.clientX, t.clientY);
+        wake();
+        return;
+      }
+      moveTo(t.clientX, t.clientY);
     };
     const onTouchMove = (e: TouchEvent) => {
+      if (held) {
+        const t = touchOf(e.touches, held.id);
+        if (!t) return;
+        // Holding the ball: no pull-to-refresh or page scroll under the finger.
+        if (e.cancelable) e.preventDefault();
+        held.x = t.clientX;
+        held.y = t.clientY;
+        track(t.clientX, t.clientY);
+        return;
+      }
       if (!touchSafe) moveTo(e.touches[0].clientX, e.touches[0].clientY);
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!held || !touchOf(e.changedTouches, held.id)) return;
+      held = null;
+      // A finger that had stopped before lifting just sets the ball down.
+      const moving = performance.now() - pusher.time < 80;
+      release(ball, params, moving ? pusher.vx : 0, moving ? pusher.vy : 0);
+      wake();
+    };
+    /** Smoothed finger velocity while holding, for the flick on release. */
+    const track = (x: number, y: number) => {
+      const now = performance.now();
+      const fresh = now - pusher.time < 100;
+      const dt = Math.max((now - pusher.time) / 1000, 1 / 240);
+      pusher.vx = fresh ? pusher.vx * 0.5 + ((x - pusher.x) / dt) * 0.5 : 0;
+      pusher.vy = fresh ? pusher.vy * 0.5 + ((y - pusher.y) / dt) * 0.5 : 0;
+      pusher.x = x;
+      pusher.y = y;
+      pusher.time = now;
     };
 
     const onResize = () => {
@@ -231,7 +277,10 @@ export function SteelBall({ readoutRef }: { readoutRef: React.RefObject<HTMLElem
 
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    // Not passive: holding the ball has to be able to stop the page scrolling.
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("touchcancel", onTouchEnd);
     window.addEventListener("resize", onResize);
     canvas.addEventListener("webglcontextlost", onContextLost);
     return () => {
@@ -241,6 +290,8 @@ export function SteelBall({ readoutRef }: { readoutRef: React.RefObject<HTMLElem
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
       window.removeEventListener("resize", onResize);
       canvas.removeEventListener("webglcontextlost", onContextLost);
     };

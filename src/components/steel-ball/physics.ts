@@ -175,14 +175,46 @@ export function strike(
     ball.vy += (push - vbn) * ny;
   }
 
-  // Soft ceiling: s → L·tanh(s/L), nearly linear well below L, never above it.
+  softCap(ball, p.strikeLimit);
+  return true;
+}
+
+/** Soft speed ceiling: s → L·tanh(s/L), nearly linear well below L, never above it. */
+export function softCap(ball: Ball, limit: number) {
   const s = speed(ball);
   if (s > 0) {
-    const k = (p.strikeLimit * Math.tanh(s / p.strikeLimit)) / s;
+    const k = (limit * Math.tanh(s / limit)) / s;
     ball.vx *= k;
     ball.vy *= k;
   }
-  return true;
+}
+
+/**
+ * How quickly a held ball closes the gap to the finger, per second. High
+ * enough to feel held, low enough that it trails the finger a touch: weight.
+ */
+const HOLD_RATE = 22;
+
+/**
+ * A finger is holding the ball (touch screens): steer it toward (x, y) by
+ * setting its velocity, so it still rolls (the marks turn) and still stops at
+ * the walls. Call before each step while held.
+ */
+export function hold(ball: Ball, p: Params, x: number, y: number) {
+  ball.vx = (x - ball.x) * HOLD_RATE;
+  ball.vy = (y - ball.y) * HOLD_RATE;
+  const s = speed(ball);
+  if (s > p.maxSpeed) {
+    ball.vx *= p.maxSpeed / s;
+    ball.vy *= p.maxSpeed / s;
+  }
+}
+
+/** The finger lets go: the ball keeps the finger's velocity, through the same soft ceiling as a hit. */
+export function release(ball: Ball, p: Params, vx: number, vy: number) {
+  ball.vx = vx;
+  ball.vy = vy;
+  softCap(ball, p.strikeLimit);
 }
 
 function unit(x: number, y: number): [number, number] {

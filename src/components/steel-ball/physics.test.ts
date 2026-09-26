@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createBall, isAtRest, step, strike, type Params } from "./physics";
+import { createBall, hold, isAtRest, release, step, strike, type Params } from "./physics";
 import { angle } from "./quaternion";
 
 const params: Params = {
@@ -115,5 +115,26 @@ describe("steel ball physics", () => {
     const away = createBall(500, 400);
     expect(strike(away, params, 460, 400, 300, 400, -2400, 0, 12)).toBe(false);
     expect(isAtRest(miss) && isAtRest(away)).toBe(true);
+  });
+
+  it("follows a holding finger, rolling as it goes, and trails it slightly", () => {
+    const ball = createBall(500, 400);
+    for (let i = 0; i < 12; i++) {
+      hold(ball, params, 600, 400);
+      step(ball, 1 / 60, bounds, params);
+    }
+    expect(ball.x).toBeGreaterThan(590); // there, nearly
+    expect(ball.x).toBeLessThanOrEqual(600); // never overshoots
+    expect(ball.distance).toBeGreaterThan(90); // it rolled, not slid
+  });
+
+  it("is flicked off the finger at the finger's speed, softly capped", () => {
+    const heavy = { ...params, strikeLimit: 700 };
+    const gentle = createBall(500, 400);
+    release(gentle, heavy, 150, 0);
+    expect(gentle.vx).toBeCloseTo(150 * (700 * Math.tanh(150 / 700)) / 150, 5);
+    const wild = createBall(500, 400);
+    release(wild, heavy, 20000, -20000);
+    expect(Math.hypot(wild.vx, wild.vy)).toBeLessThanOrEqual(700);
   });
 });
