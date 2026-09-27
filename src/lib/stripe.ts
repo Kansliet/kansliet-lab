@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
+import { CACHE_SCOPE } from "@/lib/cache-scope";
 import { formatMoney } from "@/lib/shop-info";
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -34,7 +35,7 @@ const getPriceMap = cache(unstable_cache(
     }
     return map;
   },
-  ["stripe-price-map"],
+  ["stripe-price-map", CACHE_SCOPE],
   { revalidate: 300, tags: ["stripe-prices"] }
 ));
 

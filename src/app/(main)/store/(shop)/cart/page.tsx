@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getCart, maxLineQuantity } from "@/lib/cart";
 import { getVariantsByIds } from "@/lib/products";
-import { variantCover, variantLabel } from "@/lib/variants";
+import { selectionQuery, variantCover, variantLabel } from "@/lib/variants";
 import { getPrice, formatPrice } from "@/lib/stripe";
 import { errorMessage } from "@/lib/error-codes";
 import { updateQuantity, removeFromCart } from "./actions";
@@ -108,7 +108,7 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                     key={variant.id}
                     className={`flex items-center gap-4 p-4 ${index > 0 ? "border-t-brutal" : ""}`}
                   >
-                    <Link href={`/store/${product.slug}`} className="shrink-0">
+                    <Link href={`/store/${product.slug}${variant.option1 ? `?${selectionQuery(product, variant)}` : ""}`} className="shrink-0">
                       <ProductImage
                         id={product.id}
                         name={product.name}
@@ -121,13 +121,13 @@ export default async function CartPage({ searchParams }: CartPageProps) {
 
                     <div className="min-w-0 flex-1">
                       <Link
-                        href={`/store/${product.slug}`}
+                        href={`/store/${product.slug}${variant.option1 ? `?${selectionQuery(product, variant)}` : ""}`}
                         className="text-caps text-sm font-normal tracking-wider transition-opacity hover:opacity-60"
                       >
                         {product.name}
                       </Link>
                       {variantLabel(variant) && (
-                        <p className="text-caps mt-1 text-sm font-light tracking-wider">
+                        <p className="mt-1 text-sm font-light uppercase tracking-wider">
                           {variantLabel(variant)}
                         </p>
                       )}

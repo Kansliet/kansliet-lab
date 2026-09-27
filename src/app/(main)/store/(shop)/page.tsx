@@ -6,6 +6,7 @@ import { quickAddToCart } from "@/app/(main)/store/(shop)/cart/actions";
 import { Grid, GridItem, GridItemTitle, GridItemMeta } from "@/components/ui/grid";
 import { ProductImage } from "@/components/store/ProductImage";
 import { SignupForm } from "@/components/newsletter/signup-form";
+import { optionCountLabel, productCover } from "@/lib/variants";
 import { mintFormToken } from "@/lib/form-token";
 
 export const metadata: Metadata = {
@@ -105,7 +106,7 @@ export default async function StorePage({ searchParams }: StorePageProps) {
                         <ProductImage
                           id={product.id}
                           name={product.name}
-                          imageUrl={product.image_url}
+                          imageUrl={productCover(product)}
                           className="h-full"
                           sizes="(max-width: 768px) 100vw, (max-width: 1400px) 33vw, 400px"
                           priority={index === 0}
@@ -123,11 +124,14 @@ export default async function StorePage({ searchParams }: StorePageProps) {
                           </GridItemTitle>
                           <GridItemMeta>
                             <span className="capitalize">{product.category}</span>, {product.displayPrice}
+                            {optionCountLabel(product) && ` · ${optionCountLabel(product)}`}
                           </GridItemMeta>
                         </Link>
-                        {!product.sold_out && (
+                        {/* Quick add only where there's nothing to choose; a
+                            product with options opens its page instead. */}
+                        {!product.sold_out && product.variants.length === 1 && (
                           <form action={quickAddToCart} className="shrink-0">
-                            <input type="hidden" name="productId" value={product.id} />
+                            <input type="hidden" name="variantId" value={product.variants[0].id} />
                             <input type="hidden" name="quantity" value={1} />
                             <button
                               type="submit"

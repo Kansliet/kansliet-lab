@@ -1,4 +1,4 @@
-import type { ProductSpec } from "@/lib/products";
+import type { ProductOption, ProductSpec } from "@/lib/products";
 
 // Parsing for the /admin/products form. Pure (no server imports) so the
 // client form can share the constants and the rules stay unit-testable.
@@ -170,4 +170,114 @@ export function parseProductFields(
       hidden: fields.hidden === "on",
     },
   };
+}
+
+/** Colour × Size at most; enough values for a real range, few enough to manage. */
+export const MAX_OPTIONS = 2;
+export const MAX_OPTION_VALUES = 30;
+export const MAX_COMBINATIONS = 100;
+const MAX_OPTION_TEXT = 40;
+
+/** A stock row from the admin's variant table. `id` is set for a variant that already exists. */
+export type VariantRow = {
+  id: number | null;
+  option1: string | null;
+  option2: string | null;
+  stock: number;
+  /** The stock the form loaded with, so the save applies only the change (see stockDelta). */
+  previous: number | null;
+};
+
+const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+
+/**
+ * The options editor's JSON: [{ name, values: [{ value, images? }] }].
+ * Photos only on the first option's values, cleaned like the product's own
+ * (sanitizeImages: existing URLs or fresh Stripe links).
+ */
+export function parseOptions(
+  raw: string,
+  existingImages: readonly string[],
+): { ok: true; options: ProductOption[] } | { ok: false; error: string } {
+  let submitted: unknown;
+  try {
+    submitted = JSON.parse(raw || "[]");
+  } catch {
+    return { ok: false, error: "The options could not be read. Reload and try again." };
+  }
+  if (!Array.isArray(submitted)) return { ok: false, error: "The options could not be read." };
+  if (submitted.length > MAX_OPTIONS) return { ok: false, error: `At most ${MAX_OPTIONS} options (e.g. Colour and Size).` };
+
+  const options: ProductOption[] = [];
+  for (const [index, entry] of submitted.entries()) {
+    const name = text(entry?.name);
+    if (!name || name.length > MAX_OPTION_TEXT) return { ok: false, error: "Every option needs a name (e.g. Colour)." };
+    const rawValues: unknown[] = Array.isArray(entry?.values) ? entry.values : [];
+    const values = rawValues.map((value) => ({
+      value: text((value as { value?: unknown })?.value),
+      images: (value as { images?: unknown })?.images,
+    }));
+    if (values.length === 0) return { ok: false, error: `Add at least one ${name} value, or remove the option.` };
+    if (values.length > MAX_OPTION_VALUES) return { ok: false, error: `At most ${MAX_OPTION_VALUES} values per option.` };
+    const seen = new Set<string>();
+    for (const { value } of values) {
+      if (!value || value.length > MAX_OPTION_TEXT) return { ok: false, error: `Every ${name} value needs a name.` };
+      if (seen.has(value.toLowerCase())) return { ok: false, error: `${name} "${value}" is listed twice.` };
+      seen.add(value.toLowerCase());
+    }
+    options.push({
+      name,
+      values: values.map(({ value, images }) =>
+        index === 0 ? { value, images: sanitizeImages(images ?? [], existingImages) } : { value },
+      ),
+    });
+  }
+  if (options.length === 2 && options[0].name.toLowerCase() === options[1].name.toLowerCase()) {
+    return { ok: false, error: "The two options need different names." };
+  }
+  const combinations = options.reduce((count, option) => count * option.values.length, 1);
+  if (options.length > 0 && combinations > MAX_COMBINATIONS) {
+    return { ok: false, error: `That makes ${combinations} combinations; at most ${MAX_COMBINATIONS}.` };
+  }
+  return { ok: true, options };
+}
+
+/** The variant table's JSON rows, checked against the options just parsed. */
+export function parseVariantRows(
+  raw: string,
+  options: ProductOption[],
+): { ok: true; rows: VariantRow[] } | { ok: false; error: string } {
+  let submitted: unknown;
+  try {
+    submitted = JSON.parse(raw || "[]");
+  } catch {
+    return { ok: false, error: "The stock table could not be read. Reload and try again." };
+  }
+  if (!Array.isArray(submitted)) return { ok: false, error: "The stock table could not be read." };
+
+  const valid = (option: ProductOption | undefined, value: unknown) =>
+    option ? option.values.some((v) => v.value === value) : value === null;
+  const rows: VariantRow[] = [];
+  const seen = new Set<string>();
+  const ids = new Set<number>();
+  for (const entry of submitted as Record<string, unknown>[]) {
+    const option1 = entry?.option1 ?? null;
+    const option2 = entry?.option2 ?? null;
+    if (!valid(options[0], option1) || !valid(options[1], option2)) {
+      return { ok: false, error: "The stock table doesn't match the options. Reload and try again." };
+    }
+    const key = JSON.stringify([option1, option2]);
+    if (seen.has(key)) return { ok: false, error: "A combination is listed twice in the stock table." };
+    seen.add(key);
+    const stock = parseStock(String(entry?.stock ?? ""));
+    if (stock === null) return { ok: false, error: `Stock must be a whole number from 0 to ${MAX_STOCK}.` };
+    const id = Number.isInteger(entry?.id) ? (entry.id as number) : null;
+    if (id !== null) {
+      if (ids.has(id)) return { ok: false, error: "The stock table could not be read. Reload and try again." };
+      ids.add(id);
+    }
+    const previous = parseStock(String(entry?.previous ?? ""));
+    rows.push({ id, option1: option1 as string | null, option2: option2 as string | null, stock, previous });
+  }
+  return { ok: true, rows };
 }

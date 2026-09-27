@@ -1,17 +1,11 @@
 import { cookies } from "next/headers";
 import { pool } from "@/lib/db";
+import { MAX_QUANTITY } from "@/lib/cart-limits";
+
+export { MAX_QUANTITY, maxLineQuantity } from "@/lib/cart-limits";
 
 export const CART_COOKIE = "cart";
 const CART_COOKIE_MAX_AGE_S = 30 * 24 * 60 * 60; // 30 days, matches the session cookie's lifetime
-
-// Per-line cap, enforced here (on every read and write) rather than per action,
-// so no code path can hand Stripe an absurd quantity. Matches the qty input's max.
-export const MAX_QUANTITY = 99;
-
-/** Largest quantity one cart line may hold: the per-line cap, or what's in stock. */
-export function maxLineQuantity(stock: number): number {
-  return Math.max(0, Math.min(MAX_QUANTITY, stock));
-}
 
 /** One cart line: a variant (a product's colour/size, or its only variant) and how many. */
 export type CartItem = {

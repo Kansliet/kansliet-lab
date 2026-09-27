@@ -48,11 +48,29 @@ const controlButton =
 export function PhotoManager({
   initial,
   onBusyChange,
+  name = "images",
+  pickerId = "photo-picker",
+  onChange,
+  hint,
 }: {
   initial: string[];
   onBusyChange: (busy: boolean) => void;
+  /** The hidden input carrying the URL list; null when `onChange` collects it instead (colour photos). */
+  name?: string | null;
+  /** Unique per manager on the page (one per colour). */
+  pickerId?: string;
+  onChange?: (images: string[]) => void;
+  hint?: string;
 }) {
-  const [images, setImages] = useState(initial);
+  const [images, setImagesState] = useState(initial);
+  // Report every change to the parent (the options editor), outside render.
+  function setImages(update: string[] | ((current: string[]) => string[])) {
+    setImagesState((current) => {
+      const next = typeof update === "function" ? update(current) : update;
+      if (onChange) queueMicrotask(() => onChange(next));
+      return next;
+    });
+  }
   const [status, setStatus] = useState<string | null>(null);
   const room = MAX_IMAGES - images.length;
 
@@ -91,7 +109,7 @@ export function PhotoManager({
 
   return (
     <div>
-      <input type="hidden" name="images" value={JSON.stringify(images)} />
+      {name && <input type="hidden" name={name} value={JSON.stringify(images)} />}
       <div className="flex flex-wrap gap-3">
         {images.map((url, index) => (
           <div key={url} className="relative h-28 w-28 border-brutal">
@@ -131,7 +149,7 @@ export function PhotoManager({
         ))}
         {room > 0 && (
           <label
-            htmlFor="photo-picker"
+            htmlFor={pickerId}
             className={buttonVariants({
               variant: "secondary",
               size: "sm",
@@ -142,7 +160,7 @@ export function PhotoManager({
           </label>
         )}
         <input
-          id="photo-picker"
+          id={pickerId}
           type="file"
           accept="image/*"
           multiple
@@ -152,6 +170,7 @@ export function PhotoManager({
       </div>
       <p className="text-normal-case mt-2 text-sm font-light opacity-60">
         {status ??
+          hint ??
           `Up to ${MAX_IMAGES}, any size (shrunk before upload). The first is the cover in the store grid, cart and checkout.`}
       </p>
     </div>

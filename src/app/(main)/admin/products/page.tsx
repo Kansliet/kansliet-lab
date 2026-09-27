@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireSession } from "@/lib/auth";
 import { getAdminProducts } from "@/lib/products";
 import { getDisplayPrice } from "@/lib/stripe";
+import { productCover, variantLabel } from "@/lib/variants";
 import { MAX_STOCK } from "@/lib/product-form";
 import { setStock } from "./actions";
 import { AdminNav } from "../admin-nav";
@@ -64,7 +65,7 @@ export default async function AdminProductsPage() {
                           <ProductImage
                             id={product.id}
                             name={product.name}
-                            imageUrl={product.image_url}
+                            imageUrl={productCover(product)}
                             sizes="48px"
                             compact
                             className="h-12 w-12 shrink-0"
@@ -82,33 +83,43 @@ export default async function AdminProductsPage() {
                         {prices[index]}
                       </td>
                       <td className="px-4 py-3">
-                        {/* key: remount on a new stock value so the stepper
-                            shows what the server saved, not stale local state. */}
-                        <form
-                          key={product.stock}
-                          action={setStock}
-                          className="flex items-center gap-2"
-                        >
-                          <input type="hidden" name="productId" value={product.id} />
-                          <input type="hidden" name="previousStock" value={product.stock} />
-                          <QuantityStepper
-                            id={`stock-${product.id}`}
-                            name="stock"
-                            min={0}
-                            max={MAX_STOCK}
-                            defaultValue={product.stock}
-                            editable
-                            className="w-32"
-                          />
-                          <Button type="submit" variant="secondary" size="sm" className="py-3.5">
-                            SAVE
-                          </Button>
+                        {/* One stepper per variant (a single one without
+                            options). key: remount on a new stock value so the
+                            stepper shows what the server saved, not stale state. */}
+                        <div className="space-y-2">
+                          {product.variants.map((variant) => (
+                            <form
+                              key={`${variant.id}-${variant.stock}`}
+                              action={setStock}
+                              className="flex items-center gap-2"
+                            >
+                              <input type="hidden" name="variantId" value={variant.id} />
+                              <input type="hidden" name="previousStock" value={variant.stock} />
+                              {variantLabel(variant) && (
+                                <span className="w-24 shrink-0 truncate uppercase tracking-wider">
+                                  {variantLabel(variant)}
+                                </span>
+                              )}
+                              <QuantityStepper
+                                id={product.variants.length === 1 ? `stock-${product.id}` : `stock-v${variant.id}`}
+                                name="stock"
+                                min={0}
+                                max={MAX_STOCK}
+                                defaultValue={variant.stock}
+                                editable
+                                className="w-32"
+                              />
+                              <Button type="submit" variant="secondary" size="sm" className="py-3.5">
+                                SAVE
+                              </Button>
+                            </form>
+                          ))}
                           {product.hidden ? (
                             <Badge>HIDDEN</Badge>
                           ) : (
                             product.sold_out && <Badge variant="solid">SOLD OUT</Badge>
                           )}
-                        </form>
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <Link
