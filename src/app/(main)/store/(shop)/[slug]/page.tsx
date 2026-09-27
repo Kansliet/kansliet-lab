@@ -5,19 +5,30 @@ import { SITE_URL } from "@/lib/site";
 import { productRef } from "@/components/store/ProductImage";
 import { errorMessage } from "@/lib/error-codes";
 import { getProductBySlug, getProducts } from "@/lib/products";
-import { addToCart } from "@/app/(main)/store/(shop)/cart/actions";
-import { Button } from "@/components/ui/button";
-import { ProductImage } from "@/components/store/ProductImage";
-import { Carousel } from "@/components/ui/carousel";
-import { QuantityStepper } from "@/components/store/QuantityStepper";
-import { maxLineQuantity } from "@/lib/cart";
+import {
+  VariantAddToCart,
+  VariantGallery,
+  VariantOptions,
+  VariantProvider,
+  VariantStatus,
+  type PickerProduct,
+} from "@/components/store/variant-picker";
+import {
+  imagesFor,
+  optionSlug,
+  productCover,
+  resolveSelection,
+  selectionQuery,
+  variantLabel,
+} from "@/lib/variants";
 import { SpecSheet } from "@/components/spec-sheet";
 import { SiblingRow } from "@/components/sibling-row";
 import { ScrollRail } from "@/components/scroll-rail";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ error?: string }>;
+  // error, plus one parameter per option (?colour=sand&size=m).
+  searchParams: Promise<Record<string, string | undefined>>;
 };
 
 export async function generateMetadata({
@@ -47,7 +58,8 @@ export default async function ProductPage({
   searchParams,
 }: ProductPageProps) {
   const { slug } = await params;
-  const error = errorMessage((await searchParams).error);
+  const query = await searchParams;
+  const error = errorMessage(query.error);
 
   const product = await getProductBySlug(slug);
   if (!product) {
@@ -60,30 +72,75 @@ export default async function ProductPage({
   ]);
   const displayPrice = formatPrice(price.amount, price.currency);
 
-  // Product structured data, so search results can show price and stock.
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
+  const selection = resolveSelection(product, query);
+  const picker: PickerProduct = {
+    id: product.id,
     name: product.name,
-    description: product.tagline ?? paragraphs(product.description)[0],
-    sku: productRef(product.id),
-    category: product.category,
-    ...(product.images.length ? { image: product.images } : {}),
-    brand: { "@type": "Brand", name: "Kansliet" },
-    offers: {
-      "@type": "Offer",
-      url: `${SITE_URL}/store/${product.slug}`,
-      price: price.amount.toFixed(2),
-      priceCurrency: price.currency,
-      availability: product.sold_out
-        ? "https://schema.org/OutOfStock"
-        : "https://schema.org/InStock",
-    },
+    hidden: product.hidden,
+    images: product.images,
+    options: product.options,
+    variants: product.variants.map(({ id, option1, option2, stock }) => ({ id, option1, option2, stock })),
   };
 
+  // Structured data, so search results can show price and stock: a Product,
+  // or for a product with options a ProductGroup listing every variant.
+  const url = `${SITE_URL}/store/${product.slug}`;
+  const offer = (inStock: boolean, offerUrl: string) => ({
+    "@type": "Offer",
+    url: offerUrl,
+    price: price.amount.toFixed(2),
+    priceCurrency: price.currency,
+    availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+  });
+  const base = {
+    "@context": "https://schema.org",
+    name: product.name,
+    description: product.tagline ?? paragraphs(product.description)[0],
+    category: product.category,
+    brand: { "@type": "Brand", name: "Kansliet" },
+  };
+  const jsonLd =
+    product.options.length === 0
+      ? {
+          ...base,
+          "@type": "Product",
+          sku: productRef(product.id),
+          ...(product.images.length ? { image: product.images } : {}),
+          offers: offer(!product.sold_out, url),
+        }
+      : {
+          ...base,
+          "@type": "ProductGroup",
+          productGroupID: productRef(product.id),
+          url,
+          variesBy: product.options.map((option) =>
+            optionSlug(option.name) === "colour" || optionSlug(option.name) === "color"
+              ? "https://schema.org/color"
+              : optionSlug(option.name) === "size"
+                ? "https://schema.org/size"
+                : option.name
+          ),
+          hasVariant: product.variants.map((variant) => {
+            const images = imagesFor(product, variant.option1);
+            return {
+              "@type": "Product",
+              sku: `${productRef(product.id)}-${variant.id}`,
+              name: `${product.name}, ${variantLabel(variant)}`,
+              ...(images.length ? { image: images } : {}),
+              offers: offer(
+                !product.hidden && variant.stock > 0,
+                `${url}?${selectionQuery(product, variant)}`
+              ),
+            };
+          }),
+        };
+
   return (
-    // Same split as /works/[id]: MainLayoutShell locks this to one viewport
-    // on desktop, so the image fills the left half and the info pane scrolls.
+    // Every page-level part that follows the colour / size pick is a client
+    // piece under this provider; the rest stays server-rendered.
+    <VariantProvider product={picker} initial={selection}>
+    {/* Same split as /works/[id]: MainLayoutShell locks this to one viewport
+        on desktop, so the image fills the left half and the info pane scrolls. */}
     <div className="scroll-pane-scope relative flex min-h-0 w-full flex-col bg-background lg:h-full lg:flex-row">
       <script
         type="application/ld+json"
@@ -92,28 +149,7 @@ export default async function ProductPage({
         }}
       />
       <aside className="flex aspect-4/5 min-h-0 w-full shrink-0 flex-col lg:aspect-auto lg:h-full lg:w-1/2 lg:border-r lg:border-foreground">
-        {product.images.length > 1 ? (
-          // Same carousel as /works/[id]: click or arrows to advance, dots below.
-          <Carousel
-            images={product.images.map((src, index) => ({
-              src,
-              alt: `${product.name}, photo ${index + 1} of ${product.images.length}`,
-            }))}
-            variant="fullHeight"
-            aria-label={`${product.name} photos`}
-            className="grain h-full min-h-0 flex-1"
-          />
-        ) : (
-          <ProductImage
-            id={product.id}
-            name={product.name}
-            imageUrl={product.image_url}
-            tone="grain"
-            className="h-full w-full"
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            priority
-          />
-        )}
+        <VariantGallery />
       </aside>
 
       {/* Desktop: the pane scrolls, not the page, so it drives its own rail. */}
@@ -136,7 +172,7 @@ export default async function ProductPage({
             <SpecSheet
               title={`SPEC — ${productRef(product.id)}`}
               rows={[
-                ["Status", product.sold_out ? "Sold out" : "In stock"],
+                ["Status", <VariantStatus key="status" />],
                 ["Category", product.category],
                 ...product.specs.map((spec): [string, string] => [spec.label, spec.value]),
               ]}
@@ -148,7 +184,7 @@ export default async function ProductPage({
             items={catalog.map((item) => ({
               href: `/store/${item.slug}`,
               label: item.name,
-              image: item.image_url,
+              image: productCover(item),
               current: item.id === product.id,
             }))}
           />
@@ -172,39 +208,11 @@ export default async function ProductPage({
             </div>
           )}
 
-          {product.sold_out ? (
-            <Button type="button" disabled className="w-full max-w-xl">
-              SOLD OUT — {displayPrice}
-            </Button>
-          ) : (
-            <div className="flex max-w-xl flex-col gap-2">
-              <form action={addToCart} className="flex items-end gap-3">
-                <input type="hidden" name="productId" value={product.id} />
-                <div className="w-32 shrink-0">
-                  <label htmlFor="quantity" className="dossier-label mb-2 block">
-                    QTY
-                  </label>
-                  <QuantityStepper
-                    id="quantity"
-                    name="quantity"
-                    max={maxLineQuantity(product.stock)}
-                  />
-                </div>
-                <Button type="submit" className="flex-1 justify-between gap-4 py-3.5">
-                  <span>ADD TO CART</span>
-                  <span className="tabular-nums">{displayPrice}</span>
-                </Button>
-              </form>
-              {/* Prices include VAT (prisinformationslagen) without saying so, the
-                  Swedish norm for consumer shops. Extra delivery costs must be
-                  flagged before purchase, hence this line. */}
-              <p className="text-normal-case text-sm font-light opacity-60 sm:text-right">
-                Shipping is calculated in the cart.
-              </p>
-            </div>
-          )}
+          <VariantOptions />
+          <VariantAddToCart displayPrice={displayPrice} />
         </div>
       </div>
     </div>
+    </VariantProvider>
   );
 }

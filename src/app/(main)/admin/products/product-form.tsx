@@ -5,6 +5,8 @@ import Link from "next/link";
 import { slugify, type ProductFields } from "@/lib/product-form";
 import { saveProduct, type ProductFormState } from "./actions";
 import { PhotoManager } from "./photo-manager";
+import { OptionsEditor, type EditorVariant } from "./options-editor";
+import type { ProductOption } from "@/lib/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,9 +38,18 @@ type ProductFormProps = {
   initial: ProductFields;
   images?: string[];
   categories: string[];
+  options?: ProductOption[];
+  variants?: EditorVariant[];
 };
 
-export function ProductForm({ productId, initial, images = [], categories }: ProductFormProps) {
+export function ProductForm({
+  productId,
+  initial,
+  images = [],
+  categories,
+  options = [],
+  variants = [],
+}: ProductFormProps) {
   const [state, formAction, pending] = useActionState<ProductFormState, FormData>(
     saveProduct,
     { error: null }
@@ -49,7 +60,11 @@ export function ProductForm({ productId, initial, images = [], categories }: Pro
   const [slug, setSlug] = useState(fields.slug);
   const [slugTouched, setSlugTouched] = useState(Boolean(productId));
 
-  const [uploading, setUploading] = useState(false);
+  // Photo uploads can run in several managers at once (shared + one per colour).
+  const [uploads, setUploads] = useState(0);
+  const uploading = uploads > 0;
+  const onBusyChange = (busy: boolean) => setUploads((n) => Math.max(0, n + (busy ? 1 : -1)));
+  const [hasOptions, setHasOptions] = useState(options.length > 0);
 
   const prose = "text-normal-case tracking-normal";
   const resetKey = JSON.stringify(state.fields ?? null);
@@ -127,15 +142,26 @@ export function ProductForm({ productId, initial, images = [], categories }: Pro
               defaultValue={fields.price}
             />
           </Field>
-          <Field label="STOCK" htmlFor="stock">
-            <Input
-              id="stock"
-              name="stock"
-              inputMode="numeric"
-              required
-              defaultValue={fields.stock}
-            />
-          </Field>
+          {hasOptions ? (
+            <div>
+              <p className="dossier-label mb-2">STOCK</p>
+              {/* Unused while there are options; kept so the form still validates. */}
+              <input type="hidden" name="stock" value={fields.stock} />
+              <p className="text-normal-case pt-3 text-sm font-light opacity-60">
+                Per combination, under Options.
+              </p>
+            </div>
+          ) : (
+            <Field label="STOCK" htmlFor="stock">
+              <Input
+                id="stock"
+                name="stock"
+                inputMode="numeric"
+                required
+                defaultValue={fields.stock}
+              />
+            </Field>
+          )}
         </div>
 
         <Field label="TAGLINE" htmlFor="tagline" hint="One line, shown large on the product page and in Stripe Checkout.">
@@ -164,9 +190,30 @@ export function ProductForm({ productId, initial, images = [], categories }: Pro
         </Field>
       </div>
 
-      <Field label="PHOTOS" htmlFor="photo-picker">
-        <PhotoManager initial={images} onBusyChange={setUploading} />
+      <Field label={hasOptions ? "SHARED PHOTOS" : "PHOTOS"} htmlFor="photo-picker">
+        <PhotoManager
+          initial={images}
+          onBusyChange={onBusyChange}
+          hint={
+            hasOptions
+              ? "Shown after each colour's own photos (details, in use). A product with no colour photos uses these as its cover."
+              : undefined
+          }
+        />
       </Field>
+
+      <div>
+        <p className="dossier-label mb-2">OPTIONS</p>
+        <p className="text-normal-case mb-4 text-sm font-light opacity-60">
+          Colours and sizes, each combination with its own stock. Leave empty for a single item.
+        </p>
+        <OptionsEditor
+          initial={options}
+          existing={variants}
+          onBusyChange={onBusyChange}
+          onHasOptionsChange={setHasOptions}
+        />
+      </div>
 
       <label key={`hidden-${resetKey}`} className="flex items-center gap-3 text-sm">
         <input
