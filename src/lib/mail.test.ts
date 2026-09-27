@@ -27,7 +27,7 @@ describe("sendCustomerEmail", () => {
     await sendCustomerEmail(message, internal);
     const customer = sendMock.mock.calls[0][0];
     expect(customer).toMatchObject({
-      from: "Kansliet <store@kansliet.co>",
+      from: '"KANSLIET (STORE)" <store@kansliet.co>',
       to: "anna@example.com",
       replyTo: "store@kansliet.co",
       subject: "Order confirmation KDC-00042",

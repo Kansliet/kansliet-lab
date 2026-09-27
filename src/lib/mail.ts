@@ -7,7 +7,9 @@ import { COMPANY } from "@/lib/shop-info";
  * desk@ to desk@ is delivered, but Gmail files it as sent mail, not in the inbox.
  */
 const STORE_ADDRESS = "store@kansliet.co";
-const CUSTOMER_SENDER = `Kansliet <${STORE_ADDRESS}>`;
+// Quoted: unquoted parentheses in an address header are a comment, which
+// mail clients may drop, leaving just "KANSLIET".
+const CUSTOMER_SENDER = `"KANSLIET (STORE)" <${STORE_ADDRESS}>`;
 const STORE_SENDER = `Kansliet Store <${STORE_ADDRESS}>`;
 
 export type InternalTag = "NEW ORDER" | "WITHDRAWAL";
