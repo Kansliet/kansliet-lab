@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import NextImage from "next/image";
 import { clampToBounds, createBall, hold, isAtRest, release, speed, step, strike, type Params } from "./physics";
 import { inverseMatrix } from "./quaternion";
 import { BALL_PAD, createBallRenderer, type BallRenderer } from "./shader";
@@ -313,8 +314,10 @@ export function SteelBall({ readoutRef }: { readoutRef: React.RefObject<HTMLElem
       />
       <div ref={ballRef} className="absolute top-0 left-0 will-change-transform">
         {fallback ? (
-          // eslint-disable-next-line @next/next/no-img-element -- fallback only; transformed every frame
-          <img src={PHOTO} alt="" draggable={false} className="h-full w-full" />
+          // Fallback only (no WebGL). next/image serves it at the ball's size
+          // (at most 322 px, see diameterFor) as WebP/AVIF instead of the
+          // 1.1 MB source PNG. The wrapper div carries the per-frame transform.
+          <NextImage src={PHOTO} alt="" fill sizes="322px" draggable={false} className="object-contain" />
         ) : (
           <canvas ref={canvasRef} className="block h-full w-full" />
         )}
