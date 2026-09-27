@@ -32,6 +32,12 @@ const PURPOSES = [
     kept: "Up to 2 years after our last contact",
   },
   {
+    what: "Newsletter (only if you sign up or tick the box in the cart)",
+    data: "Email address, when and how you subscribed",
+    basis: "Consent (art. 6.1 a)",
+    kept: "Until you unsubscribe (link in every newsletter)",
+  },
+  {
     what: "Site analytics (only if you accept)",
     data: "Pages visited, device and browser, approximate location, a random ID",
     basis: "Consent (art. 6.1 a)",
@@ -100,8 +106,8 @@ export default function PrivacyPage() {
               <strong className="font-normal">Vercel</strong> hosts the site and its database.
             </>,
             <>
-              <strong className="font-normal">Resend</strong> sends order confirmations and
-              delivers contact form messages to us.
+              <strong className="font-normal">Resend</strong> sends order confirmations and the
+              newsletter, keeps the newsletter list, and delivers contact form messages to us.
             </>,
             <>
               <strong className="font-normal">Google</strong> provides Google Analytics, only if you
@@ -141,7 +147,7 @@ export default function PrivacyPage() {
           ]}
         />
         <p>
-          You can withdraw consent to analytics at any time; this doesn&apos;t affect processing
+          You can withdraw consent to analytics or the newsletter at any time; this doesn&apos;t affect processing
           before you withdrew it. Email <MailLink />; we reply within one month. Order records we
           must keep for accounting can&apos;t be deleted before the legal period ends.
         </p>

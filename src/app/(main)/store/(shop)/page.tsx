@@ -5,6 +5,8 @@ import { getCategories, getProducts } from "@/lib/products";
 import { quickAddToCart } from "@/app/(main)/store/(shop)/cart/actions";
 import { Grid, GridItem, GridItemTitle, GridItemMeta } from "@/components/ui/grid";
 import { ProductImage } from "@/components/store/ProductImage";
+import { SignupForm } from "@/components/newsletter/signup-form";
+import { mintFormToken } from "@/lib/form-token";
 
 export const metadata: Metadata = {
   title: "KANSLIET (STORE)",
@@ -142,6 +144,19 @@ export default async function StorePage({ searchParams }: StorePageProps) {
                 ))}
               </Grid>
             )}
+          </div>
+
+          <div className="mt-20 max-w-xl border-t-brutal pt-8">
+            <h2 className="dossier-label mb-4">NEWSLETTER</h2>
+            <p className="text-normal-case mb-6 text-sm font-light leading-relaxed">
+              New objects in the store, and the occasional note from the studio. No spam;
+              unsubscribe any time. See the{" "}
+              <Link href="/privacy#purposes" className="underline hover:opacity-60">
+                privacy policy
+              </Link>
+              .
+            </p>
+            <SignupForm formToken={mintFormToken()} />
           </div>
         </div>
       </section>

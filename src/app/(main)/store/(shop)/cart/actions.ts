@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import type Stripe from "stripe";
-import { stripe } from "@/lib/stripe";
+import { getPrice, stripe } from "@/lib/stripe";
 import {
   COMPANY,
   COUNTRY_NAMES,
@@ -13,6 +13,7 @@ import {
   TERMS_VERSION,
   WITHDRAWAL_DAYS,
   regionForCountry,
+  shippingCost,
 } from "@/lib/shop-info";
 import { getAppBaseUrl } from "@/lib/site";
 import { withError } from "@/lib/error-codes";
@@ -155,6 +156,23 @@ export async function checkoutCart(formData: FormData) {
     }
   }
 
+  // Free shipping is decided here from Stripe's prices (the same cached map the
+  // cart shows, so the two always agree), never from anything the browser sent.
+  // A price edited in the admin busts that cache at once; one edited directly
+  // in the Stripe dashboard can lag up to 5 minutes.
+  const prices = await Promise.all(
+    cart.map((item) => getPrice(productsById.get(item.productId)!.stripe_price_id))
+  );
+  const subtotalCents = cart.reduce(
+    (sum, item, i) => sum + Math.round(prices[i].amount * 100) * item.quantity,
+    0
+  );
+  const shipping = shippingCost(region, subtotalCents);
+
+  // Unticked by default; buyers who tick it are added to the list by the
+  // webhook once the payment goes through (see lib/newsletter).
+  const newsletter = formData.get("newsletter") === "on";
+
   const baseUrl = getAppBaseUrl();
 
   let sessionUrl: string | null;
@@ -172,8 +190,8 @@ export async function checkoutCart(formData: FormData) {
         {
           shipping_rate_data: {
             type: "fixed_amount",
-            display_name: `Shipping to ${COUNTRY_NAMES[country] ?? country}`,
-            fixed_amount: { amount: region.amount, currency: STORE_CURRENCY },
+            display_name: `${shipping === 0 ? "Free shipping" : "Shipping"} to ${COUNTRY_NAMES[country] ?? country}`,
+            fixed_amount: { amount: shipping, currency: STORE_CURRENCY },
             delivery_estimate: {
               minimum: { unit: "business_day", value: minDays + DISPATCH_DAYS },
               maximum: { unit: "business_day", value: maxDays + DISPATCH_DAYS },
@@ -187,7 +205,11 @@ export async function checkoutCart(formData: FormData) {
         },
       },
       // Which terms the customer accepted, for the record.
-      metadata: { terms_version: TERMS_VERSION, ship_country: country },
+      metadata: {
+        terms_version: TERMS_VERSION,
+        ship_country: country,
+        ...(newsletter ? { newsletter: "1" } : {}),
+      },
       success_url: `${baseUrl}/store/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/store/cart`,
       integration_identifier: "kansliet-shop-vqxmzrtl",

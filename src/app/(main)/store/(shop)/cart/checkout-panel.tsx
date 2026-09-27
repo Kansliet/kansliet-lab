@@ -9,6 +9,7 @@ import {
   WITHDRAWAL_DAYS,
   formatMoney,
   regionForCountry,
+  shippingCost,
 } from "@/lib/shop-info";
 import { checkoutCart } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,9 @@ export function CheckoutPanel({ subtotalCents }: { subtotalCents: number }) {
   const [country, setCountry] = useState("SE");
   const region = regionForCountry(country)!;
   const [min, max] = region.deliveryDays;
+  const shipping = shippingCost(region, subtotalCents);
+  const toFree =
+    region.freeFrom !== undefined && shipping > 0 ? region.freeFrom - subtotalCents : null;
 
   return (
     <form action={checkoutCart} className="mt-8 grid gap-6">
@@ -48,9 +52,9 @@ export function CheckoutPanel({ subtotalCents }: { subtotalCents: number }) {
           <dt className="opacity-60">SUBTOTAL</dt>
           <dd>{formatMoney(subtotalCents)}</dd>
           <dt className="opacity-60">SHIPPING</dt>
-          <dd>{formatMoney(region.amount)}</dd>
+          <dd>{shipping === 0 ? "FREE" : formatMoney(shipping)}</dd>
           <dt className="dossier-label mt-2 justify-self-start md:justify-self-end">TOTAL</dt>
-          <dd className="mt-2 text-lg">{formatMoney(subtotalCents + region.amount)}</dd>
+          <dd className="mt-2 text-lg">{formatMoney(subtotalCents + shipping)}</dd>
         </dl>
       </div>
 
@@ -62,6 +66,7 @@ export function CheckoutPanel({ subtotalCents }: { subtotalCents: number }) {
             `Exported without Swedish VAT, at the same price. Import VAT, duty and carrier fees in ${COUNTRY_NAMES[country]} are paid by you on delivery. `}
           Dispatched within {DISPATCH_DAYS} business days, then {min}–{max} business days to{" "}
           {COUNTRY_NAMES[country]}.
+          {toFree !== null && ` Free shipping to ${COUNTRY_NAMES[country]} from ${formatMoney(region.freeFrom!)}: ${formatMoney(toFree)} to go.`}
         </p>
         <p>
           {WITHDRAWAL_DAYS}-day right of withdrawal; you pay return shipping. Payment and shipping
@@ -99,6 +104,14 @@ export function CheckoutPanel({ subtotalCents }: { subtotalCents: number }) {
           </span>
         </label>
       </div>
+
+      {/* Marketing consent: never pre-ticked, and not a condition of buying. */}
+      <label className="flex cursor-pointer items-start gap-4 px-4 text-sm">
+        <input type="checkbox" name="newsletter" className="mt-0.5 size-[18px] shrink-0 cursor-pointer accent-foreground" />
+        <span className="text-normal-case font-light">
+          Send me the Kansliet newsletter (optional; unsubscribe any time).
+        </span>
+      </label>
 
       <div className="flex justify-end">
         <Button type="submit" size="lg" className="w-full md:w-auto">

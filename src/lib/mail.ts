@@ -14,6 +14,46 @@ const STORE_SENDER = `Kansliet Store <${STORE_ADDRESS}>`;
 
 export type InternalTag = "NEW ORDER" | "WITHDRAWAL";
 
+function resendClient(): Resend {
+  if (!process.env.RESEND_API_KEY?.trim()) {
+    throw new Error("RESEND_API_KEY not set");
+  }
+  // Constructed per call, not at module scope: the Resend constructor throws
+  // on a missing key, and the build must not depend on it.
+  return new Resend(process.env.RESEND_API_KEY);
+}
+
+/** A plain-text email from store@ with no internal copy (newsletter confirmations). Throws on failure. */
+export async function sendStoreEmail(message: { to: string; subject: string; text: string }) {
+  const { error } = await resendClient().emails.send({
+    from: CUSTOMER_SENDER,
+    to: message.to,
+    replyTo: STORE_ADDRESS,
+    subject: message.subject,
+    text: message.text,
+  });
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * Adds an address to the newsletter list (Resend contact in `segmentId`),
+ * re-subscribing it if it had unsubscribed. Throws on failure.
+ */
+export async function addNewsletterContact(email: string, segmentId: string) {
+  const resend = resendClient();
+  const created = await resend.contacts.create({
+    email,
+    unsubscribed: false,
+    segments: [{ id: segmentId }],
+  });
+  if (!created.error) return;
+  // Already a contact (a buyer, or signed up before): opt back in and add to the list.
+  const updated = await resend.contacts.update({ email, unsubscribed: false });
+  if (updated.error) throw new Error(updated.error.message);
+  const added = await resend.contacts.segments.add({ email, segmentId });
+  if (added.error) throw new Error(added.error.message);
+}
+
 /**
  * A plain-text email to a customer (from and replying to store@),
  * then a separate copy to desk@ from store@, subject "[NEW ORDER] KDC-00042",
@@ -25,12 +65,7 @@ export async function sendCustomerEmail(
   message: { to: string; subject: string; text: string },
   internal: { tag: InternalTag; orderRef: string },
 ) {
-  if (!process.env.RESEND_API_KEY?.trim()) {
-    throw new Error("RESEND_API_KEY not set");
-  }
-  // Constructed here, not at module scope: the Resend constructor throws on a
-  // missing key, and the build must not depend on it.
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  const resend = resendClient();
 
   let failure: Error | null = null;
   try {
