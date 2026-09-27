@@ -84,8 +84,8 @@ export const WITHDRAWAL_DAYS = 14;
 export const REFUND_DAYS = 14;
 /**
  * The online withdrawal function ("ångerknapp", EU directive 2023/2673,
- * art. 11a CRD): must stay reachable for the whole withdrawal period, so it's
- * linked from the nav, the terms and every order confirmation.
+ * art. 11a CRD; 2 kap. 10 a § distansavtalslagen): linked from the terms
+ * (section on withdrawal) and every order confirmation.
  */
 export const WITHDRAW_PATH = "/store/withdraw";
 /** Reklamationsrätt: years from receipt (konsumentköplagen 5 kap). */

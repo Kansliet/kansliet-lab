@@ -15,8 +15,11 @@ export type Sibling = {
  */
 export function SiblingRow({ items, label }: { items: Sibling[]; label: string }) {
   return (
-    <nav aria-label={label} className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <ul className="flex gap-1.5 py-1">
+    // The selected plate's outline sits 3px outside it (1px + 2px offset), and
+    // a scrolling row clips at its edges: px-1 leaves room for it at both
+    // ends, and -mx-1 keeps the plates where they were.
+    <nav aria-label={label} className="-mx-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <ul className="flex gap-1.5 px-1 py-1">
         {items.map((item) => (
           <li key={item.href} className="shrink-0">
             <Link
