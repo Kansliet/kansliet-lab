@@ -2,16 +2,18 @@ import { Resend } from "resend";
 import { COMPANY } from "@/lib/shop-info";
 
 /**
- * desk@'s own copy comes from a different address on the same domain: a BCC
- * from desk@ to desk@ is delivered, but Gmail files it as sent mail, not in
- * the inbox.
+ * Store mail (order and withdrawal confirmations) comes from, and takes
+ * replies at, store@. desk@'s own copy also comes from store@: a copy from
+ * desk@ to desk@ is delivered, but Gmail files it as sent mail, not in the inbox.
  */
-const STORE_SENDER = "Kansliet Store <store@kansliet.co>";
+const STORE_ADDRESS = "store@kansliet.co";
+const CUSTOMER_SENDER = `Kansliet <${STORE_ADDRESS}>`;
+const STORE_SENDER = `Kansliet Store <${STORE_ADDRESS}>`;
 
 export type InternalTag = "NEW ORDER" | "WITHDRAWAL";
 
 /**
- * A plain-text email to a customer (from RESEND_FROM_EMAIL, replies to desk@),
+ * A plain-text email to a customer (from and replying to store@),
  * then a separate copy to desk@ from store@, subject "[NEW ORDER] KDC-00042",
  * so every order and withdrawal lands in the inbox. The copy goes out even if
  * the customer's email fails, and says so, since that's when desk@ needs to
@@ -31,9 +33,9 @@ export async function sendCustomerEmail(
   let failure: Error | null = null;
   try {
     const { error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL ?? "Kansliet <onboarding@resend.dev>",
+      from: CUSTOMER_SENDER,
       to: message.to,
-      replyTo: COMPANY.email,
+      replyTo: STORE_ADDRESS,
       subject: message.subject,
       text: message.text,
     });
