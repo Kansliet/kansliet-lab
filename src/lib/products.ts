@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
 import { pool } from "@/lib/db";
+import { CACHE_SCOPE } from "@/lib/cache-scope";
 
 // Every read of the store catalog goes through here, so the row shape and
 // ordering are defined once. (Table names keep their original shop_* prefix.)
@@ -102,7 +103,7 @@ export const getProducts = unstable_cache(
     );
     return rows;
   },
-  ["store-products"],
+  ["store-products", CACHE_SCOPE],
   CATALOG_CACHE
 );
 
@@ -121,7 +122,7 @@ export const getCategories = unstable_cache(
     );
     return rows.map((row) => row.category);
   },
-  ["store-categories"],
+  ["store-categories", CACHE_SCOPE],
   CATALOG_CACHE
 );
 
@@ -139,7 +140,7 @@ export const getProductBySlug = cache(
       );
       return rows[0] ?? null;
     },
-    ["store-product-by-slug"],
+    ["store-product-by-slug", CACHE_SCOPE],
     CATALOG_CACHE
   )
 );
