@@ -8,6 +8,20 @@ Webstore at `/store`, with the orders admin at `/admin/orders` (login at `/login
 - Env vars: `DATABASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` (see `.env.example`).
 - Remote product image hosts must be listed in `images.remotePatterns` in `next.config.ts`.
 
+## How we ship
+
+One simple loop; `main` is the live site.
+
+1. **One branch per change, from the latest `main`.** Never build a branch on top of another unmerged branch: when the first merges, the second's PR ends up merging into nowhere (that's how #10 went missing).
+2. **One PR into `main`.** Vercel builds a preview for it (test Stripe keys, the shared `preview` database, never `main`).
+3. **If the PR says "needs migration"**, run that migration on production *before* merging. The old code keeps working with the new schema, so the order is always migrate, then merge.
+4. **Merge** (squash only: one PR = one commit on `main`; the branch is deleted automatically). Vercel deploys production.
+5. **Check the live site**: `/store`, a product page, the cart; for store changes, one real order (then refund it).
+
+**Migrations** live in `db/migrations/`, named by date, and every one must be **safe to re-run** (`IF NOT EXISTS`, `ON CONFLICT DO NOTHING`, backfills that skip rows already done): the preview auto-setup (`prepare-preview-db.mjs`) applies all of them on every preview build.
+
+**Destructive changes** (dropping columns or tables, rewriting data irreversibly) always come as their own PR, titled **DESTRUCTIVE**, saying what goes and how to check nothing still uses it first, and are reviewed separately.
+
 ## Local setup
 1. Postgres 17 runs in Docker (container `kansliet-pg`, db `kansliet`). On a fresh database, load the schema: `docker exec -i kansliet-pg psql -U postgres -d kansliet < db/schema.sql`
 2. Fill in the store vars in `.env.local`. Locally, `STRIPE_WEBHOOK_SECRET` is the Stripe CLI's signing secret (`stripe listen --print-secret`), not a dashboard endpoint's. Without it every webhook event gets a 500 (checked per request), so no orders are recorded.
@@ -19,7 +33,7 @@ Webstore at `/store`, with the orders admin at `/admin/orders` (login at `/login
 **Blockers before taking real money:**
 - [x] **Terms of sale + privacy notice.** `/terms`, `/privacy`, `/legal` (company info, cookie list, consent withdrawal). Cart requires accepting the terms (checked server-side); the order confirmation email carries the legally required info. All seller/shipping/rights facts live in `src/lib/shop-info.ts`.
 - [x] **Resend sender.** kansliet.co is verified in Resend. Order and withdrawal emails go from `"KANSLIET (STORE)" <store@kansliet.co>` with replies to store@ (set in `src/lib/mail.ts`, so store@ must exist in Google Workspace); desk@'s copies come from store@ too. `RESEND_FROM_EMAIL` is only the contact form's sender now.
-- [x] **Currency.** Prices are in SEK (`STORE_CURRENCY` in `src/lib/shop-info.ts`). Stripe Adaptive Pricing, if enabled, shows foreign customers their own currency at checkout; `amount_total` stays SEK and the order email adds what they were charged (`presentment_details`). EUR test prices were moved with `convert-prices-to-sek.mjs` (one-off, re-runnable).
+- [x] **Currency.** Prices are in SEK (`STORE_CURRENCY` in `src/lib/shop-info.ts`). Stripe Adaptive Pricing, if enabled, shows foreign customers their own currency at checkout; `amount_total` stays SEK and the order email adds what they were charged (`presentment_details`). EUR test prices were moved to SEK before launch (one-off, `scripts/archive/convert-prices-to-sek.mjs`).
 - [x] **VAT.** Prices include 25% Swedish VAT (said on product page, cart, email). Exports (Norway) at the same price without VAT. Past €10,000/yr of sales to other EU countries, switch to OSS (Stripe Tax).
 - [x] **Shipping costs.** Flat rate per region, chosen in the cart; the Checkout Session gets that country and rate only. UK and US are paused in `shop-info.ts` (UK VAT registration; US duties prepaid by sender).
 - [x] **Sizes and colours.** Products can have up to two options (Colour × Size), each combination a variant with its own stock and Stripe price; see Options below.
@@ -27,12 +41,12 @@ Webstore at `/store`, with the orders admin at `/admin/orders` (login at `/login
 
 **Infrastructure (Vercel):**
 1. Hosted Postgres (e.g. Neon via Vercel Marketplace). Load `db/schema.sql`, run `node seed-store-products.mjs` and `node seed-admin.mjs <email>` against it (prompts for a 16+ char password).
-2. Env vars for **Production and Preview** (the build evaluates the DB and Stripe modules, so a missing var fails the build): `DATABASE_URL` (the *pooled* connection string) and `STRIPE_SECRET_KEY` (live in Production, test in Preview, so a preview can never take a real payment). `STRIPE_WEBHOOK_SECRET` is **Production only**: Stripe only ever calls kansliet.co, and the webhook checks the secret per request, so its absence doesn't break preview builds. Plus the portfolio's `CONTACT_FORM_SECRET` (the contact form refuses submissions on production without it) and `RESEND_*`.
+2. Env vars for **Production and Preview** (the build evaluates the DB and Stripe modules, so a missing var fails the build): `DATABASE_URL` (the *pooled* connection string). Production gets `main`'s from the Neon integration (which serves Production only); Preview has its own `DATABASE_URL` and `DATABASE_URL_UNPOOLED` pointing at the shared Neon branch `preview` (endpoint `ep-little-wave-b1wlsic1`, never auto-deleted). `prepare-preview-db.mjs` refuses any other database, so a preview can never touch `main` and `STRIPE_SECRET_KEY` (live in Production, test in Preview, so a preview can never take a real payment). `STRIPE_WEBHOOK_SECRET` is **Production only**: Stripe only ever calls kansliet.co, and the webhook checks the secret per request, so its absence doesn't break preview builds. Plus the portfolio's `CONTACT_FORM_SECRET` (the contact form refuses submissions on production without it) and `RESEND_*`.
 3. Stripe dashboard: add a webhook endpoint `https://kansliet.co/api/store/webhook` for `checkout.session.completed`, `checkout.session.async_payment_succeeded` and `charge.refunded`; its signing secret is the production `STRIPE_WEBHOOK_SECRET`. Test mode and live mode are separate endpoints with separate secrets.
 4. Stripe settings: turn on **Adaptive Pricing** (Settings → Payments), if offered for the account, so EU/Norwegian customers can pay in EUR/DKK/NOK while payouts stay SEK. Payment notification emails to desk@kansliet.co are optional: the site already sends the order confirmation, plus a separate `[NEW ORDER] KDC-000xx` copy to desk@ from store@kansliet.co (a BCC from desk@ to desk@ is hidden by Gmail). Stripe's own receipt emails can stay on as a payment receipt.
 5. Vercel Firewall: rate-limit `POST /login` (e.g. 10/min per IP).
 6. Before deploying this code, apply `db/migrations/*.sql` in date order to the production database.
-7. After deploy: one real test-mode purchase end to end on the preview URL, then switch to live keys. **Switching to live:** every row still points at test-mode Stripe products/prices, which live keys can't see, so run `copy-products-to-live.mjs` once against the production database (dry run first, then `--apply`; usage at the top of the file). It copies each product, price and photo into the live account, is safe to re-run, and leaves stock, copy and orders alone. Then swap `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` to live on Vercel and redeploy.
+7. After deploy: one real test-mode purchase end to end on the preview URL, then switch to live keys. **Switching to live** (done at launch): the catalog's test-mode Stripe products were copied into the live account with a one-off script (deleted since, in git history as `copy-products-to-live.mjs`; it predates variants and wrote to live), then `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` were swapped to live on Vercel.
 
 **Refunds:** refund in the Stripe dashboard; the webhook (`charge.refunded`, which must be enabled on the endpoint alongside the two checkout events) records the amount and date on the order. A full refund marks it REFUNDED and, if it hadn't shipped, puts the stock back; for a shipped order, restock by hand when the goods come back. Partial refunds are recorded as an amount only. Orders store their `stripe_payment_intent_id` for this (`db/migrations/2026-09-26-order-refunds.sql`).
 

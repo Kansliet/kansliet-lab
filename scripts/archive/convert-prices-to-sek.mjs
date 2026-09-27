@@ -1,3 +1,7 @@
+// ARCHIVED (2026-09-27): one-off from before launch, when test prices moved
+// from EUR to SEK. Done; kept for the record. Written before product
+// variants, so it doesn't match the current schema. Don't run it.
+//
 // One-off: moves every product from its EUR Stripe price to a new SEK price
 // (EUR × 11, rounded to the nearest 10 kr) and archives the EUR price.
 // Fine-tune the amounts in /admin/products afterwards.
