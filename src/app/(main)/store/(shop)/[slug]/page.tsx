@@ -5,7 +5,7 @@ import { SITE_URL } from "@/lib/site";
 import { productRef } from "@/components/store/ProductImage";
 import { errorMessage } from "@/lib/error-codes";
 import { getProductBySlug, getProducts } from "@/lib/products";
-import { addToCart } from "@/app/(main)/store/cart/actions";
+import { addToCart } from "@/app/(main)/store/(shop)/cart/actions";
 import { Button } from "@/components/ui/button";
 import { ProductImage } from "@/components/store/ProductImage";
 import { Carousel } from "@/components/ui/carousel";

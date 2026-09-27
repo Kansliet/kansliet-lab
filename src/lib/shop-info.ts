@@ -73,12 +73,18 @@ export const DISPATCH_DAYS = 2;
 export const WITHDRAWAL_DAYS = 14;
 /** Refund deadline after a withdrawal notice (2 kap 14 §). */
 export const REFUND_DAYS = 14;
+/**
+ * The online withdrawal function ("ångerknapp", EU directive 2023/2673,
+ * art. 11a CRD): must stay reachable for the whole withdrawal period, so it's
+ * linked from the nav, the terms and every order confirmation.
+ */
+export const WITHDRAW_PATH = "/store/withdraw";
 /** Reklamationsrätt: years from receipt (konsumentköplagen 5 kap). */
 export const COMPLAINT_YEARS = 3;
 /** Defects appearing within this many years are presumed to have existed at delivery. */
 export const DEFECT_PRESUMPTION_YEARS = 2;
 
-export const TERMS_VERSION = "2026-09-24";
+export const TERMS_VERSION = "2026-09-27";
 
 /** Stripe currency code for every price, shipping rate and payout. */
 export const STORE_CURRENCY = "sek";

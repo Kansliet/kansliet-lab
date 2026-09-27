@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { mintFormToken, verifyFormToken } from "./token";
+import { mintFormToken, verifyFormToken } from "./form-token";
 
 afterEach(() => {
   vi.unstubAllEnvs();

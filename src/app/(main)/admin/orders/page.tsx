@@ -6,6 +6,7 @@ import { markShipped } from "./actions";
 import { AdminNav } from "../admin-nav";
 import Link from "next/link";
 import { orderRef } from "@/lib/order-email";
+import { formatStockholmTime } from "@/lib/withdrawal-email";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -31,11 +32,32 @@ type Order = {
   currency: string;
   fulfillment_status: string;
   created_at: string;
+  withdrawn_at: string | null;
+};
+
+type Withdrawal = {
+  id: number;
+  shop_order_id: number | null;
+  order_ref: string;
+  name: string;
+  email: string;
+  created_at: Date;
+  acknowledged_at: Date | null;
 };
 
 async function getOrders(): Promise<Order[]> {
   const { rows } = await pool.query<Order>(
-    "SELECT id, stripe_checkout_session_id, customer_email, shipping_name, shipping_address, amount_total, amount_refunded, currency, fulfillment_status, created_at FROM shop_orders ORDER BY created_at DESC"
+    `SELECT o.id, o.stripe_checkout_session_id, o.customer_email, o.shipping_name, o.shipping_address,
+            o.amount_total, o.amount_refunded, o.currency, o.fulfillment_status, o.created_at,
+            (SELECT min(w.created_at) FROM shop_withdrawals w WHERE w.shop_order_id = o.id) AS withdrawn_at
+     FROM shop_orders o ORDER BY o.created_at DESC`
+  );
+  return rows;
+}
+
+async function getWithdrawals(): Promise<Withdrawal[]> {
+  const { rows } = await pool.query<Withdrawal>(
+    "SELECT id, shop_order_id, order_ref, name, email, created_at, acknowledged_at FROM shop_withdrawals ORDER BY created_at DESC"
   );
   return rows;
 }
@@ -56,13 +78,58 @@ const TH = "px-4 py-3 text-sm font-light uppercase tracking-wider opacity-60";
 
 export default async function StoreOrdersPage() {
   await requireSession();
-  const orders = await getOrders();
+  const [orders, withdrawals] = await Promise.all([getOrders(), getWithdrawals()]);
 
   return (
     <div className="min-h-screen bg-background">
       <section className="py-20">
         <div className="container-kansliet">
           <AdminNav active="ORDERS" />
+
+          {withdrawals.length > 0 && (
+            <div className="mb-12">
+              <h2 className="dossier-label mb-4">WITHDRAWALS</h2>
+              <div className="overflow-x-auto border-brutal">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b-brutal">
+                    <tr>
+                      <th className={TH}>RECEIVED</th>
+                      <th className={TH}>ORDER</th>
+                      <th className={TH}>CUSTOMER</th>
+                      <th className={TH}>RECEIPT</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {withdrawals.map((w, index) => (
+                      <tr key={w.id} className={index > 0 ? "border-t-brutal" : ""}>
+                        <td className="px-4 py-3 tabular-nums whitespace-nowrap">
+                          {formatStockholmTime(w.created_at)}
+                        </td>
+                        <td className="px-4 py-3 tabular-nums whitespace-nowrap">
+                          <div>{w.order_ref}</div>
+                          {/* Order number and email didn't both match an order: find it by hand. */}
+                          {w.shop_order_id === null && (
+                            <div className="font-light opacity-60">NO MATCH</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div>{w.name}</div>
+                          <div className="font-light opacity-60">{w.email}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          {w.acknowledged_at ? (
+                            <Badge>SENT</Badge>
+                          ) : (
+                            <Badge variant="solid">NOT SENT, EMAIL BY HAND</Badge>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {orders.length === 0 ? (
             <div className="border-brutal p-10 text-center">
@@ -113,6 +180,11 @@ export default async function StoreOrdersPage() {
                         <Badge variant={order.fulfillment_status === "paid" ? "solid" : "default"}>
                           {order.fulfillment_status.toUpperCase()}
                         </Badge>
+                        {order.withdrawn_at && (
+                          <div className="mt-1 font-light whitespace-nowrap opacity-60">
+                            WITHDRAWN {formatDate(order.withdrawn_at)}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-4">

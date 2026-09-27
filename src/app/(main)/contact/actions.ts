@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { Resend } from "resend";
-import { verifyFormToken } from "./token";
+import { verifyFormToken } from "@/lib/form-token";
 
 const MAX_NAME = 200;
 const MAX_EMAIL = 254;

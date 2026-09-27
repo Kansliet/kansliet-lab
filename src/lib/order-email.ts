@@ -41,6 +41,17 @@ export function orderRef(orderId: number): string {
   return `KDC-${String(orderId).padStart(5, "0")}`;
 }
 
+/**
+ * The order id in a reference as a customer might type it: "KDC-00042",
+ * "kdc 42", "#42", "42". Null for anything else.
+ */
+export function parseOrderRef(input: string): number | null {
+  const match = /^\s*#?\s*(?:KDC[\s-]*)?0*(\d{1,9})\s*$/i.exec(input);
+  if (!match) return null;
+  const id = Number(match[1]);
+  return id > 0 ? id : null;
+}
+
 /** VAT contained in a VAT-inclusive amount, in cents. */
 export function includedVat(totalCents: number, ratePercent = VAT_RATE_PERCENT): number {
   return Math.round(totalCents - totalCents / (1 + ratePercent / 100));

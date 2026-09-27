@@ -3,7 +3,7 @@ import { cartItemCount, getCart } from "@/lib/cart";
 
 // A small tab pinned to the top-right corner of every store page, in the same
 // style as the axis tabs — the store's one cart affordance, so it lives once in
-// the store layout rather than being repeated per-page.
+// the shop layout rather than being repeated per-page.
 export async function CartIcon() {
   const count = cartItemCount(await getCart());
 

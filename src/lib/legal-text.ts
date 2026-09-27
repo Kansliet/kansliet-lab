@@ -3,6 +3,7 @@ import {
   COMPLAINT_YEARS,
   REFUND_DAYS,
   WITHDRAWAL_DAYS,
+  WITHDRAW_PATH,
 } from "@/lib/shop-info";
 
 // Legal wording used in more than one place: the /terms page renders it, and
@@ -18,7 +19,7 @@ export const SELLER_LINES = [
 /** The right of withdrawal, in the order the email and the terms state it. */
 export const WITHDRAWAL_PARAGRAPHS = [
   `You have the right to withdraw from your purchase within ${WITHDRAWAL_DAYS} days without giving any reason. The period starts the day you, or someone you name (not the carrier), receive the goods. If one order arrives in several parcels, it starts when you receive the last one.`,
-  `To withdraw, tell us before the period ends by emailing ${COMPANY.email} with your order number. You can use the model withdrawal form below, but you don't have to; any clear statement works.`,
+  `To withdraw, send us a clear statement before the period ends: through the withdrawal form at ${COMPANY.website}${WITHDRAW_PATH}, by email to ${COMPANY.email}, or by post to ${COMPANY.legalName}, ${COMPANY.address.join(", ")}. Include your order number. You can use the model withdrawal form below, but you don't have to; any clear statement works.`,
   `Send the goods back to us within ${WITHDRAWAL_DAYS} days of telling us. You pay the cost of returning them.`,
   `We refund everything you paid, including the standard shipping cost, within ${REFUND_DAYS} days of receiving your notice, to the same payment method. We may wait to refund until the goods are back with us or you have shown that you have sent them, whichever comes first.`,
   `You are responsible for any loss in value caused by handling the goods beyond what is needed to establish their nature, characteristics and function, the way you could in a shop.`,

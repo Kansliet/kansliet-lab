@@ -156,6 +156,41 @@ ALTER SEQUENCE public.shop_products_id_seq OWNED BY public.shop_products.id;
 
 
 --
+-- Name: shop_withdrawals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.shop_withdrawals (
+    id integer NOT NULL,
+    shop_order_id integer,
+    order_ref text NOT NULL,
+    name text NOT NULL,
+    email text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    acknowledged_at timestamp with time zone
+);
+
+
+--
+-- Name: shop_withdrawals_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.shop_withdrawals_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: shop_withdrawals_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.shop_withdrawals_id_seq OWNED BY public.shop_withdrawals.id;
+
+
+--
 -- Name: stripe_webhook_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -220,6 +255,13 @@ ALTER TABLE ONLY public.shop_products ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: shop_withdrawals id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shop_withdrawals ALTER COLUMN id SET DEFAULT nextval('public.shop_withdrawals_id_seq'::regclass);
+
+
+--
 -- Name: users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -275,6 +317,14 @@ ALTER TABLE ONLY public.shop_products
 
 
 --
+-- Name: shop_withdrawals shop_withdrawals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shop_withdrawals
+    ADD CONSTRAINT shop_withdrawals_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: stripe_webhook_events stripe_webhook_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -296,6 +346,20 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: shop_orders_payment_intent_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX shop_orders_payment_intent_key ON public.shop_orders USING btree (stripe_payment_intent_id) WHERE (stripe_payment_intent_id IS NOT NULL);
+
+
+--
+-- Name: shop_withdrawals_order_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX shop_withdrawals_order_key ON public.shop_withdrawals USING btree (shop_order_id);
 
 
 --
@@ -339,12 +403,15 @@ ALTER TABLE ONLY public.shop_orders
 
 
 --
--- Name: shop_orders_payment_intent_key; Type: INDEX; Schema: public; Owner: -
+-- Name: shop_withdrawals shop_withdrawals_shop_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX shop_orders_payment_intent_key ON public.shop_orders USING btree (stripe_payment_intent_id) WHERE (stripe_payment_intent_id IS NOT NULL);
+ALTER TABLE ONLY public.shop_withdrawals
+    ADD CONSTRAINT shop_withdrawals_shop_order_id_fkey FOREIGN KEY (shop_order_id) REFERENCES public.shop_orders(id) ON DELETE SET NULL;
 
 
 --
 -- PostgreSQL database dump complete
 --
+
+
