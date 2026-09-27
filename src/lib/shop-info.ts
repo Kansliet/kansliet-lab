@@ -13,6 +13,8 @@ export const COMPANY = {
   /** Geographic address, required by e-handelslagen 8 §. */
   address: ["Allévägen 30C", "311 45 Falkenberg", "Sweden"],
   email: "desk@kansliet.co",
+  /** Listed in the seller details: the law requires a phone number the company has. */
+  phone: { display: "+46 70 829 13 00", href: "tel:+46708291300" },
   website: "kansliet.co",
 } as const;
 

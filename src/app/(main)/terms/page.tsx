@@ -13,7 +13,7 @@ import {
   formatMoney,
 } from "@/lib/shop-info";
 import { MODEL_WITHDRAWAL_FORM, WITHDRAWAL_PARAGRAPHS } from "@/lib/legal-text";
-import { LegalDoc, LegalSection, MailLink, TextLink } from "@/components/legal/LegalDoc";
+import { LegalDoc, LegalSection, MailLink, PhoneLink, TextLink } from "@/components/legal/LegalDoc";
 
 export const metadata: Metadata = {
   title: "KANSLIET (TERMS OF SALE)",
@@ -65,6 +65,8 @@ export default function TermsPage() {
             </span>
           ))}
           <MailLink />
+          <br />
+          <PhoneLink />
         </p>
       </LegalSection>
 

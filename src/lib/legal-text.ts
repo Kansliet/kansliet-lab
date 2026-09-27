@@ -14,6 +14,7 @@ export const SELLER_LINES = [
   `${COMPANY.legalName} (org.nr ${COMPANY.orgNr}, VAT ${COMPANY.vatNr})`,
   COMPANY.address.join(", "),
   COMPANY.email,
+  COMPANY.phone.display,
 ];
 
 /** The right of withdrawal, in the order the email and the terms state it. */
