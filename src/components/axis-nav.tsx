@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { COMPANY, WITHDRAW_PATH } from "@/lib/shop-info";
+import { COMPANY } from "@/lib/shop-info";
 import { STORE_ENABLED } from "@/lib/store-flag";
 
 // The site's whole frame: two small tabs on one horizontal axis across the
@@ -25,9 +25,6 @@ const LEGAL = [
   { href: "/terms", label: "TERMS OF SALE" },
   { href: "/privacy", label: "PRIVACY" },
   { href: "/legal", label: "LEGAL & COOKIES" },
-  // The withdrawal function must be easy to find for 14 days after every
-  // delivery, so it's listed even while the store is closed.
-  { href: WITHDRAW_PATH, label: "WITHDRAW FROM CONTRACT" },
 ] as const;
 
 export function getActiveSection(pathname: string): string {
@@ -35,7 +32,7 @@ export function getActiveSection(pathname: string): string {
   if (pathname.startsWith("/works")) return "WORKS";
   if (pathname === "/studio") return "STUDIO";
   if (pathname === "/contact") return "CONTACT";
-  if (LEGAL.some((item) => item.href === pathname)) return "LEGAL";
+  if (LEGAL.some((item) => item.href === pathname) || pathname === "/store/withdraw") return "LEGAL";
   if (pathname === "/store/cart") return "CART";
   if (pathname.startsWith("/admin") || pathname === "/login") return "ADMIN";
   if (pathname.startsWith("/store")) return "STORE";
@@ -72,10 +69,10 @@ function useMinuteClock(): Date | null {
 }
 
 // flex! and the font size's ! because .dossier-label's own display and 8px size
-// would otherwise win (same layer, defined later). The tabs use the body size:
-// at the label size they were too small to read.
+// would otherwise win (same layer, defined later). 10px in a 28px tab: the 8px
+// label size was too small to read, the 11px body size a notch too big.
 const TAB =
-  "dossier-label flex! h-8 items-center gap-2 px-3 text-[length:var(--font-size-base)]! transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  "dossier-label flex! h-7 items-center gap-2 px-2.5 text-[0.625rem]! transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
 export function AxisNav() {
   const pathname = usePathname() ?? "";
@@ -160,9 +157,9 @@ export function AxisNav() {
         aria-modal="true"
         aria-label="Index"
         hidden={!open}
-        className="fixed right-0 z-201 w-full bg-foreground p-5 pt-10 text-background max-lg:bottom-3 max-lg:pb-14 sm:w-96 lg:top-[calc(50%+1rem)] lg:max-h-[calc(50vh-2rem)] lg:overflow-y-auto"
+        className="fixed right-0 z-201 w-full bg-foreground p-5 pt-10 text-background max-lg:bottom-3 max-lg:pb-12 sm:w-96 lg:top-[calc(50%+0.875rem)] lg:max-h-[calc(50vh-1.75rem)] lg:overflow-y-auto"
       >
-        <ul className="space-y-2 text-base tracking-wider">
+        <ul className="space-y-1.5 text-[0.625rem] tracking-wider">
           {SECTIONS.map((section) => (
             <li key={section.href}>
               <Link
@@ -176,7 +173,7 @@ export function AxisNav() {
           ))}
         </ul>
 
-        <ul className="mt-6 space-y-1 text-[0.625rem] tracking-wider opacity-80">
+        <ul className="mt-6 space-y-1 text-[0.5625rem] tracking-wider opacity-80">
           {LEGAL.map((item) => (
             <li key={item.href}>
               <Link href={item.href} className="uppercase transition-opacity hover:opacity-60">
@@ -186,7 +183,7 @@ export function AxisNav() {
           ))}
         </ul>
 
-        <div className="mt-6 space-y-1 text-[0.625rem] uppercase tracking-wider opacity-80">
+        <div className="mt-6 space-y-1 text-[0.5625rem] uppercase tracking-wider opacity-80">
           <p>
             <a href={`mailto:${COMPANY.email}`} className="normal-case hover:opacity-60">
               {COMPANY.email}
@@ -202,7 +199,7 @@ export function AxisNav() {
           </p>
         </div>
 
-        <div className="mt-6 space-y-0.5 text-[0.625rem] uppercase tracking-wider opacity-60">
+        <div className="mt-6 space-y-0.5 text-[0.5625rem] uppercase tracking-wider opacity-60">
           <p>
             {COMPANY.legalName} · ORG.NR {COMPANY.orgNr} · VAT {COMPANY.vatNr}
           </p>
