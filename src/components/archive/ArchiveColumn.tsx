@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { PixelReveal } from "@/components/ui/pixel-reveal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -79,7 +80,7 @@ export function ArchiveColumn({
           className="pointer-events-none absolute top-1/2 left-[calc(50%+103px)] hidden -translate-y-1/2 md:block"
         >
           <div className="grain relative h-[44vh] w-[min(34vw,36vh)] overflow-hidden bg-foreground/5">
-            <PixelReveal key={current.src} src={current.src} />
+            <PixelReveal key={current.src} src={current.src} sizes={PREVIEW_SIZES} eager />
           </div>
           <figcaption className="mt-2 text-dossier uppercase tracking-wider">{current.caption}</figcaption>
         </figure>
@@ -133,67 +134,3 @@ export function ArchiveColumn({
   );
 }
 
-/** The preview's pixelated stages: tiny versions of the image, px wide. */
-const PIXEL_WIDTHS = [16, 32];
-/**
- * An image that arrives within this long of being asked for was cached (or
- * as good as): it's shown straight away, with no pixelated stages.
- */
-const CACHED_MS = 80;
-
-/** A tiny version of a local image from Next's optimizer (widths must be in images.imageSizes). */
-const tiny = (src: string, w: number) => `/_next/image?url=${encodeURIComponent(src)}&w=${w}&q=75`;
-
-/**
- * The preview image. Already cached: it's simply there. Actually loading:
- * it arrives pixelated and resolves as the data comes in, a 16 px wide
- * version stretched to fill the frame with no smoothing (big hard blocks),
- * then a 32 px one, then the image itself, each shown as soon as it has
- * loaded. Every stage uses the same object-fit: cover as the final image, so
- * the framing never shifts.
- */
-function PixelReveal({ src }: { src: string }) {
-  // Which stages have loaded: 16 px, 32 px, full.
-  const [loaded, setLoaded] = useState([false, false, false]);
-  const [waiting, setWaiting] = useState(false); // past CACHED_MS without the full image
-  const markLoaded = (i: number) => setLoaded((l) => l.map((v, j) => v || j === i));
-
-  // A cached image fires onLoad well within CACHED_MS, before any stage shows.
-  useEffect(() => {
-    const t = window.setTimeout(() => setWaiting(true), CACHED_MS);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  // The best stage we have; pixel stages only once it's clearly a real load.
-  const shown = loaded[2] ? 2 : !waiting ? -1 : loaded[1] ? 1 : loaded[0] ? 0 : -1;
-  const show = (i: number) => ({ visibility: shown === i ? ("visible" as const) : ("hidden" as const) });
-  return (
-    <>
-      {PIXEL_WIDTHS.map((w, i) => (
-        // eslint-disable-next-line @next/next/no-img-element -- deliberately tiny and unoptimised further
-        <img
-          key={w}
-          src={tiny(src, w)}
-          alt=""
-          onLoad={() => markLoaded(i)}
-          onError={() => markLoaded(i)} // a failed stage is skipped, never waited on
-          className="absolute inset-0 h-full w-full object-cover"
-          style={{ imageRendering: "pixelated", ...show(i) }}
-        />
-      ))}
-      <Image
-        src={src}
-        alt=""
-        fill
-        sizes={PREVIEW_SIZES}
-        // Always in view, and the page's largest image: never lazy.
-        loading="eager"
-        fetchPriority="high"
-        className="object-cover"
-        style={show(2)}
-        onLoad={() => markLoaded(2)}
-        onError={() => markLoaded(2)}
-      />
-    </>
-  );
-}

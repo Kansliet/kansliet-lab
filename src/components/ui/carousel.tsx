@@ -3,6 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { PixelReveal } from "@/components/ui/pixel-reveal";
 
 interface CarouselProps extends React.HTMLAttributes<HTMLDivElement> {
   images: Array<string | { src: string; alt: string }>;
@@ -10,6 +11,8 @@ interface CarouselProps extends React.HTMLAttributes<HTMLDivElement> {
   interval?: number;
   /** Minimal variant: dots only over image, no thick control bar */
   variant?: "default" | "minimal" | "fullHeight";
+  /** Photos arrive pixelated and resolve while loading, like the works archive preview. */
+  pixelReveal?: boolean;
 }
 
 const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
@@ -20,6 +23,7 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
       autoplay = false,
       interval = 5000,
       variant = "default",
+      pixelReveal = false,
       ...props
     },
     ref,
@@ -114,6 +118,13 @@ const Carousel = React.forwardRef<HTMLDivElement, CarouselProps>(
                 <div className="flex h-full items-center justify-center bg-foreground/5">
                   <span className="text-caps text-sm opacity-40">{image}</span>
                 </div>
+              ) : pixelReveal ? (
+                <PixelReveal
+                  src={image.src}
+                  alt={image.alt}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1400px) 80vw, 1120px"
+                  eager={index === 0}
+                />
               ) : (
                 <Image
                   src={image.src}
