@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getCart, maxLineQuantity } from "@/lib/cart";
-import { getProductsByIds } from "@/lib/products";
+import { getVariantsByIds } from "@/lib/products";
+import { variantCover, variantLabel } from "@/lib/variants";
 import { getPrice, formatPrice } from "@/lib/stripe";
 import { errorMessage } from "@/lib/error-codes";
 import { updateQuantity, removeFromCart } from "./actions";
@@ -18,13 +19,13 @@ type CartPageProps = {
 };
 
 function QuantityButton({
-  productId,
+  variantId,
   quantity,
   label,
   disabled,
   children,
 }: {
-  productId: number;
+  variantId: number;
   quantity: number;
   label: string;
   disabled?: boolean;
@@ -32,7 +33,7 @@ function QuantityButton({
 }) {
   return (
     <form action={updateQuantity}>
-      <input type="hidden" name="productId" value={productId} />
+      <input type="hidden" name="variantId" value={variantId} />
       <input type="hidden" name="quantity" value={quantity} />
       <button
         type="submit"
@@ -50,16 +51,16 @@ export default async function CartPage({ searchParams }: CartPageProps) {
   const error = errorMessage((await searchParams).error);
   const cart = await getCart();
 
-  const products = await getProductsByIds(cart.map((item) => item.productId));
-  const productsById = new Map(products.map((product) => [product.id, product]));
+  const variants = await getVariantsByIds(cart.map((item) => item.variantId));
 
   const lines = await Promise.all(
     cart
-      .filter((item) => productsById.has(item.productId))
+      .filter((item) => variants.has(item.variantId))
       .map(async (item) => {
-        const product = productsById.get(item.productId)!;
-        const { amount, currency } = await getPrice(product.stripe_price_id);
-        return { item, product, amount, currency };
+        const { variant, product } = variants.get(item.variantId)!;
+        const { amount, currency } = await getPrice(variant.stripe_price_id);
+        const soldOut = product.sold_out || variant.stock <= 0;
+        return { item, product, variant, soldOut, amount, currency };
       })
   );
 
@@ -102,16 +103,16 @@ export default async function CartPage({ searchParams }: CartPageProps) {
           ) : (
             <>
               <ul className="border-brutal">
-                {lines.map(({ item, product, amount, currency: lineCurrency }, index) => (
+                {lines.map(({ item, product, variant, soldOut, amount, currency: lineCurrency }, index) => (
                   <li
-                    key={product.id}
+                    key={variant.id}
                     className={`flex items-center gap-4 p-4 ${index > 0 ? "border-t-brutal" : ""}`}
                   >
                     <Link href={`/store/${product.slug}`} className="shrink-0">
                       <ProductImage
                         id={product.id}
                         name={product.name}
-                        imageUrl={product.image_url}
+                        imageUrl={variantCover(product, variant)}
                         className="aspect-5/6 w-16 md:w-20"
                         sizes="80px"
                         compact
@@ -125,18 +126,23 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                       >
                         {product.name}
                       </Link>
+                      {variantLabel(variant) && (
+                        <p className="text-caps mt-1 text-sm font-light tracking-wider">
+                          {variantLabel(variant)}
+                        </p>
+                      )}
                       <p className="text-normal-case mt-1 text-sm font-light opacity-60">
                         {formatPrice(amount, lineCurrency)}
-                        {product.sold_out
+                        {soldOut
                           ? " — sold out, remove to check out"
-                          : item.quantity > product.stock &&
-                            ` — only ${product.stock} left, lower the quantity`}
+                          : item.quantity > variant.stock &&
+                            ` — only ${variant.stock} left, lower the quantity`}
                       </p>
 
                       <div className="mt-3 flex items-center gap-4">
                         <div className="flex items-center border-brutal">
                           <QuantityButton
-                            productId={product.id}
+                            variantId={variant.id}
                             quantity={item.quantity - 1}
                             label="Decrease quantity"
                           >
@@ -146,17 +152,17 @@ export default async function CartPage({ searchParams }: CartPageProps) {
                             {item.quantity}
                           </span>
                           <QuantityButton
-                            productId={product.id}
+                            variantId={variant.id}
                             quantity={item.quantity + 1}
                             label="Increase quantity"
-                            disabled={item.quantity >= maxLineQuantity(product.stock)}
+                            disabled={item.quantity >= maxLineQuantity(variant.stock)}
                           >
                             +
                           </QuantityButton>
                         </div>
 
                         <form action={removeFromCart}>
-                          <input type="hidden" name="productId" value={product.id} />
+                          <input type="hidden" name="variantId" value={variant.id} />
                           <button
                             type="submit"
                             className="text-caps text-sm font-light tracking-wider cursor-pointer opacity-60 transition-opacity hover:opacity-100"

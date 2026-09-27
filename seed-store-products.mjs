@@ -292,7 +292,10 @@ async function main() {
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
   const { rows: existingRows } = await pool.query(
-    "SELECT slug, stripe_product_id, stripe_price_id FROM shop_products"
+    // Seeded products have no options: their Stripe ids live on the one default variant.
+    `SELECT p.slug, v.stripe_product_id, v.stripe_price_id
+     FROM shop_products p JOIN shop_variants v ON v.product_id = p.id
+     WHERE v.option1 IS NULL AND v.option2 IS NULL`
   );
   const existing = new Map(existingRows.map((row) => [row.slug, row]));
 
@@ -326,8 +329,8 @@ async function main() {
     const { rows } = await pool.query(
       // stock and photos are set on first insert only; after that /admin/products and
       // paid orders own them, so a re-run never resets live stock or photos.
-      `INSERT INTO shop_products (slug, name, tagline, description, specs, stripe_product_id, stripe_price_id, stock, category)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO shop_products (slug, name, tagline, description, specs, category)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (slug) DO UPDATE SET
          name = EXCLUDED.name,
          tagline = EXCLUDED.tagline,
@@ -341,11 +344,16 @@ async function main() {
         product.tagline,
         product.description.join("\n\n"),
         JSON.stringify(product.specs),
-        stripeProductId,
-        stripePriceId,
-        product.soldOut ? 0 : 10,
         product.category,
       ]
+    );
+    // The default variant holds stock and the Stripe ids; stock is set on
+    // first insert only, so a re-run never resets live stock.
+    await pool.query(
+      `INSERT INTO shop_variants (product_id, stock, stripe_product_id, stripe_price_id)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (product_id, option1, option2) DO NOTHING`,
+      [rows[0].id, product.soldOut ? 0 : 10, stripeProductId, stripePriceId]
     );
 
     console.log(current ? "Updated:" : "Created:", rows[0]);

@@ -17,7 +17,7 @@ import {
 } from "@/lib/shop-info";
 import { getAppBaseUrl } from "@/lib/site";
 import { withError } from "@/lib/error-codes";
-import { getProductById, getProductsByIds } from "@/lib/products";
+import { getProductById, getVariantsByIds } from "@/lib/products";
 import { getSession } from "@/lib/auth";
 import { STORE_ENABLED } from "@/lib/store-flag";
 import {
@@ -44,25 +44,37 @@ async function writeCart(cart: CartItem[]) {
   }
 }
 
+/**
+ * The variant a form means: `variantId`, or for a product with a single
+ * variant, `productId` (the grid's quick add, and pages rendered before
+ * variants existed).
+ */
+async function variantFromForm(formData: FormData): Promise<number | null> {
+  const variantId = Number(formData.get("variantId"));
+  if (formData.has("variantId") && Number.isInteger(variantId)) return variantId;
+  const product = await getProductById(Number(formData.get("productId")));
+  return product && product.variants.length === 1 ? product.variants[0].id : null;
+}
+
 async function addItemToCart(formData: FormData): Promise<void> {
-  const productId = Number(formData.get("productId"));
+  const variantId = await variantFromForm(formData);
   const requestedQuantity = Number(formData.get("quantity"));
   const quantity =
     Number.isInteger(requestedQuantity) && requestedQuantity > 0 ? requestedQuantity : 1;
 
-  const product = await getProductById(productId);
-  if (!product || product.sold_out) {
+  const found = variantId === null ? undefined : (await getVariantsByIds([variantId])).get(variantId);
+  if (!found || found.product.sold_out || found.variant.stock <= 0) {
     return;
   }
 
   // Never hold more than is in stock, however many times "add" is pressed.
-  const cap = maxLineQuantity(product.stock);
+  const cap = maxLineQuantity(found.variant.stock);
   const cart = await getCart();
-  const existing = cart.find((item) => item.productId === productId);
+  const existing = cart.find((item) => item.variantId === found.variant.id);
   if (existing) {
     existing.quantity = Math.min(existing.quantity + quantity, cap);
   } else {
-    cart.push({ productId, quantity: Math.min(quantity, cap) });
+    cart.push({ variantId: found.variant.id, quantity: Math.min(quantity, cap) });
   }
 
   await writeCart(cart);
@@ -86,19 +98,19 @@ export async function quickAddToCart(formData: FormData) {
 
 export async function updateQuantity(formData: FormData) {
   await assertStoreOpen();
-  const productId = Number(formData.get("productId"));
+  const variantId = Number(formData.get("variantId"));
   const quantity = Number(formData.get("quantity"));
 
-  const product = await getProductById(productId);
-  const cap = product ? maxLineQuantity(product.stock) : 0;
+  const found = (await getVariantsByIds([variantId])).get(variantId);
+  const cap = found ? maxLineQuantity(found.variant.stock) : 0;
 
   const cart = await getCart();
   const next =
     Number.isInteger(quantity) && quantity > 0
       ? cart.map((item) =>
-          item.productId === productId ? { ...item, quantity: Math.min(quantity, cap) } : item
+          item.variantId === variantId ? { ...item, quantity: Math.min(quantity, cap) } : item
         )
-      : cart.filter((item) => item.productId !== productId);
+      : cart.filter((item) => item.variantId !== variantId);
 
   // A cap of 0 (sold out meanwhile) leaves a zero line; drop it.
   await writeCart(next.filter((item) => item.quantity > 0));
@@ -107,9 +119,9 @@ export async function updateQuantity(formData: FormData) {
 
 export async function removeFromCart(formData: FormData) {
   await assertStoreOpen();
-  const productId = Number(formData.get("productId"));
+  const variantId = Number(formData.get("variantId"));
   const cart = await getCart();
-  await writeCart(cart.filter((item) => item.productId !== productId));
+  await writeCart(cart.filter((item) => item.variantId !== variantId));
   revalidatePath("/store/cart");
 }
 
@@ -138,8 +150,7 @@ export async function checkoutCart(formData: FormData) {
   }
   const [minDays, maxDays] = region.deliveryDays;
 
-  const products = await getProductsByIds(cart.map((item) => item.productId));
-  const productsById = new Map(products.map((product) => [product.id, product]));
+  const variants = await getVariantsByIds(cart.map((item) => item.variantId));
 
   // Defense in depth, same principle as buyNow re-checking sold_out
   // server-side: if anything in the cart is no longer purchasable, don't
@@ -147,11 +158,11 @@ export async function checkoutCart(formData: FormData) {
   // customer can fix their cart first, rather than silently charging for
   // fewer items than they saw.
   for (const item of cart) {
-    const product = productsById.get(item.productId);
-    if (!product || product.sold_out) {
+    const found = variants.get(item.variantId);
+    if (!found || found.product.sold_out || found.variant.stock <= 0) {
       redirect(withError("/store/cart", "unavailable"));
     }
-    if (item.quantity > product.stock) {
+    if (item.quantity > found.variant.stock) {
       redirect(withError("/store/cart", "insufficient_stock"));
     }
   }
@@ -161,7 +172,7 @@ export async function checkoutCart(formData: FormData) {
   // A price edited in the admin busts that cache at once; one edited directly
   // in the Stripe dashboard can lag up to 5 minutes.
   const prices = await Promise.all(
-    cart.map((item) => getPrice(productsById.get(item.productId)!.stripe_price_id))
+    cart.map((item) => getPrice(variants.get(item.variantId)!.variant.stripe_price_id))
   );
   const subtotalCents = cart.reduce(
     (sum, item, i) => sum + Math.round(prices[i].amount * 100) * item.quantity,
@@ -180,7 +191,7 @@ export async function checkoutCart(formData: FormData) {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: cart.map((item) => ({
-        price: productsById.get(item.productId)!.stripe_price_id,
+        price: variants.get(item.variantId)!.variant.stripe_price_id,
         quantity: item.quantity,
       })),
       shipping_address_collection: {

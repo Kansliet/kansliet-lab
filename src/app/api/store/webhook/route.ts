@@ -5,6 +5,7 @@ import { stripe } from "@/lib/stripe";
 import { revalidateTag } from "next/cache";
 import { addNewsletterContact, sendCustomerEmail } from "@/lib/mail";
 import { NEWSLETTER_SEGMENT_ID } from "@/lib/newsletter";
+import { variantLabel } from "@/lib/variants";
 import { CATALOG_TAG } from "@/lib/products";
 import { buildOrderEmail, orderRef, type OrderEmailInput } from "@/lib/order-email";
 
@@ -58,23 +59,28 @@ async function recordOrder(
     .map((line) => line.price?.id)
     .filter((id): id is string => Boolean(id));
 
-  const { rows: products } = priceIds.length
-    ? await client.query<{ id: number; stripe_price_id: string }>(
-        "SELECT id, stripe_price_id FROM shop_products WHERE stripe_price_id = ANY($1)",
+  // Every variant has its own Stripe price, so a paid price is one variant.
+  type VariantRow = { id: number; product_id: number; option1: string | null; option2: string | null; stripe_price_id: string };
+  const { rows: variants } = priceIds.length
+    ? await client.query<VariantRow>(
+        "SELECT id, product_id, option1, option2, stripe_price_id FROM shop_variants WHERE stripe_price_id = ANY($1)",
         [priceIds]
       )
-    : { rows: [] as { id: number; stripe_price_id: string }[] };
-  const productIdByPriceId = new Map(products.map((p) => [p.stripe_price_id, p.id]));
+    : { rows: [] as VariantRow[] };
+  const variantByPriceId = new Map(variants.map((v) => [v.stripe_price_id, v]));
 
   for (const line of lineItems.data) {
     const priceId = line.price?.id;
-    const productId = priceId ? (productIdByPriceId.get(priceId) ?? null) : null;
+    const variant = priceId ? (variantByPriceId.get(priceId) ?? null) : null;
     await client.query(
-      `INSERT INTO shop_order_items (shop_order_id, shop_product_id, quantity, unit_amount, currency)
-       VALUES ($1, $2, $3, $4, $5)`,
+      `INSERT INTO shop_order_items
+         (shop_order_id, shop_product_id, shop_variant_id, variant_label, quantity, unit_amount, currency)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
         orderId,
-        productId,
+        variant?.product_id ?? null,
+        variant?.id ?? null,
+        variant ? variantLabel(variant) : null,
         line.quantity ?? 0,
         line.price?.unit_amount ?? 0,
         session.currency ?? "usd",
@@ -85,10 +91,10 @@ async function recordOrder(
     // redelivered event can't decrement twice. Clamped at 0: two buyers can
     // race for the last unit (stock is checked at checkout, not reserved);
     // the loser is refunded by hand rather than the row going negative.
-    if (productId !== null) {
+    if (variant) {
       await client.query(
-        "UPDATE shop_products SET stock = GREATEST(stock - $1, 0) WHERE id = $2",
-        [line.quantity ?? 0, productId]
+        "UPDATE shop_variants SET stock = GREATEST(stock - $1, 0) WHERE id = $2",
+        [line.quantity ?? 0, variant.id]
       );
     }
   }
@@ -169,9 +175,9 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
   );
   if (fullyRefunded && order.fulfillment_status === "paid") {
     await client.query(
-      `UPDATE shop_products p SET stock = p.stock + i.quantity
+      `UPDATE shop_variants v SET stock = v.stock + i.quantity
        FROM shop_order_items i
-       WHERE i.shop_order_id = $1 AND i.shop_product_id = p.id`,
+       WHERE i.shop_order_id = $1 AND i.shop_variant_id = v.id`,
       [order.id]
     );
   }

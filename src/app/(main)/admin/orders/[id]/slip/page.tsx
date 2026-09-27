@@ -41,8 +41,8 @@ export default async function PackingSlipPage({ params }: { params: Promise<{ id
       "SELECT id, created_at, customer_email, shipping_name, shipping_address FROM shop_orders WHERE id = $1",
       [id]
     ),
-    pool.query<{ name: string | null; quantity: number }>(
-      `SELECT p.name, i.quantity FROM shop_order_items i
+    pool.query<{ name: string | null; variant_label: string | null; quantity: number }>(
+      `SELECT p.name, i.variant_label, i.quantity FROM shop_order_items i
        LEFT JOIN shop_products p ON p.id = i.shop_product_id
        WHERE i.shop_order_id = $1 ORDER BY i.id`,
       [id]
@@ -112,7 +112,10 @@ export default async function PackingSlipPage({ params }: { params: Promise<{ id
                 {items.map((item, index) => (
                   <tr key={index} className="border-b border-foreground/15">
                     <td className="py-2 pr-4 tabular-nums">{item.quantity}</td>
-                    <td className="py-2">{item.name ?? "Item no longer in catalog"}</td>
+                    <td className="py-2">
+                      {item.name ?? "Item no longer in catalog"}
+                      {item.variant_label && ` — ${item.variant_label}`}
+                    </td>
                   </tr>
                 ))}
               </tbody>
