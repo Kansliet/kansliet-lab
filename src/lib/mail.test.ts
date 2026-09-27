@@ -16,7 +16,6 @@ beforeEach(() => {
   sendMock.mockReset();
   sendMock.mockResolvedValue({ data: { id: "test" }, error: null });
   vi.stubEnv("RESEND_API_KEY", "re_test_key");
-  vi.stubEnv("RESEND_FROM_EMAIL", "Kansliet <desk@kansliet.co>");
 });
 
 afterEach(() => {
@@ -24,13 +23,13 @@ afterEach(() => {
 });
 
 describe("sendCustomerEmail", () => {
-  it("sends the customer's email from desk@, with no BCC", async () => {
+  it("sends the customer's email from store@, replies to store@, with no BCC", async () => {
     await sendCustomerEmail(message, internal);
     const customer = sendMock.mock.calls[0][0];
     expect(customer).toMatchObject({
-      from: "Kansliet <desk@kansliet.co>",
+      from: "Kansliet <store@kansliet.co>",
       to: "anna@example.com",
-      replyTo: "desk@kansliet.co",
+      replyTo: "store@kansliet.co",
       subject: "Order confirmation KDC-00042",
     });
     expect(customer.bcc).toBeUndefined();
