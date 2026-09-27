@@ -177,12 +177,15 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
 /**
  * Sent after the order is committed, and never allowed to fail the webhook:
  * the event is already marked processed, so a Stripe retry would not resend
- * it anyway. A failure is logged; desk@ is BCC'd on every confirmation, so a
- * missing copy there is the signal to resend by hand.
+ * it anyway. A failure is logged, and desk@'s [NEW ORDER] copy, sent either
+ * way, says NOT SENT: the signal to resend by hand.
  */
 async function sendOrderConfirmation(order: OrderEmailInput & { to: string }) {
   try {
-    await sendCustomerEmail({ to: order.to, ...buildOrderEmail(order) });
+    await sendCustomerEmail(
+      { to: order.to, ...buildOrderEmail(order) },
+      { tag: "NEW ORDER", orderRef: order.orderRef },
+    );
   } catch (err) {
     console.error(`Order ${order.orderRef}: confirmation email failed`, err);
   }
