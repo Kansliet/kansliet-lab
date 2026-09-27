@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
+  parseOptions,
   parsePriceToCents,
   parseProductFields,
   parseSpecs,
   parseStock,
+  parseVariantRows,
   sanitizeImages,
   slugify,
   stockDelta,
@@ -157,5 +159,75 @@ describe("sanitizeImages", () => {
   it("caps the count", () => {
     const many = Array.from({ length: 10 }, (_, i) => link(String(i)));
     expect(sanitizeImages(many, [])).toHaveLength(6);
+  });
+});
+
+describe("parseOptions", () => {
+  const photo = "https://files.stripe.com/links/abc";
+
+  it("keeps names and values, and photos only on the first option", () => {
+    const raw = JSON.stringify([
+      { name: " Colour ", values: [{ value: "Sand", images: [photo, "https://evil.example/x.jpg"] }, { value: "Black" }] },
+      { name: "Size", values: [{ value: "S", images: [photo] }, { value: "M" }] },
+    ]);
+    expect(parseOptions(raw, [])).toEqual({
+      ok: true,
+      options: [
+        { name: "Colour", values: [{ value: "Sand", images: [photo] }, { value: "Black", images: [] }] },
+        { name: "Size", values: [{ value: "S" }, { value: "M" }] },
+      ],
+    });
+  });
+
+  it("allows no options", () => {
+    expect(parseOptions("[]", [])).toEqual({ ok: true, options: [] });
+    expect(parseOptions("", [])).toEqual({ ok: true, options: [] });
+  });
+
+  it("rejects duplicates, empties, too many and bad JSON", () => {
+    const one = (values: unknown[]) => JSON.stringify([{ name: "Colour", values }]);
+    expect(parseOptions(one([{ value: "Sand" }, { value: "sand" }]), []).ok).toBe(false);
+    expect(parseOptions(one([{ value: "" }]), []).ok).toBe(false);
+    expect(parseOptions(one([]), []).ok).toBe(false);
+    expect(parseOptions(JSON.stringify([{ name: "", values: [{ value: "A" }] }]), []).ok).toBe(false);
+    expect(parseOptions(JSON.stringify([1, 2, 3]), []).ok).toBe(false);
+    expect(parseOptions("{nope", []).ok).toBe(false);
+    const many = (n: number) => Array.from({ length: n }, (_, i) => ({ value: `V${i}` }));
+    expect(
+      parseOptions(JSON.stringify([{ name: "Colour", values: many(11) }, { name: "Size", values: many(10) }]), []).ok,
+    ).toBe(false);
+    expect(
+      parseOptions(JSON.stringify([{ name: "Colour", values: many(10) }, { name: "colour", values: many(2) }]), []).ok,
+    ).toBe(false);
+  });
+});
+
+describe("parseVariantRows", () => {
+  const options = [
+    { name: "Colour", values: [{ value: "Sand" }, { value: "Black" }] },
+    { name: "Size", values: [{ value: "S" }] },
+  ];
+
+  it("reads rows, keeping ids and the stock the form loaded with", () => {
+    const raw = JSON.stringify([
+      { id: 4, option1: "Sand", option2: "S", stock: "7", previous: 5 },
+      { option1: "Black", option2: "S", stock: 0 },
+    ]);
+    expect(parseVariantRows(raw, options)).toEqual({
+      ok: true,
+      rows: [
+        { id: 4, option1: "Sand", option2: "S", stock: 7, previous: 5 },
+        { id: null, option1: "Black", option2: "S", stock: 0, previous: null },
+      ],
+    });
+  });
+
+  it("rejects rows that don't match the options, duplicates and bad stock", () => {
+    const rows = (entries: unknown[]) => parseVariantRows(JSON.stringify(entries), options).ok;
+    expect(rows([{ option1: "Pink", option2: "S", stock: 1 }])).toBe(false);
+    expect(rows([{ option1: "Sand", option2: null, stock: 1 }])).toBe(false);
+    expect(rows([{ option1: "Sand", option2: "S", stock: 1 }, { option1: "Sand", option2: "S", stock: 2 }])).toBe(false);
+    expect(rows([{ option1: "Sand", option2: "S", stock: -1 }])).toBe(false);
+    expect(rows([{ id: 1, option1: "Sand", option2: "S", stock: 1 }, { id: 1, option1: "Black", option2: "S", stock: 1 }])).toBe(false);
   });
 });

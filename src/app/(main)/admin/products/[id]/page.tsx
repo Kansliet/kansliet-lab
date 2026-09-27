@@ -46,6 +46,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
             productId={product.id}
             images={product.images}
             categories={categories}
+            options={product.options}
+            variants={product.variants.map(({ id, option1, option2, stock }) => ({ id, option1, option2, stock }))}
             initial={{
               name: product.name,
               slug: product.slug,

@@ -313,17 +313,29 @@ async function main() {
         description: product.tagline,
       });
     } else {
-      const stripeProduct = await stripe.products.create({
-        name: product.name,
-        description: product.tagline,
-      });
-      const stripePrice = await stripe.prices.create({
-        product: stripeProduct.id,
-        unit_amount: product.amount,
-        currency: "sek",
-      });
-      stripeProductId = stripeProduct.id;
-      stripePriceId = stripePrice.id;
+      // Reuse the price from an earlier seed of another database (each
+      // preview deployment's Neon branch is seeded fresh), found by its
+      // lookup key, instead of piling up duplicate products in Stripe.
+      const lookupKey = `seed:${product.slug}`;
+      const { data: [found] } = await stripe.prices.list({ lookup_keys: [lookupKey], active: true, limit: 1 });
+      if (found && found.unit_amount === product.amount && found.currency === "sek") {
+        stripeProductId = typeof found.product === "string" ? found.product : found.product.id;
+        stripePriceId = found.id;
+      } else {
+        const stripeProduct = await stripe.products.create({
+          name: product.name,
+          description: product.tagline,
+        });
+        const stripePrice = await stripe.prices.create({
+          product: stripeProduct.id,
+          unit_amount: product.amount,
+          currency: "sek",
+          lookup_key: lookupKey,
+          transfer_lookup_key: true,
+        });
+        stripeProductId = stripeProduct.id;
+        stripePriceId = stripePrice.id;
+      }
     }
 
     const { rows } = await pool.query(

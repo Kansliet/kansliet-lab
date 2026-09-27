@@ -7,16 +7,19 @@ import { requireSession } from "@/lib/auth";
 import { stripe, getPrice } from "@/lib/stripe";
 import { STORE_CURRENCY } from "@/lib/shop-info";
 import { CATALOG_TAG, type ProductOption } from "@/lib/products";
-import { imagesFor, variantName } from "@/lib/variants";
+import { combinations, imagesFor, variantName } from "@/lib/variants";
 import {
   MAX_PHOTO_BYTES,
+  parseOptions,
   parseProductFields,
+  parseVariantRows,
   parseStock,
   readProductFields,
   sanitizeImages,
   stockDelta,
   type ParsedProduct,
   type ProductFields,
+  type VariantRow,
 } from "@/lib/product-form";
 
 export type ProductFormState = {
@@ -69,125 +72,145 @@ function revalidateStore(...slugs: string[]) {
 // Stripe Checkout shows product images; its API takes at most 8.
 const stripeImages = (images: string[]) => images.slice(0, 8);
 
-async function createProduct(product: ParsedProduct, images: string[]) {
-  const stripeProduct = await stripe.products.create({
-    name: product.name,
-    description: product.tagline ?? undefined,
-    images: stripeImages(images),
-  });
+type ExistingVariant = {
+  id: number;
+  option1: string | null;
+  option2: string | null;
+  stock: number;
+  stripe_product_id: string;
+  stripe_price_id: string;
+};
 
-  try {
-    const price = await stripe.prices.create({
-      product: stripeProduct.id,
-      unit_amount: product.priceCents,
-      currency: STORE_CURRENCY,
-    });
-
-    // The product and its default variant (which holds the stock and the
-    // Stripe ids) are written together or not at all.
-    const client = await pool.connect();
-    try {
-      await client.query("BEGIN");
-      const { rows } = await client.query<{ id: number }>(
-        `INSERT INTO shop_products
-           (slug, name, tagline, description, specs, images, category, hidden)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         RETURNING id`,
-        [
-          product.slug,
-          product.name,
-          product.tagline,
-          product.description,
-          JSON.stringify(product.specs),
-          JSON.stringify(images),
-          product.category,
-          product.hidden,
-        ]
-      );
-      await client.query(
-        `INSERT INTO shop_variants (product_id, stock, stripe_product_id, stripe_price_id)
-         VALUES ($1, $2, $3, $4)`,
-        [rows[0].id, product.stock, stripeProduct.id, price.id]
-      );
-      await client.query("COMMIT");
-    } catch (err) {
-      await client.query("ROLLBACK");
-      throw err;
-    } finally {
-      client.release();
-    }
-  } catch (err) {
-    // Don't leave an orphan behind in the Stripe dashboard.
-    await stripe.products.update(stripeProduct.id, { active: false }).catch(() => {});
-    throw err;
+/** Stripe calls in small parallel batches: up to 100 variants shouldn't take 100 round trips in a row. */
+async function inBatches<T>(items: T[], run: (item: T) => Promise<unknown>) {
+  for (let i = 0; i < items.length; i += 8) {
+    await Promise.all(items.slice(i, i + 8).map(run));
   }
 }
 
-async function updateProduct(
-  id: number,
+/**
+ * Creates (id null) or updates a product together with its variants: one per
+ * combination of option values, or a single default variant without options.
+ *
+ * Matching: a table row carrying an existing variant's id keeps that variant
+ * (so renaming "Sand" to "Beige" keeps its stock and Stripe product); other
+ * combinations are created with their own Stripe product and price; variants
+ * no longer listed are deleted (order lines keep their label) and their
+ * Stripe products archived. Stripe is written first, then everything in the
+ * database in one transaction; on failure, Stripe products created here are
+ * archived again.
+ */
+async function saveCatalogProduct(
+  id: number | null,
   product: ParsedProduct,
+  options: ProductOption[],
+  rows: VariantRow[],
   stockChange: number,
   buildImages: (current: string[]) => string[]
-) {
-  const { rows } = await pool.query<{ slug: string; images: string[]; options: ProductOption[] }>(
-    "SELECT slug, images, options FROM shop_products WHERE id = $1",
-    [id]
-  );
-  const current = rows[0];
-  if (!current) throw new Error("That product no longer exists.");
-  const { rows: variants } = await pool.query<{
-    id: number;
-    option1: string | null;
-    option2: string | null;
-    stripe_product_id: string;
-    stripe_price_id: string;
-  }>(
-    "SELECT id, option1, option2, stripe_product_id, stripe_price_id FROM shop_variants WHERE product_id = $1 ORDER BY position, id",
-    [id]
-  );
-  if (variants.length === 0) throw new Error("That product has no variants.");
+): Promise<string> {
+  const current = id
+    ? (
+        await pool.query<{ slug: string; images: string[] }>(
+          "SELECT slug, images FROM shop_products WHERE id = $1",
+          [id]
+        )
+      ).rows[0]
+    : null;
+  if (id && !current) throw new Error("That product no longer exists.");
+  const existing = id
+    ? (
+        await pool.query<ExistingVariant>(
+          `SELECT id, option1, option2, stock, stripe_product_id, stripe_price_id
+           FROM shop_variants WHERE product_id = $1 ORDER BY position, id`,
+          [id]
+        )
+      ).rows
+    : [];
 
-  const images = buildImages(current.images);
+  const images = buildImages(current?.images ?? []);
+  const catalog = { options, images };
 
-  // One price per product, held by every variant's Stripe price. Stripe
-  // prices are immutable: a new amount (or currency) means a new price object
-  // for each variant. Old ones are archived, not deleted, so past orders
-  // still resolve them.
-  const currentPrice = await getPrice(variants[0].stripe_price_id);
-  const priceChanged =
-    Math.round(currentPrice.amount * 100) !== product.priceCents ||
-    currentPrice.currency.toLowerCase() !== STORE_CURRENCY;
-  const newPriceIds = new Map<number, string>();
-  if (priceChanged) {
-    for (const variant of variants) {
+  // What each combination becomes: an existing variant kept (with its stock
+  // change), or a new one.
+  type Keep = { variant: ExistingVariant; option1: string | null; option2: string | null; position: number; delta: number };
+  type Create = { option1: string | null; option2: string | null; position: number; stock: number };
+  const keep: Keep[] = [];
+  const create: Create[] = [];
+  if (options.length === 0) {
+    // No options: one default variant, stocked from the form's STOCK field.
+    const [first] = existing;
+    if (first) {
+      // Collapsing several variants into one: STOCK is the new total.
+      const delta = existing.length === 1 ? stockChange : product.stock - first.stock;
+      keep.push({ variant: first, option1: null, option2: null, position: 0, delta });
+    } else {
+      create.push({ option1: null, option2: null, position: 0, stock: product.stock });
+    }
+  } else {
+    const byId = new Map(existing.map((variant) => [variant.id, variant]));
+    combinations(options).forEach(({ option1, option2 }, position) => {
+      const row = rows.find((r) => r.option1 === option1 && r.option2 === option2);
+      const variant = row?.id !== null && row?.id !== undefined ? byId.get(row.id) : undefined;
+      if (row && variant) {
+        byId.delete(variant.id);
+        const delta = row.previous === null ? row.stock - variant.stock : row.stock - row.previous;
+        keep.push({ variant, option1, option2, position, delta });
+      } else {
+        create.push({ option1, option2, position, stock: row?.stock ?? 0 });
+      }
+    });
+  }
+  const keptIds = new Set(keep.map((k) => k.variant.id));
+  const remove = existing.filter((variant) => !keptIds.has(variant.id));
+
+  // One price per product. Stripe prices are immutable: a new amount (or
+  // currency) means a new price object for every kept variant. Old ones are
+  // archived after the save, not deleted, so past orders still resolve them.
+  let priceChanged = false;
+  if (existing.length > 0) {
+    const currentPrice = await getPrice(existing[0].stripe_price_id);
+    priceChanged =
+      Math.round(currentPrice.amount * 100) !== product.priceCents ||
+      currentPrice.currency.toLowerCase() !== STORE_CURRENCY;
+  }
+
+  const stripeProduct = (variant: { option1: string | null; option2: string | null }) => ({
+    name: variantName(product.name, variant),
+    description: product.tagline ?? undefined,
+    images: stripeImages(imagesFor(catalog, variant.option1)),
+  });
+
+  const created: { plan: Create; productId: string; priceId: string }[] = [];
+  const newPrices = new Map<number, string>();
+  try {
+    await inBatches(create, async (plan) => {
+      const made = await stripe.products.create(stripeProduct(plan));
       const price = await stripe.prices.create({
-        product: variant.stripe_product_id,
+        product: made.id,
         unit_amount: product.priceCents,
         currency: STORE_CURRENCY,
       });
-      newPriceIds.set(variant.id, price.id);
-    }
-  }
-
-  // Each variant's Stripe product carries its name and its colour's photos.
-  const withImages = { options: current.options, images };
-  for (const variant of variants) {
-    await stripe.products.update(variant.stripe_product_id, {
-      name: variantName(product.name, variant),
-      description: product.tagline ?? "",
-      images: stripeImages(imagesFor(withImages, variant.option1)),
+      created.push({ plan, productId: made.id, priceId: price.id });
     });
-  }
+    await inBatches(keep, async ({ variant, option1, option2 }) => {
+      await stripe.products.update(variant.stripe_product_id, {
+        ...stripeProduct({ option1, option2 }),
+        description: product.tagline ?? "",
+      });
+      if (priceChanged) {
+        const price = await stripe.prices.create({
+          product: variant.stripe_product_id,
+          unit_amount: product.priceCents,
+          currency: STORE_CURRENCY,
+        });
+        newPrices.set(variant.id, price.id);
+      }
+    });
 
-  const client = await pool.connect();
-  try {
-    await client.query("BEGIN");
-    await client.query(
-      `UPDATE shop_products SET
-         slug = $1, name = $2, tagline = $3, description = $4, specs = $5,
-         images = $6, category = $7, hidden = $8
-       WHERE id = $9`,
-      [
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const values = [
         product.slug,
         product.name,
         product.tagline,
@@ -196,39 +219,77 @@ async function updateProduct(
         JSON.stringify(images),
         product.category,
         product.hidden,
-        id,
-      ]
-    );
-    for (const [variantId, priceId] of newPriceIds) {
-      await client.query("UPDATE shop_variants SET stripe_price_id = $1 WHERE id = $2", [
-        priceId,
-        variantId,
-      ]);
+        JSON.stringify(options),
+      ];
+      const productId = id
+        ? (await client.query(
+            `UPDATE shop_products SET
+               slug = $1, name = $2, tagline = $3, description = $4, specs = $5,
+               images = $6, category = $7, hidden = $8, options = $9
+             WHERE id = $10`,
+            [...values, id]
+          ),
+          id)
+        : (
+            await client.query<{ id: number }>(
+              `INSERT INTO shop_products (slug, name, tagline, description, specs, images, category, hidden, options)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+              values
+            )
+          ).rows[0].id;
+
+      if (remove.length > 0) {
+        await client.query("DELETE FROM shop_variants WHERE id = ANY($1)", [remove.map((v) => v.id)]);
+      }
+      // Two passes, so renames that swap values (Sand ↔ Black) never collide
+      // on the (product, option1, option2) unique key mid-update.
+      for (const { variant } of keep) {
+        await client.query("UPDATE shop_variants SET option1 = $1, option2 = NULL WHERE id = $2", [
+          `__renaming_${variant.id}`,
+          variant.id,
+        ]);
+      }
+      for (const { variant, option1, option2, position, delta } of keep) {
+        await client.query(
+          `UPDATE shop_variants SET option1 = $1, option2 = $2, position = $3,
+             stock = GREATEST(stock + $4, 0), stripe_price_id = $5
+           WHERE id = $6`,
+          [option1, option2, position, delta, newPrices.get(variant.id) ?? variant.stripe_price_id, variant.id]
+        );
+      }
+      for (const { plan, productId: stripeId, priceId } of created) {
+        await client.query(
+          `INSERT INTO shop_variants (product_id, option1, option2, stock, stripe_product_id, stripe_price_id, position)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [productId, plan.option1, plan.option2, plan.stock, stripeId, priceId, plan.position]
+        );
+      }
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
     }
-    // The form's single stock field applies to a product without options;
-    // a product with options is restocked per variant from the list.
-    if (variants.length === 1 && stockChange !== 0) {
-      await client.query("UPDATE shop_variants SET stock = GREATEST(stock + $1, 0) WHERE id = $2", [
-        stockChange,
-        variants[0].id,
-      ]);
-    }
-    await client.query("COMMIT");
   } catch (err) {
-    await client.query("ROLLBACK");
+    // Don't leave orphans in the Stripe dashboard.
+    await Promise.all(
+      created.map(({ productId }) => stripe.products.update(productId, { active: false }).catch(() => {}))
+    );
     throw err;
-  } finally {
-    client.release();
   }
 
-  if (priceChanged) {
-    for (const variant of variants) {
-      await stripe.prices.update(variant.stripe_price_id, { active: false });
-    }
-    revalidateTag("stripe-prices", { expire: 0 });
-  }
+  await Promise.all([
+    ...remove.map((variant) =>
+      stripe.products.update(variant.stripe_product_id, { active: false }).catch(() => {})
+    ),
+    ...(priceChanged
+      ? keep.map(({ variant }) => stripe.prices.update(variant.stripe_price_id, { active: false }).catch(() => {}))
+      : []),
+  ]);
+  if (priceChanged || created.length > 0) revalidateTag("stripe-prices", { expire: 0 });
 
-  return current.slug;
+  return current?.slug ?? product.slug;
 }
 
 /** Create (no productId) or update (productId set). Used with useActionState. */
@@ -251,6 +312,24 @@ export async function saveProduct(
     return { error: `Another product already uses the slug "${product.slug}".`, fields };
   }
 
+  // Photos a colour may keep: the ones any colour or the product had.
+  const known = id
+    ? (
+        await pool.query<{ options: ProductOption[]; images: string[] }>(
+          "SELECT options, images FROM shop_products WHERE id = $1",
+          [id]
+        )
+      ).rows[0]
+    : undefined;
+  const knownImages = [
+    ...(known?.images ?? []),
+    ...(known?.options[0]?.values.flatMap((value) => value.images ?? []) ?? []),
+  ];
+  const options = parseOptions(String(formData.get("options") ?? "[]"), knownImages);
+  if (!options.ok) return { error: options.error, fields };
+  const variantRows = parseVariantRows(String(formData.get("variants") ?? "[]"), options.options);
+  if (!variantRows.ok) return { error: variantRows.error, fields };
+
   let submittedImages: unknown = null;
   try {
     submittedImages = JSON.parse(String(formData.get("images") ?? "null"));
@@ -260,13 +339,14 @@ export async function saveProduct(
 
   let previousSlug = product.slug;
   try {
-    const buildImages = (current: string[]) => sanitizeImages(submittedImages, current);
-
-    if (id === null) {
-      await createProduct(product, buildImages([]));
-    } else {
-      previousSlug = await updateProduct(id, product, stockDelta(formData, product.stock), buildImages);
-    }
+    previousSlug = await saveCatalogProduct(
+      id,
+      product,
+      options.options,
+      variantRows.rows,
+      stockDelta(formData, product.stock),
+      (current) => sanitizeImages(submittedImages, current)
+    );
   } catch (err) {
     console.error("Saving product failed", err);
     const message = err instanceof Error ? err.message : "Something went wrong.";
