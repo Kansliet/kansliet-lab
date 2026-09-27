@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { COMPANY } from "@/lib/shop-info";
 
 /** Page shell for /legal, /terms and /privacy: same type and spacing as /legal. */
 export function LegalDoc({
@@ -79,6 +80,14 @@ export function MailLink() {
   return (
     <a href="mailto:desk@kansliet.co" className="underline hover:opacity-60">
       desk@kansliet.co
+    </a>
+  );
+}
+
+export function PhoneLink() {
+  return (
+    <a href={COMPANY.phone.href} className="underline hover:opacity-60">
+      {COMPANY.phone.display}
     </a>
   );
 }

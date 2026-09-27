@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { COMPANY } from "@/lib/shop-info";
+import { COMPANY, WITHDRAW_PATH } from "@/lib/shop-info";
 import { STORE_ENABLED } from "@/lib/store-flag";
 
 // The site's whole frame: two small tabs on one horizontal axis across the
@@ -25,6 +25,9 @@ const LEGAL = [
   { href: "/terms", label: "TERMS OF SALE" },
   { href: "/privacy", label: "PRIVACY" },
   { href: "/legal", label: "LEGAL & COOKIES" },
+  // The withdrawal function must be easy to find for 14 days after every
+  // delivery, so it's listed even while the store is closed.
+  { href: WITHDRAW_PATH, label: "WITHDRAW FROM CONTRACT" },
 ] as const;
 
 export function getActiveSection(pathname: string): string {
@@ -32,7 +35,7 @@ export function getActiveSection(pathname: string): string {
   if (pathname.startsWith("/works")) return "WORKS";
   if (pathname === "/studio") return "STUDIO";
   if (pathname === "/contact") return "CONTACT";
-  if (pathname === "/legal" || pathname === "/terms" || pathname === "/privacy") return "LEGAL";
+  if (LEGAL.some((item) => item.href === pathname)) return "LEGAL";
   if (pathname === "/store/cart") return "CART";
   if (pathname.startsWith("/admin") || pathname === "/login") return "ADMIN";
   if (pathname.startsWith("/store")) return "STORE";

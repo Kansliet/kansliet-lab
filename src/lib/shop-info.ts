@@ -13,6 +13,8 @@ export const COMPANY = {
   /** Geographic address, required by e-handelslagen 8 §. */
   address: ["Allévägen 30C", "311 45 Falkenberg", "Sweden"],
   email: "desk@kansliet.co",
+  /** Listed in the seller details: the law requires a phone number the company has. */
+  phone: { display: "+46 70 829 13 00", href: "tel:+46708291300" },
   website: "kansliet.co",
 } as const;
 
@@ -73,12 +75,18 @@ export const DISPATCH_DAYS = 2;
 export const WITHDRAWAL_DAYS = 14;
 /** Refund deadline after a withdrawal notice (2 kap 14 §). */
 export const REFUND_DAYS = 14;
+/**
+ * The online withdrawal function ("ångerknapp", EU directive 2023/2673,
+ * art. 11a CRD): must stay reachable for the whole withdrawal period, so it's
+ * linked from the nav, the terms and every order confirmation.
+ */
+export const WITHDRAW_PATH = "/store/withdraw";
 /** Reklamationsrätt: years from receipt (konsumentköplagen 5 kap). */
 export const COMPLAINT_YEARS = 3;
 /** Defects appearing within this many years are presumed to have existed at delivery. */
 export const DEFECT_PRESUMPTION_YEARS = 2;
 
-export const TERMS_VERSION = "2026-09-24";
+export const TERMS_VERSION = "2026-09-27";
 
 /** Stripe currency code for every price, shipping rate and payout. */
 export const STORE_CURRENCY = "sek";

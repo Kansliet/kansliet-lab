@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { COMPANY, TERMS_VERSION } from "@/lib/shop-info";
-import { LegalDoc, LegalSection, MailLink, TextLink } from "@/components/legal/LegalDoc";
+import { LegalDoc, LegalSection, MailLink, PhoneLink, TextLink } from "@/components/legal/LegalDoc";
 import { CookieSettings } from "@/components/legal/CookieSettings";
 
 export const metadata: Metadata = {
@@ -38,6 +38,8 @@ export default function LegalPage() {
             </span>
           ))}
           <MailLink />
+          <br />
+          <PhoneLink />
         </p>
         <p>
           Store purchases are covered by our <TextLink href="/terms">terms of sale</TextLink>, and

@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getDisplayPrice } from "@/lib/stripe";
 import { getCategories, getProducts } from "@/lib/products";
-import { quickAddToCart } from "@/app/(main)/store/cart/actions";
+import { quickAddToCart } from "@/app/(main)/store/(shop)/cart/actions";
 import { Grid, GridItem, GridItemTitle, GridItemMeta } from "@/components/ui/grid";
 import { ProductImage } from "@/components/store/ProductImage";
 

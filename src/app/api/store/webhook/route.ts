@@ -1,9 +1,8 @@
 import type Stripe from "stripe";
 import type { PoolClient } from "pg";
 import { pool } from "@/lib/db";
-import { Resend } from "resend";
 import { stripe } from "@/lib/stripe";
-import { COMPANY } from "@/lib/shop-info";
+import { sendCustomerEmail } from "@/lib/mail";
 import { buildOrderEmail, orderRef, type OrderEmailInput } from "@/lib/order-email";
 
 // shop_orders.shop_product_id is no longer set — it assumed one product per
@@ -182,22 +181,8 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
  * missing copy there is the signal to resend by hand.
  */
 async function sendOrderConfirmation(order: OrderEmailInput & { to: string }) {
-  if (!process.env.RESEND_API_KEY?.trim()) {
-    console.error(`Order ${order.orderRef}: RESEND_API_KEY not set, confirmation not sent`);
-    return;
-  }
   try {
-    const { subject, text } = buildOrderEmail(order);
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const { error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL ?? "Kansliet <onboarding@resend.dev>",
-      to: order.to,
-      bcc: COMPANY.email,
-      replyTo: COMPANY.email,
-      subject,
-      text,
-    });
-    if (error) throw new Error(error.message);
+    await sendCustomerEmail({ to: order.to, ...buildOrderEmail(order) });
   } catch (err) {
     console.error(`Order ${order.orderRef}: confirmation email failed`, err);
   }

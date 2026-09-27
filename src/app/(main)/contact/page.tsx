@@ -1,6 +1,6 @@
 import { ContactForm } from "./contact-form";
 import { ContactSuccessTracker } from "./contact-success-tracker";
-import { mintFormToken } from "./token";
+import { mintFormToken } from "@/lib/form-token";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
