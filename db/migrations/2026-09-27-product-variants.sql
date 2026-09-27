@@ -35,9 +35,13 @@ ALTER TABLE shop_products
   ALTER COLUMN stripe_product_id DROP NOT NULL,
   ALTER COLUMN stripe_price_id DROP NOT NULL;
 
--- Every existing product becomes a product with one default variant.
+-- Every existing product becomes a product with one default variant. Only
+-- products without variants yet, so a re-run skips products created since
+-- (their Stripe ids live on their variants; the product row's are NULL).
 INSERT INTO shop_variants (product_id, stock, stripe_product_id, stripe_price_id)
-SELECT id, stock, stripe_product_id, stripe_price_id FROM shop_products
+SELECT p.id, p.stock, p.stripe_product_id, p.stripe_price_id FROM shop_products p
+WHERE p.stripe_price_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM shop_variants v WHERE v.product_id = p.id)
 ON CONFLICT DO NOTHING;
 
 ALTER TABLE shop_order_items
