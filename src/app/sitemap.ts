@@ -1,6 +1,7 @@
 import { projects } from "@/data/projects";
 import { SITE_URL } from "@/lib/site";
 import { STORE_ENABLED } from "@/lib/store-flag";
+import { getProducts } from "@/lib/products";
 import type { MetadataRoute } from "next";
 
 // Last meaningful change to static-page copy (studio rewrite, 2026-07-08).
@@ -8,7 +9,11 @@ import type { MetadataRoute } from "next";
 // distrust the sitemap. Bump this when static copy actually changes.
 const LAUNCH_DATE = new Date("2026-07-08");
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Product pages come from the database, so rebuild the sitemap hourly rather
+// than only at deploy time.
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 1. Static Routes
   // /store only once it's open (see lib/store-flag).
   const routes = ["", "/works", "/studio", ...(STORE_ENABLED ? ["/store"] : []), "/contact", "/legal", "/terms", "/privacy"].map((route) => ({
@@ -26,5 +31,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9, // High priority for your actual work
   }));
 
-  return [...routes, ...projectRoutes];
+  // 3. Product pages (visible products only; getProducts leaves hidden ones out).
+  const productRoutes = STORE_ENABLED
+    ? (await getProducts()).map((product) => ({
+        url: `${SITE_URL}/store/${product.slug}`,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      }))
+    : [];
+
+  return [...routes, ...projectRoutes, ...productRoutes];
 }
