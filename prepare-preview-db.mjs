@@ -2,9 +2,9 @@
 // it makes the preview's own Neon branch usable; everywhere else it does
 // nothing.
 //
-// Why: the Vercel–Neon integration gives every preview a copy of the live
+// Why: all previews share one Neon branch, `preview`, a copy of the live
 // database, but previews run with the TEST Stripe key, which can't see live
-// prices, so every store page failed ("No such price"). This:
+// prices, so store pages failed ("No such price"). This:
 //   1. applies db/migrations/*.sql (all written to be re-runnable), so a
 //      preview has the schema its code expects;
 //   2. hides products whose Stripe price the test key can't see (the live
@@ -12,12 +12,11 @@
 //   3. seeds the demo catalog with test-mode prices (seed-store-products.mjs,
 //      which reuses its Stripe prices across previews).
 //
-// Guards, since this writes to a database: it refuses to run against the
-// live `main` branch (its endpoint's fingerprint is below) and with anything
-// but a test Stripe key. Previews must never use main.
+// Guards, since this writes to a database: it only runs against the `preview`
+// branch's endpoint (allow-list below; anything else, `main` included, is
+// refused) and only with a test Stripe key. Previews must never use main.
 //
 // Local rehearsal against the Docker database: node prepare-preview-db.mjs --local
-import { createHash } from "node:crypto";
 import { readdirSync, readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import nextEnv from "@next/env";
@@ -34,24 +33,23 @@ if (process.env.VERCEL_ENV !== "preview" && !local) {
   process.exit(0);
 }
 
-// SHA-256 of the live `main` branch's Neon endpoint id ("ep-…", without
-// "-pooler"), so the id itself isn't in the repo.
-const MAIN_ENDPOINT_SHA256 = "4a0ae21063a0f99f379d7e6dc1943a97e9a8e1292fa8f7bd756abe7f86e1a70a";
+// The shared `preview` Neon branch's endpoint (host "ep-…", pooled or not).
+// The only database a preview build may touch.
+const PREVIEW_ENDPOINT = "ep-little-wave-b1wlsic1";
 
-const endpointFingerprint = (url) => {
-  const endpoint = new URL(url).hostname.split(".")[0].replace(/-pooler$/, "");
-  return createHash("sha256").update(endpoint).digest("hex");
-};
+const endpointOf = (url) => new URL(url).hostname.split(".")[0].replace(/-pooler$/, "");
 
 const urls = [process.env.DATABASE_URL, process.env.DATABASE_URL_UNPOOLED].filter(Boolean);
 if (urls.length === 0) {
-  console.error("prepare-preview-db: no DATABASE_URL; refusing to build a preview without its own database.");
+  console.error("prepare-preview-db: no DATABASE_URL; refusing to build a preview without its database.");
   process.exit(1);
 }
-if (urls.some((url) => endpointFingerprint(url) === MAIN_ENDPOINT_SHA256)) {
+const allowed = (url) =>
+  endpointOf(url) === PREVIEW_ENDPOINT || (local && ["localhost", "127.0.0.1"].includes(new URL(url).hostname));
+if (!urls.every(allowed)) {
   console.error(
-    "prepare-preview-db: REFUSING. This preview's DATABASE_URL points at the live `main` Neon branch. " +
-      "Previews must use their own branch: check the Neon integration and the Preview env vars in Vercel."
+    `prepare-preview-db: REFUSING. Previews may only use the Neon \`preview\` branch (${PREVIEW_ENDPOINT}); ` +
+      "this deployment's DATABASE_URL points elsewhere. Check the Preview env vars in Vercel."
   );
   process.exit(1);
 }
@@ -62,6 +60,7 @@ if (!process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_")) {
 
 // Schema changes need a direct connection, not Neon's pooler.
 const connectionString = process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL;
+log(`database endpoint: ${local ? "localhost (rehearsal)" : `${endpointOf(connectionString)} (preview branch)`}.`);
 const pool = new pg.Pool({ connectionString });
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
