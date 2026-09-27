@@ -45,7 +45,9 @@ CREATE TABLE public.shop_order_items (
     quantity integer NOT NULL,
     unit_amount integer NOT NULL,
     currency text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    shop_variant_id integer,
+    variant_label text
 );
 
 
@@ -121,8 +123,8 @@ CREATE TABLE public.shop_products (
     name text NOT NULL,
     description text,
     image_url text,
-    stripe_product_id text NOT NULL,
-    stripe_price_id text NOT NULL,
+    stripe_product_id text,
+    stripe_price_id text,
     sold_out boolean DEFAULT false NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     category text DEFAULT 'misc'::text NOT NULL,
@@ -131,6 +133,7 @@ CREATE TABLE public.shop_products (
     stock integer DEFAULT 0 NOT NULL,
     hidden boolean DEFAULT false NOT NULL,
     images jsonb DEFAULT '[]'::jsonb NOT NULL,
+    options jsonb DEFAULT '[]'::jsonb NOT NULL,
     CONSTRAINT shop_products_stock_check CHECK ((stock >= 0))
 );
 
@@ -153,6 +156,44 @@ CREATE SEQUENCE public.shop_products_id_seq
 --
 
 ALTER SEQUENCE public.shop_products_id_seq OWNED BY public.shop_products.id;
+
+
+--
+-- Name: shop_variants; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.shop_variants (
+    id integer NOT NULL,
+    product_id integer NOT NULL,
+    option1 text,
+    option2 text,
+    stock integer DEFAULT 0 NOT NULL,
+    stripe_product_id text NOT NULL,
+    stripe_price_id text NOT NULL,
+    "position" integer DEFAULT 0 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT shop_variants_stock_check CHECK ((stock >= 0))
+);
+
+
+--
+-- Name: shop_variants_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.shop_variants_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: shop_variants_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.shop_variants_id_seq OWNED BY public.shop_variants.id;
 
 
 --
@@ -255,6 +296,13 @@ ALTER TABLE ONLY public.shop_products ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: shop_variants id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shop_variants ALTER COLUMN id SET DEFAULT nextval('public.shop_variants_id_seq'::regclass);
+
+
+--
 -- Name: shop_withdrawals id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -317,6 +365,30 @@ ALTER TABLE ONLY public.shop_products
 
 
 --
+-- Name: shop_variants shop_variants_options_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shop_variants
+    ADD CONSTRAINT shop_variants_options_key UNIQUE NULLS NOT DISTINCT (product_id, option1, option2);
+
+
+--
+-- Name: shop_variants shop_variants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shop_variants
+    ADD CONSTRAINT shop_variants_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: shop_variants shop_variants_stripe_price_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shop_variants
+    ADD CONSTRAINT shop_variants_stripe_price_id_key UNIQUE (stripe_price_id);
+
+
+--
 -- Name: shop_withdrawals shop_withdrawals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -356,6 +428,13 @@ CREATE UNIQUE INDEX shop_orders_payment_intent_key ON public.shop_orders USING b
 
 
 --
+-- Name: shop_variants_product_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX shop_variants_product_key ON public.shop_variants USING btree (product_id);
+
+
+--
 -- Name: shop_withdrawals_order_key; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -387,6 +466,14 @@ ALTER TABLE ONLY public.shop_order_items
 
 
 --
+-- Name: shop_order_items shop_order_items_shop_variant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shop_order_items
+    ADD CONSTRAINT shop_order_items_shop_variant_id_fkey FOREIGN KEY (shop_variant_id) REFERENCES public.shop_variants(id) ON DELETE SET NULL;
+
+
+--
 -- Name: shop_orders shop_orders_shop_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -400,6 +487,14 @@ ALTER TABLE ONLY public.shop_orders
 
 ALTER TABLE ONLY public.shop_orders
     ADD CONSTRAINT shop_orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: shop_variants shop_variants_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shop_variants
+    ADD CONSTRAINT shop_variants_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.shop_products(id) ON DELETE CASCADE;
 
 
 --

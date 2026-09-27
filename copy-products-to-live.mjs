@@ -1,3 +1,8 @@
+// PRE-VARIANTS: written for the launch, when Stripe ids lived on
+// shop_products. Since db/migrations/2026-09-27-product-variants.sql they live
+// on shop_variants, so this script no longer matches the schema. Kept for the
+// record; port it before ever running it again.
+//
 // One-off, at launch: copies every catalog product from Stripe test mode (or
 // a sandbox) into the live account and repoints shop_products at the copies.
 // Without it, live keys can't see the test-mode product/price ids the rows

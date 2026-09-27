@@ -6,7 +6,8 @@ import { pool } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
 import { stripe, getPrice } from "@/lib/stripe";
 import { STORE_CURRENCY } from "@/lib/shop-info";
-import { CATALOG_TAG } from "@/lib/products";
+import { CATALOG_TAG, type ProductOption } from "@/lib/products";
+import { imagesFor, variantName } from "@/lib/variants";
 import {
   MAX_PHOTO_BYTES,
   parseProductFields,
@@ -82,24 +83,39 @@ async function createProduct(product: ParsedProduct, images: string[]) {
       currency: STORE_CURRENCY,
     });
 
-    await pool.query(
-      `INSERT INTO shop_products
-         (slug, name, tagline, description, specs, images, stripe_product_id, stripe_price_id, stock, category, hidden)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-      [
-        product.slug,
-        product.name,
-        product.tagline,
-        product.description,
-        JSON.stringify(product.specs),
-        JSON.stringify(images),
-        stripeProduct.id,
-        price.id,
-        product.stock,
-        product.category,
-        product.hidden,
-      ]
-    );
+    // The product and its default variant (which holds the stock and the
+    // Stripe ids) are written together or not at all.
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const { rows } = await client.query<{ id: number }>(
+        `INSERT INTO shop_products
+           (slug, name, tagline, description, specs, images, category, hidden)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING id`,
+        [
+          product.slug,
+          product.name,
+          product.tagline,
+          product.description,
+          JSON.stringify(product.specs),
+          JSON.stringify(images),
+          product.category,
+          product.hidden,
+        ]
+      );
+      await client.query(
+        `INSERT INTO shop_variants (product_id, stock, stripe_product_id, stripe_price_id)
+         VALUES ($1, $2, $3, $4)`,
+        [rows[0].id, product.stock, stripeProduct.id, price.id]
+      );
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     // Don't leave an orphan behind in the Stripe dashboard.
     await stripe.products.update(stripeProduct.id, { active: false }).catch(() => {});
@@ -113,66 +129,102 @@ async function updateProduct(
   stockChange: number,
   buildImages: (current: string[]) => string[]
 ) {
-  const { rows } = await pool.query<{
-    slug: string;
-    images: string[];
-    stripe_product_id: string;
-    stripe_price_id: string;
-  }>(
-    "SELECT slug, images, stripe_product_id, stripe_price_id FROM shop_products WHERE id = $1",
+  const { rows } = await pool.query<{ slug: string; images: string[]; options: ProductOption[] }>(
+    "SELECT slug, images, options FROM shop_products WHERE id = $1",
     [id]
   );
   const current = rows[0];
   if (!current) throw new Error("That product no longer exists.");
+  const { rows: variants } = await pool.query<{
+    id: number;
+    option1: string | null;
+    option2: string | null;
+    stripe_product_id: string;
+    stripe_price_id: string;
+  }>(
+    "SELECT id, option1, option2, stripe_product_id, stripe_price_id FROM shop_variants WHERE product_id = $1 ORDER BY position, id",
+    [id]
+  );
+  if (variants.length === 0) throw new Error("That product has no variants.");
 
   const images = buildImages(current.images);
 
-  // Stripe prices are immutable: a new amount means a new price object. The
-  // old one is archived, not deleted, so past orders still resolve it.
-  let priceId = current.stripe_price_id;
-  const currentPrice = await getPrice(current.stripe_price_id);
-  // Also on a currency change: a price object's currency can't be edited either.
-  if (
+  // One price per product, held by every variant's Stripe price. Stripe
+  // prices are immutable: a new amount (or currency) means a new price object
+  // for each variant. Old ones are archived, not deleted, so past orders
+  // still resolve them.
+  const currentPrice = await getPrice(variants[0].stripe_price_id);
+  const priceChanged =
     Math.round(currentPrice.amount * 100) !== product.priceCents ||
-    currentPrice.currency.toLowerCase() !== STORE_CURRENCY
-  ) {
-    const price = await stripe.prices.create({
-      product: current.stripe_product_id,
-      unit_amount: product.priceCents,
-      currency: STORE_CURRENCY,
-    });
-    priceId = price.id;
+    currentPrice.currency.toLowerCase() !== STORE_CURRENCY;
+  const newPriceIds = new Map<number, string>();
+  if (priceChanged) {
+    for (const variant of variants) {
+      const price = await stripe.prices.create({
+        product: variant.stripe_product_id,
+        unit_amount: product.priceCents,
+        currency: STORE_CURRENCY,
+      });
+      newPriceIds.set(variant.id, price.id);
+    }
   }
 
-  await stripe.products.update(current.stripe_product_id, {
-    name: product.name,
-    description: product.tagline ?? "",
-    images: stripeImages(images),
-  });
+  // Each variant's Stripe product carries its name and its colour's photos.
+  const withImages = { options: current.options, images };
+  for (const variant of variants) {
+    await stripe.products.update(variant.stripe_product_id, {
+      name: variantName(product.name, variant),
+      description: product.tagline ?? "",
+      images: stripeImages(imagesFor(withImages, variant.option1)),
+    });
+  }
 
-  await pool.query(
-    `UPDATE shop_products SET
-       slug = $1, name = $2, tagline = $3, description = $4, specs = $5,
-       images = $6, stripe_price_id = $7, stock = GREATEST(stock + $8, 0),
-       category = $9, hidden = $10
-     WHERE id = $11`,
-    [
-      product.slug,
-      product.name,
-      product.tagline,
-      product.description,
-      JSON.stringify(product.specs),
-      JSON.stringify(images),
-      priceId,
-      stockChange,
-      product.category,
-      product.hidden,
-      id,
-    ]
-  );
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(
+      `UPDATE shop_products SET
+         slug = $1, name = $2, tagline = $3, description = $4, specs = $5,
+         images = $6, category = $7, hidden = $8
+       WHERE id = $9`,
+      [
+        product.slug,
+        product.name,
+        product.tagline,
+        product.description,
+        JSON.stringify(product.specs),
+        JSON.stringify(images),
+        product.category,
+        product.hidden,
+        id,
+      ]
+    );
+    for (const [variantId, priceId] of newPriceIds) {
+      await client.query("UPDATE shop_variants SET stripe_price_id = $1 WHERE id = $2", [
+        priceId,
+        variantId,
+      ]);
+    }
+    // The form's single stock field applies to a product without options;
+    // a product with options is restocked per variant from the list.
+    if (variants.length === 1 && stockChange !== 0) {
+      await client.query("UPDATE shop_variants SET stock = GREATEST(stock + $1, 0) WHERE id = $2", [
+        stockChange,
+        variants[0].id,
+      ]);
+    }
+    await client.query("COMMIT");
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  } finally {
+    client.release();
+  }
 
-  if (priceId !== current.stripe_price_id) {
-    await stripe.prices.update(current.stripe_price_id, { active: false });
+  if (priceChanged) {
+    for (const variant of variants) {
+      await stripe.prices.update(variant.stripe_price_id, { active: false });
+    }
     revalidateTag("stripe-prices", { expire: 0 });
   }
 
@@ -243,17 +295,33 @@ export async function uploadProductPhoto(
   }
 }
 
-/** The inline refill control on the product list. */
+/**
+ * The inline refill control on the product list: a variant (`variantId`), or
+ * a product without options (`productId`, its only variant).
+ */
 export async function setStock(formData: FormData) {
   await requireSession();
 
-  const id = Number(formData.get("productId"));
   const stock = parseStock(String(formData.get("stock") ?? ""));
-  if (!Number.isInteger(id) || stock === null) return;
+  if (stock === null) return;
+  const delta = stockDelta(formData, stock);
 
-  const { rows } = await pool.query<{ slug: string }>(
-    "UPDATE shop_products SET stock = GREATEST(stock + $1, 0) WHERE id = $2 RETURNING slug",
-    [stockDelta(formData, stock), id]
-  );
+  const variantId = Number(formData.get("variantId"));
+  const productId = Number(formData.get("productId"));
+  const { rows } = formData.has("variantId")
+    ? await pool.query<{ slug: string }>(
+        `UPDATE shop_variants v SET stock = GREATEST(v.stock + $1, 0)
+         FROM shop_products p WHERE v.id = $2 AND p.id = v.product_id
+         RETURNING p.slug`,
+        [delta, Number.isInteger(variantId) ? variantId : null]
+      )
+    : await pool.query<{ slug: string }>(
+        `UPDATE shop_variants v SET stock = GREATEST(v.stock + $1, 0)
+         FROM shop_products p
+         WHERE p.id = $2 AND v.product_id = p.id
+           AND (SELECT count(*) FROM shop_variants WHERE product_id = p.id) = 1
+         RETURNING p.slug`,
+        [delta, Number.isInteger(productId) ? productId : null]
+      );
   if (rows[0]) revalidateStore(rows[0].slug);
 }
