@@ -66,10 +66,13 @@ export async function submitWithdrawal(
   const withdrawal = rows[0];
 
   try {
-    await sendCustomerEmail({
-      to: email,
-      ...buildWithdrawalEmail({ orderRef: ref, name, email, receivedAt: withdrawal.created_at }),
-    });
+    await sendCustomerEmail(
+      {
+        to: email,
+        ...buildWithdrawalEmail({ orderRef: ref, name, email, receivedAt: withdrawal.created_at }),
+      },
+      { tag: "WITHDRAWAL", orderRef: ref },
+    );
     await pool.query("UPDATE shop_withdrawals SET acknowledged_at = now() WHERE id = $1", [
       withdrawal.id,
     ]);
