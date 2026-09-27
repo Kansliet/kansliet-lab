@@ -3,7 +3,8 @@ import type { PoolClient } from "pg";
 import { pool } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { revalidateTag } from "next/cache";
-import { sendCustomerEmail } from "@/lib/mail";
+import { addNewsletterContact, sendCustomerEmail } from "@/lib/mail";
+import { NEWSLETTER_SEGMENT_ID } from "@/lib/newsletter";
 import { CATALOG_TAG } from "@/lib/products";
 import { buildOrderEmail, orderRef, type OrderEmailInput } from "@/lib/order-email";
 
@@ -193,6 +194,10 @@ async function sendOrderConfirmation(order: OrderEmailInput & { to: string }) {
   }
 }
 
+function newsletterOptIn(session: Stripe.Checkout.Session): string | null {
+  return session.metadata?.newsletter === "1" ? (session.customer_details?.email ?? null) : null;
+}
+
 export async function POST(req: Request) {
   // Checked per request, not at module load: Next loads this module during the
   // build, and Preview deployments (which never receive Stripe's webhooks)
@@ -231,6 +236,8 @@ export async function POST(req: Request) {
   // Orders take stock and full refunds can put it back, so the cached catalog
   // (sold-out state on the grid and product pages) must be refreshed.
   let stockMayHaveChanged = false;
+  // Ticked the (unticked-by-default) newsletter box in the cart.
+  let newsletterEmail: string | null = null;
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -253,11 +260,13 @@ export async function POST(req: Request) {
       ) {
         confirmation = await recordOrder(client, event.data.object as Stripe.Checkout.Session);
         stockMayHaveChanged = true;
+        newsletterEmail = newsletterOptIn(event.data.object as Stripe.Checkout.Session);
       }
 
       if (event.type === "checkout.session.async_payment_succeeded") {
         confirmation = await recordOrder(client, event.data.object as Stripe.Checkout.Session);
         stockMayHaveChanged = true;
+        newsletterEmail = newsletterOptIn(event.data.object as Stripe.Checkout.Session);
       }
       if (event.type === "charge.refunded") {
         await recordRefund(client, event.data.object as Stripe.Charge, event.created);
@@ -276,6 +285,14 @@ export async function POST(req: Request) {
   // After COMMIT, so the refetch can't read the pre-order stock.
   if (stockMayHaveChanged) revalidateTag(CATALOG_TAG, { expire: 0 });
   if (confirmation) await sendOrderConfirmation(confirmation);
+  if (newsletterEmail) {
+    // Never fails the webhook: the order is recorded; a missed signup is only logged.
+    try {
+      await addNewsletterContact(newsletterEmail, NEWSLETTER_SEGMENT_ID);
+    } catch (err) {
+      console.error("Newsletter opt-in at checkout failed", err);
+    }
+  }
 
   return new Response(null, { status: 200 });
 }

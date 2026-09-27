@@ -27,6 +27,8 @@ export type ShippingRegion = {
   countries: readonly string[];
   /** Öre (SEK × 100), VAT included. */
   amount: number;
+  /** Goods subtotal (öre, VAT included) from which shipping is free; unset = never free. */
+  freeFrom?: number;
   /** Business days from dispatch. */
   deliveryDays: readonly [min: number, max: number];
   /** Outside the EU VAT area: customer is the importer and pays duties/import VAT. */
@@ -36,7 +38,7 @@ export type ShippingRegion = {
 };
 
 const ALL_SHIPPING_REGIONS: readonly ShippingRegion[] = [
-  { id: "se", label: "Sweden", countries: ["SE"], amount: 5900, deliveryDays: [1, 3], customs: false, enabled: true },
+  { id: "se", label: "Sweden", countries: ["SE"], amount: 5900, freeFrom: 80000, deliveryDays: [1, 3], customs: false, enabled: true },
   { id: "eu", label: "EU (Denmark, Finland, Germany)", countries: ["DK", "FI", "DE"], amount: 11900, deliveryDays: [3, 7], customs: false, enabled: true },
   // Norway: fine without registration while sales there stay under NOK 50,000
   // a year; above that, register for VOEC and collect Norwegian VAT at checkout.
@@ -67,6 +69,11 @@ export const SHIP_COUNTRIES = SHIPPING_REGIONS.flatMap((region) => region.countr
 
 export function regionForCountry(country: string): ShippingRegion | null {
   return SHIPPING_REGIONS.find((region) => region.countries.includes(country)) ?? null;
+}
+
+/** Shipping for a goods subtotal (öre): free at or above the region's threshold. */
+export function shippingCost(region: ShippingRegion, subtotalCents: number): number {
+  return region.freeFrom !== undefined && subtotalCents >= region.freeFrom ? 0 : region.amount;
 }
 
 /** Business days from order to dispatch. */

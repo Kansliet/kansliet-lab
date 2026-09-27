@@ -137,6 +137,12 @@ export default function TermsPage() {
             </tbody>
           </table>
         </div>
+        {SHIPPING_REGIONS.filter((region) => region.freeFrom !== undefined).map((region) => (
+          <p key={region.id}>
+            Shipping to {region.label} is free for orders of {formatMoney(region.freeFrom!)} or
+            more (goods total, VAT included).
+          </p>
+        ))}
         <p>
           If delivery hasn&apos;t happened within 30 days of your order, or by a date we agreed,
           you can give us a reasonable extra period, and cancel the order for a full refund if we
