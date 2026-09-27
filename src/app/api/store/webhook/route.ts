@@ -2,7 +2,9 @@ import type Stripe from "stripe";
 import type { PoolClient } from "pg";
 import { pool } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
+import { revalidateTag } from "next/cache";
 import { sendCustomerEmail } from "@/lib/mail";
+import { CATALOG_TAG } from "@/lib/products";
 import { buildOrderEmail, orderRef, type OrderEmailInput } from "@/lib/order-email";
 
 // shop_orders.shop_product_id is no longer set — it assumed one product per
@@ -226,6 +228,9 @@ export async function POST(req: Request) {
   // between "mark seen" and "do the work" would silently drop the order,
   // since Stripe never redelivers an event we've already returned 200 for.
   let confirmation: Awaited<ReturnType<typeof recordOrder>> = null;
+  // Orders take stock and full refunds can put it back, so the cached catalog
+  // (sold-out state on the grid and product pages) must be refreshed.
+  let stockMayHaveChanged = false;
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -247,13 +252,16 @@ export async function POST(req: Request) {
         (event.data.object as Stripe.Checkout.Session).payment_status === "paid"
       ) {
         confirmation = await recordOrder(client, event.data.object as Stripe.Checkout.Session);
+        stockMayHaveChanged = true;
       }
 
       if (event.type === "checkout.session.async_payment_succeeded") {
         confirmation = await recordOrder(client, event.data.object as Stripe.Checkout.Session);
+        stockMayHaveChanged = true;
       }
       if (event.type === "charge.refunded") {
         await recordRefund(client, event.data.object as Stripe.Charge, event.created);
+        stockMayHaveChanged = true;
       }
     }
 
@@ -265,6 +273,8 @@ export async function POST(req: Request) {
     client.release();
   }
 
+  // After COMMIT, so the refetch can't read the pre-order stock.
+  if (stockMayHaveChanged) revalidateTag(CATALOG_TAG, { expire: 0 });
   if (confirmation) await sendOrderConfirmation(confirmation);
 
   return new Response(null, { status: 200 });

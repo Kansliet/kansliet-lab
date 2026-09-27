@@ -6,6 +6,7 @@ import { pool } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
 import { stripe, getPrice } from "@/lib/stripe";
 import { STORE_CURRENCY } from "@/lib/shop-info";
+import { CATALOG_TAG } from "@/lib/products";
 import {
   MAX_PHOTO_BYTES,
   parseProductFields,
@@ -57,6 +58,8 @@ async function slugTaken(slug: string, exceptId: number | null): Promise<boolean
 }
 
 function revalidateStore(...slugs: string[]) {
+  // expire: 0, so the next visit (yours, checking the change) gets fresh data.
+  revalidateTag(CATALOG_TAG, { expire: 0 });
   revalidatePath("/store");
   for (const slug of slugs) revalidatePath(`/store/${slug}`);
   revalidatePath("/admin/products");
