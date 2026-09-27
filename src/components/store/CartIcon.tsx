@@ -13,7 +13,7 @@ export async function CartIcon() {
       aria-label={count > 0 ? `Cart, ${count} items` : "Cart"}
       // flex! because .dossier-label's own display: inline-block would otherwise
       // win and leave the text in the tab's top-left corner (as in axis-nav).
-      className="dossier-label fixed top-0 right-0 z-201 flex! h-6 items-center justify-center px-2 tabular-nums transition-opacity hover:opacity-80 print:hidden"
+      className="dossier-label fixed top-0 right-0 z-201 flex! h-8 items-center justify-center px-3 text-[length:var(--font-size-base)]! tabular-nums transition-opacity hover:opacity-80 print:hidden"
     >
       CART ({count})
     </Link>
