@@ -71,10 +71,11 @@ function useMinuteClock(): Date | null {
   return now;
 }
 
-// flex! because .dossier-label's own display: inline-block would otherwise win,
-// leaving the link's text at the top of the tab (the button centres natively).
+// flex! and the font size's ! because .dossier-label's own display and 8px size
+// would otherwise win (same layer, defined later). The tabs use the body size:
+// at the label size they were too small to read.
 const TAB =
-  "dossier-label flex! h-6 items-center gap-2 px-2 transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
+  "dossier-label flex! h-8 items-center gap-2 px-3 text-[length:var(--font-size-base)]! transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground";
 
 export function AxisNav() {
   const pathname = usePathname() ?? "";
@@ -159,9 +160,9 @@ export function AxisNav() {
         aria-modal="true"
         aria-label="Index"
         hidden={!open}
-        className="fixed right-0 z-201 w-full bg-foreground p-5 pt-10 text-background max-lg:bottom-3 max-lg:pb-12 sm:w-96 lg:top-[calc(50%+0.75rem)] lg:max-h-[calc(50vh-1.5rem)] lg:overflow-y-auto"
+        className="fixed right-0 z-201 w-full bg-foreground p-5 pt-10 text-background max-lg:bottom-3 max-lg:pb-14 sm:w-96 lg:top-[calc(50%+1rem)] lg:max-h-[calc(50vh-2rem)] lg:overflow-y-auto"
       >
-        <ul className="space-y-1.5 text-sm tracking-wider">
+        <ul className="space-y-2 text-base tracking-wider">
           {SECTIONS.map((section) => (
             <li key={section.href}>
               <Link
@@ -175,7 +176,7 @@ export function AxisNav() {
           ))}
         </ul>
 
-        <ul className="mt-6 space-y-1 text-dossier tracking-wider opacity-80">
+        <ul className="mt-6 space-y-1 text-[0.625rem] tracking-wider opacity-80">
           {LEGAL.map((item) => (
             <li key={item.href}>
               <Link href={item.href} className="uppercase transition-opacity hover:opacity-60">
@@ -185,7 +186,7 @@ export function AxisNav() {
           ))}
         </ul>
 
-        <div className="mt-6 space-y-1 text-dossier uppercase tracking-wider opacity-80">
+        <div className="mt-6 space-y-1 text-[0.625rem] uppercase tracking-wider opacity-80">
           <p>
             <a href={`mailto:${COMPANY.email}`} className="normal-case hover:opacity-60">
               {COMPANY.email}
@@ -201,7 +202,7 @@ export function AxisNav() {
           </p>
         </div>
 
-        <div className="mt-6 space-y-0.5 text-dossier uppercase tracking-wider opacity-60">
+        <div className="mt-6 space-y-0.5 text-[0.625rem] uppercase tracking-wider opacity-60">
           <p>
             {COMPANY.legalName} · ORG.NR {COMPANY.orgNr} · VAT {COMPANY.vatNr}
           </p>
