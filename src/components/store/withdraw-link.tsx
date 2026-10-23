@@ -2,9 +2,10 @@ import Link from "next/link";
 import { WITHDRAW_PATH } from "@/lib/shop-info";
 
 /**
- * The online withdrawal function, always one click away on every store page
- * (art. 11a CRD asks for it to be easily accessible for the whole withdrawal
- * period). The terms and every order email link to it too.
+ * The online withdrawal function (art. 11a CRD), shown after a purchase on the
+ * success page only (owner's call, 2026-10-23); the terms and every customer
+ * email link to it too. The label is the owner's softer wording, still saying
+ * plainly what the page does.
  */
 export function WithdrawLink({ className = "" }: { className?: string }) {
   return (
@@ -13,7 +14,7 @@ export function WithdrawLink({ className = "" }: { className?: string }) {
         href={WITHDRAW_PATH}
         className="text-caps text-xs font-light tracking-wider transition-opacity hover:opacity-60"
       >
-        WITHDRAW FROM CONTRACT HERE →
+        CANCEL OR RETURN A PURCHASE →
       </Link>
     </p>
   );

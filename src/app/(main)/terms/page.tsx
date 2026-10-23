@@ -174,7 +174,7 @@ export default function TermsPage() {
           <p key={paragraph}>{paragraph}</p>
         ))}
         <p>
-          <TextLink href={WITHDRAW_PATH}>Withdraw from contract here</TextLink>
+          <TextLink href={WITHDRAW_PATH}>Cancel or return a purchase</TextLink>
         </p>
         <p>
           Returns go to the address in section {n("seller")}. Pack the goods well; they travel at your risk

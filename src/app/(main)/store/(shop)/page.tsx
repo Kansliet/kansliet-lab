@@ -6,7 +6,6 @@ import { quickAddToCart } from "@/app/(main)/store/(shop)/cart/actions";
 import { Grid, GridItem, GridItemTitle, GridItemMeta } from "@/components/ui/grid";
 import { ProductImage } from "@/components/store/ProductImage";
 import { SignupForm } from "@/components/newsletter/signup-form";
-import { WithdrawLink } from "@/components/store/withdraw-link";
 import { optionCountLabel, productCover } from "@/lib/variants";
 import { mintFormToken } from "@/lib/form-token";
 
@@ -169,7 +168,6 @@ export default async function StorePage({ searchParams }: StorePageProps) {
             <SignupForm formToken={mintFormToken()} />
           </div>
 
-          <WithdrawLink className="mt-20" />
         </div>
       </section>
     </div>

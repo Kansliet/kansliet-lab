@@ -87,7 +87,7 @@ export function buildShippedEmail(input: ShippedEmailInput): { subject: string; 
         paragraphs: [
           `You can withdraw from your purchase within ${WITHDRAWAL_DAYS} days from when you receive it, without giving any reason. The full conditions and the model withdrawal form are in your order confirmation and in the terms of sale.`,
         ],
-        button: { label: "Withdraw from contract here", href: `https://${COMPANY.website}${WITHDRAW_PATH}` },
+        button: { label: "Cancel or return a purchase", href: `https://${COMPANY.website}${WITHDRAW_PATH}` },
       },
       { type: "columns", columns: [sellerColumn()] },
       footerBlock(),

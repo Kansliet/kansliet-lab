@@ -24,7 +24,6 @@ import {
 import { SpecSheet } from "@/components/spec-sheet";
 import { SiblingRow } from "@/components/sibling-row";
 import { ScrollRail } from "@/components/scroll-rail";
-import { WithdrawLink } from "@/components/store/withdraw-link";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -216,7 +215,6 @@ export default async function ProductPage({
           <VariantOptions />
           <VariantAddToCart displayPrice={displayPrice} />
 
-          <WithdrawLink className="mt-10" />
         </div>
       </div>
     </div>

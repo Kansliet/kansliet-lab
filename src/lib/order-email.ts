@@ -116,7 +116,7 @@ export function buildOrderEmail(input: OrderEmailInput): { subject: string; html
         type: "section",
         heading: "Your right of withdrawal",
         paragraphs: WITHDRAWAL_PARAGRAPHS,
-        button: { label: "Withdraw from contract here", href: `https://${COMPANY.website}${WITHDRAW_PATH}` },
+        button: { label: "Cancel or return a purchase", href: `https://${COMPANY.website}${WITHDRAW_PATH}` },
       },
       {
         type: "section",

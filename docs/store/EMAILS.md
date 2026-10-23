@@ -51,7 +51,7 @@ Taken from `src/app/globals.css`. The owner's direction: simple, curated, "dossi
   - Bordered order box: lines, shipping, then the TOTAL PAID chip with a large total. The VAT line sits under the box.
   - DELIVERY TO | SELLER in two columns.
   - Legal sections (withdrawal, model form, faulty goods, disputes) in 11 px.
-  - **One outlined button: "WITHDRAW FROM CONTRACT HERE →"**, the only call to action.
+  - **One outlined button: "CANCEL OR RETURN A PURCHASE →"**, the only call to action. This is the owner's softer label (2026-10-23), replacing "withdraw from contract here".
   - Footer links: terms (with version), privacy, kansliet.co.
 - **Shipped / refund / withdrawal emails** use the same masthead, title, one bordered box (tracking, refund amount, or received date and time) and footer, with only their own legal lines.
 - **Technical:**
@@ -68,6 +68,8 @@ Taken from `src/app/globals.css`. The owner's direction: simple, curated, "dossi
 ## 4. Task cards (for implementation)
 
 ### E-01 · Withdrawal link on every store page · legal · S
+
+> **Changed 2026-10-23 (owner's call):** the line is now on the **success page only**, labelled **"CANCEL OR RETURN A PURCHASE →"**. It was removed from `/store`, product pages and the cart; emails and `/terms` keep their links. This is a deliberate grey zone under art. 11a (see README, Withdrawals). The card below describes the original version.
 - **Status: done on branch `store/emails`, not merged.**
 - **Files:** `src/components/store/withdraw-link.tsx` (new), the four store pages under `src/app/(main)/store/(shop)/`, `docs/store/README.md`. The site has no footer (the frame is the AxisNav tabs), so the link is a small line at the end of the page content, in the store only.
 - **Change:**
