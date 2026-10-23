@@ -3,7 +3,7 @@ import type { PoolClient } from "pg";
 import { pool } from "@/lib/db";
 import { stripe } from "@/lib/stripe";
 import { revalidateTag } from "next/cache";
-import { addNewsletterContact, sendCustomerEmail } from "@/lib/mail";
+import { addNewsletterContact, sendCustomerEmail, sendInternalAlert } from "@/lib/mail";
 import { NEWSLETTER_SEGMENT_ID } from "@/lib/newsletter";
 import { variantLabel } from "@/lib/variants";
 import { CATALOG_TAG } from "@/lib/products";
@@ -12,11 +12,18 @@ import { matchVariant, stripeProductId } from "@/lib/order-lines";
 import { STORE_CURRENCY } from "@/lib/shop-info";
 
 // shop_order_items (one row per paid line) is the source of truth for what was bought.
-/** Returns what the confirmation email needs, or null for an already-recorded session. */
+/**
+ * Returns what to do after COMMIT (oversold lines to report, the confirmation
+ * email to send), or null for an already-recorded session.
+ */
 async function recordOrder(
   client: PoolClient,
   session: Stripe.Checkout.Session
-): Promise<(OrderEmailInput & { to: string }) | null> {
+): Promise<{
+  orderRef: string;
+  oversold: string[];
+  confirmation: (OrderEmailInput & { to: string }) | null;
+} | null> {
   const shippingDetails = session.collected_information?.shipping_details;
 
   const { rows } = await client.query<{ id: number }>(
@@ -83,6 +90,7 @@ async function recordOrder(
         )
       : { rows: [] as VariantRow[] };
 
+  const oversold: string[] = [];
   for (const line of lineItems.data) {
     const variant = matchVariant(variants, line.price?.id ?? null, stripeProductId(line.price?.product));
     await client.query(
@@ -103,40 +111,53 @@ async function recordOrder(
     // Same transaction as the order insert and the event-id marker, so a
     // redelivered event can't decrement twice. Clamped at 0: two buyers can
     // race for the last unit (stock is checked at checkout, not reserved);
-    // the loser is refunded by hand rather than the row going negative.
+    // the loser is reported in `oversold` and refunded by hand.
     if (variant) {
+      const quantity = line.quantity ?? 0;
+      // Locked, so two orders for the last unit see each other's decrement.
+      const { rows: [current] } = await client.query<{ stock: number }>(
+        "SELECT stock FROM shop_variants WHERE id = $1 FOR UPDATE",
+        [variant.id]
+      );
+      if (current && current.stock < quantity) {
+        oversold.push(`${line.description ?? "Item"}: ordered ${quantity}, ${current.stock} in stock`);
+      }
       await client.query(
         "UPDATE shop_variants SET stock = GREATEST(stock - $1, 0) WHERE id = $2",
-        [line.quantity ?? 0, variant.id]
+        [quantity, variant.id]
       );
     }
   }
 
   const email = session.customer_details?.email;
-  if (!email) return null;
+  if (!email) return { orderRef: orderRef(orderId), oversold, confirmation: null };
   return {
-    to: email,
     orderRef: orderRef(orderId),
-    date: new Date(session.created * 1000),
-    lines: lineItems.data.map((line) => ({
-      name: line.description ?? "Item",
-      quantity: line.quantity ?? 0,
-      amountCents: line.amount_total,
-    })),
-    shippingCents: session.shipping_cost?.amount_total ?? 0,
-    totalCents: session.amount_total ?? 0,
-    // Adaptive Pricing: amount_total stays in SEK; what the customer actually
-    // paid in their own currency is in presentment_details.
-    charged:
-      session.presentment_details &&
-      session.presentment_details.presentment_currency !== session.currency
-        ? {
-            amountCents: session.presentment_details.presentment_amount,
-            currency: session.presentment_details.presentment_currency,
-          }
-        : null,
-    shippingName: shippingDetails?.name ?? null,
-    shippingAddress: shippingDetails?.address ?? null,
+    oversold,
+    confirmation: {
+      to: email,
+      orderRef: orderRef(orderId),
+      date: new Date(session.created * 1000),
+      lines: lineItems.data.map((line) => ({
+        name: line.description ?? "Item",
+        quantity: line.quantity ?? 0,
+        amountCents: line.amount_total,
+      })),
+      shippingCents: session.shipping_cost?.amount_total ?? 0,
+      totalCents: session.amount_total ?? 0,
+      // Adaptive Pricing: amount_total stays in SEK; what the customer actually
+      // paid in their own currency is in presentment_details.
+      charged:
+        session.presentment_details &&
+        session.presentment_details.presentment_currency !== session.currency
+          ? {
+              amountCents: session.presentment_details.presentment_amount,
+              currency: session.presentment_details.presentment_currency,
+            }
+          : null,
+      shippingName: shippingDetails?.name ?? null,
+      shippingAddress: shippingDetails?.address ?? null,
+    },
   };
 }
 
@@ -251,7 +272,7 @@ export async function POST(req: Request) {
   // will see the event as unprocessed and try again. Without this, a crash
   // between "mark seen" and "do the work" would silently drop the order,
   // since Stripe never redelivers an event we've already returned 200 for.
-  let confirmation: Awaited<ReturnType<typeof recordOrder>> = null;
+  let recorded: Awaited<ReturnType<typeof recordOrder>> = null;
   // Orders take stock and full refunds can put it back, so the cached catalog
   // (sold-out state on the grid and product pages) must be refreshed.
   let stockMayHaveChanged = false;
@@ -277,13 +298,13 @@ export async function POST(req: Request) {
         event.type === "checkout.session.completed" &&
         (event.data.object as Stripe.Checkout.Session).payment_status === "paid"
       ) {
-        confirmation = await recordOrder(client, event.data.object as Stripe.Checkout.Session);
+        recorded = await recordOrder(client, event.data.object as Stripe.Checkout.Session);
         stockMayHaveChanged = true;
         newsletterEmail = newsletterOptIn(event.data.object as Stripe.Checkout.Session);
       }
 
       if (event.type === "checkout.session.async_payment_succeeded") {
-        confirmation = await recordOrder(client, event.data.object as Stripe.Checkout.Session);
+        recorded = await recordOrder(client, event.data.object as Stripe.Checkout.Session);
         stockMayHaveChanged = true;
         newsletterEmail = newsletterOptIn(event.data.object as Stripe.Checkout.Session);
       }
@@ -303,7 +324,18 @@ export async function POST(req: Request) {
 
   // After COMMIT, so the refetch can't read the pre-order stock.
   if (stockMayHaveChanged) revalidateTag(CATALOG_TAG, { expire: 0 });
-  if (confirmation) await sendOrderConfirmation(confirmation);
+  if (recorded?.oversold.length) {
+    console.error(`Order ${recorded.orderRef} oversold`, recorded.oversold);
+    await sendInternalAlert(
+      `[OVERSOLD] ${recorded.orderRef}`,
+      [
+        "Paid for more than was in stock. Contact the customer, then refund what can't be sent (Stripe dashboard).",
+        "",
+        ...recorded.oversold,
+      ].join("\n")
+    );
+  }
+  if (recorded?.confirmation) await sendOrderConfirmation(recorded.confirmation);
   if (newsletterEmail) {
     // Never fails the webhook: the order is recorded; a missed signup is only logged.
     try {

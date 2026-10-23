@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { sendCustomerEmail } from "./mail";
+import { sendCustomerEmail, sendInternalAlert } from "./mail";
 
 const { sendMock } = vi.hoisted(() => ({ sendMock: vi.fn() }));
 
@@ -69,5 +69,34 @@ describe("sendCustomerEmail", () => {
     vi.stubEnv("RESEND_API_KEY", "");
     await expect(sendCustomerEmail(message, internal)).rejects.toThrow("RESEND_API_KEY");
     expect(sendMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("sendInternalAlert", () => {
+  it("sends one email from store@ to desk@ with the given subject", async () => {
+    await sendInternalAlert("[OVERSOLD] KDC-00042", "Details");
+    expect(sendMock).toHaveBeenCalledTimes(1);
+    expect(sendMock.mock.calls[0][0]).toMatchObject({
+      from: "Kansliet Store <store@kansliet.co>",
+      to: "desk@kansliet.co",
+      subject: "[OVERSOLD] KDC-00042",
+      text: "Details",
+    });
+  });
+
+  it("doesn't throw when Resend returns an error", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    sendMock.mockResolvedValueOnce({ data: null, error: { message: "x" } });
+    await expect(sendInternalAlert("[OVERSOLD] KDC-00042", "Details")).resolves.toBeUndefined();
+    expect(log).toHaveBeenCalled();
+    log.mockRestore();
+  });
+
+  it("doesn't throw when sending rejects", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    sendMock.mockRejectedValueOnce(new Error("network"));
+    await expect(sendInternalAlert("[OVERSOLD] KDC-00042", "Details")).resolves.toBeUndefined();
+    expect(log).toHaveBeenCalled();
+    log.mockRestore();
   });
 });

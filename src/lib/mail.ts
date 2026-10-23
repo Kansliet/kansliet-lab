@@ -36,6 +36,24 @@ export async function sendStoreEmail(message: { to: string; subject: string; tex
 }
 
 /**
+ * A plain-text alert to desk@ from store@ ("[OVERSOLD] KDC-00042",
+ * "[WEBHOOK FAILED] …"). Never throws: an alert must not break what raised it.
+ */
+export async function sendInternalAlert(subject: string, text: string): Promise<void> {
+  try {
+    const { error } = await resendClient().emails.send({
+      from: STORE_SENDER,
+      to: COMPANY.email,
+      subject,
+      text,
+    });
+    if (error) throw new Error(error.message);
+  } catch (err) {
+    console.error(`Internal alert "${subject}" failed`, err);
+  }
+}
+
+/**
  * Adds an address to the newsletter list (Resend contact in `segmentId`),
  * re-subscribing it if it had unsubscribed. Throws on failure.
  */
