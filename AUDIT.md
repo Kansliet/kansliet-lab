@@ -1,4 +1,4 @@
-# Kansliet Lab — Codebase Audit
+# KANSLIET Lab — Codebase Audit
 
 **Date:** February 2025  
 **Scope:** Full critical audit for production-grade Next.js (App Router) project.

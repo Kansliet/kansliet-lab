@@ -78,7 +78,7 @@ Small touches that make the whole site feel more “state of the art”:
 
 - **Consistent micro-motion** — Buttons/links that have a tiny scale or opacity change on hover/focus (you have some; ensure it’s consistent). Focus rings that match your design system.
 - **Scroll rhythm** — Section transitions (e.g. Studio, Contact) that have a subtle reveal or sticky moment so scrolling feels intentional.
-- **One “signature” interaction** — Pick one thing that’s uniquely Kansliet (e.g. the dossier strip, the custom cursor, or the trail) and make it slightly more expressive (e.g. cursor shows project title on hover, or dossier strip reacts to scroll).
+- **One “signature” interaction** — Pick one thing that’s uniquely KANSLIET (e.g. the dossier strip, the custom cursor, or the trail) and make it slightly more expressive (e.g. cursor shows project title on hover, or dossier strip reacts to scroll).
 - **Sound (optional)** | One very subtle click on key actions (e.g. “SEND MESSAGE”) or silence by default with an opt-in. Risky but memorable if done sparingly.
 - **404 / error personality** | Your 404 is already on-brand; keep that level of care on any error or empty state.
 

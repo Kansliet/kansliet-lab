@@ -1,6 +1,6 @@
-# Kansliet (Design Company)
+# KANSLIET (DESIGN COMPANY)
 
-Next.js site for Kansliet — portfolio, works, studio, and contact.
+Next.js site for KANSLIET — portfolio, works, studio, and contact.
 
 ## Getting started
 

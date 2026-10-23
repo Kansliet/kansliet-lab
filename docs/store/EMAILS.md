@@ -70,7 +70,7 @@ Taken from `src/app/globals.css`. The owner's direction: simple, curated, "dossi
 ### E-01 · Withdrawal link on every store page · legal · S
 
 > **Changed 2026-10-23 (owner's call):** the line is now on the **success page only**, labelled **"CANCEL OR RETURN A PURCHASE →"**. It was removed from `/store`, product pages and the cart; emails and `/terms` keep their links. This is a deliberate grey zone under art. 11a (see README, Withdrawals). The card below describes the original version.
-- **Status: done on branch `store/emails`, not merged.**
+- **Status: done on branch `store/emails`, merged (#19).**
 - **Files:** `src/components/store/withdraw-link.tsx` (new), the four store pages under `src/app/(main)/store/(shop)/`, `docs/store/README.md`. The site has no footer (the frame is the AxisNav tabs), so the link is a small line at the end of the page content, in the store only.
 - **Change:**
   1. A line **"WITHDRAW FROM CONTRACT HERE →"** (small caps, 1 px top rule) linking to `WITHDRAW_PATH`, at the end of `/store`, every product page, `/store/cart` and `/store/success`.
@@ -79,7 +79,7 @@ Taken from `src/app/globals.css`. The owner's direction: simple, curated, "dossi
 - **Accept:** the link is visible at the end of `/store`, a product page, the cart and the success page, and `/terms` still links to the form. Typecheck, lint and tests pass.
 
 ### E-02 · Shared email renderer (HTML + text) · M
-- **Status: done on branch `store/emails`, not merged.**
+- **Status: done on branch `store/emails`, merged (#19).**
 - **Files:** new `src/lib/email-layout.ts` + test; `src/lib/mail.ts` (pass `html` alongside `text` to Resend for customer emails). No image assets: the wordmark is a text chip.
 - **Change:**
   1. `renderEmail({ subject, preheader, blocks })` returns `{ subject, html, text }`. Blocks are headings, key/value rows, paragraphs and order lines.
@@ -88,7 +88,7 @@ Taken from `src/app/globals.css`. The owner's direction: simple, curated, "dossi
 - **Accept:** unit tests show that every block appears in both html and text, that HTML escaping works (`<script>` in a name), and that no external resources load except the Google Fonts stylesheet.
 
 ### E-03 · Order confirmation and withdrawal acknowledgement use the renderer · M
-- **Status: done on branch `store/emails`, not merged.**
+- **Status: done on branch `store/emails`, merged (#19).**
 - **Files:** `src/lib/order-email.ts`, `src/lib/withdrawal-email.ts`, their tests.
 - **Change:**
   1. Rebuild both from blocks.
@@ -97,7 +97,7 @@ Taken from `src/app/globals.css`. The owner's direction: simple, curated, "dossi
 - **Accept:** existing tests pass, plus a test that the HTML contains the withdrawal section, the model form, the seller's org.nr and the received date/time.
 
 ### E-04 · Shipped email with optional tracking · M (migration)
-- **Status: done on branch `store/emails`, not merged.**
+- **Status: done on branch `store/emails`, merged (#19).**
 - **Files:**
   - new migration `ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS carrier text, ADD COLUMN IF NOT EXISTS tracking_number text` (`shipped_at` already exists from P2-04, migration `2026-10-26-order-status.sql`)
   - `db/schema.sql`
@@ -113,7 +113,7 @@ Taken from `src/app/globals.css`. The owner's direction: simple, curated, "dossi
 - **Owner actions:** run `db/migrations/2026-10-27-shipping-tracking.sql` on Neon `main` before merging.
 
 ### E-05 · Refund email · S–M
-- **Status: done on branch `store/emails`, not merged.**
+- **Status: done on branch `store/emails`, merged (#19).**
 - **Files:** `src/app/api/store/webhook/route.ts` (`recordRefund`), new `src/lib/refund-email.ts` + test.
 - **Change:**
   1. After COMMIT, when `recordRefund` recorded a new refund amount, send: order ref, the amount refunded **this time** and the total refunded, full or partial, the payment method ("to the card you paid with"), and "5–10 business days".
