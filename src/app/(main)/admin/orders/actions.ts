@@ -8,22 +8,16 @@ import { sendCustomerEmail } from "@/lib/mail";
 import { buildOrderEmail } from "@/lib/order-email";
 import { orderEmailFromSession } from "@/lib/order-confirmation";
 
-const VALID_STATUSES = ["paid", "shipped", "cancelled"] as const;
-
 export async function markShipped(formData: FormData) {
   await requireSession();
 
   const orderId = Number(formData.get("orderId"));
-  const status = String(formData.get("status") ?? "");
 
-  if (!VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) {
-    return;
-  }
-
-  await pool.query("UPDATE shop_orders SET fulfillment_status = $1 WHERE id = $2", [
-    status,
-    orderId,
-  ]);
+  // Only a paid order ships: a stale form can't mark a refunded one shipped.
+  await pool.query(
+    "UPDATE shop_orders SET fulfillment_status = 'shipped', shipped_at = now() WHERE id = $1 AND fulfillment_status = 'paid'",
+    [orderId]
+  );
 
   revalidatePath("/admin/orders");
 }

@@ -146,8 +146,9 @@ async function recordOrder(
 /**
  * A refund made in the Stripe dashboard (charge.refunded). Records each Stripe
  * refund in the shop_refunds ledger (the moms report books it in the month it
- * happened) and the cumulative refunded amount on the order. A full refund marks the order "refunded", and if nothing had
- * shipped yet puts the stock back; for a shipped order the goods are still out
+ * happened) and the cumulative refunded amount on the order. A full refund
+ * marks the order "refunded", and if nothing had shipped yet (shipped_at is
+ * NULL) puts the stock back; for a shipped order the goods are still out
  * there, so stock is left for the admin to restore when they come back.
  * Idempotent: the refunded amount only ever moves forward, so a redelivered
  * or out-of-order event changes nothing.
@@ -159,13 +160,13 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
 
   type Row = {
     id: number;
-    fulfillment_status: string;
+    shipped_at: Date | null;
     amount_refunded: number;
     amount_total: number;
     currency: string;
   };
   let { rows } = await client.query<Row>(
-    "SELECT id, fulfillment_status, amount_refunded, amount_total, currency FROM shop_orders WHERE stripe_payment_intent_id = $1 FOR UPDATE",
+    "SELECT id, shipped_at, amount_refunded, amount_total, currency FROM shop_orders WHERE stripe_payment_intent_id = $1 FOR UPDATE",
     [paymentIntent]
   );
   if (rows.length === 0) {
@@ -178,7 +179,7 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
     ({ rows } = await client.query<Row>(
       `UPDATE shop_orders SET stripe_payment_intent_id = $1
        WHERE stripe_checkout_session_id = $2
-       RETURNING id, fulfillment_status, amount_refunded, amount_total, currency`,
+       RETURNING id, shipped_at, amount_refunded, amount_total, currency`,
       [paymentIntent, storeSession.id]
     ));
     if (rows.length === 0) {
@@ -218,7 +219,7 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
      WHERE id = $4`,
     [refunded, refundedAt, fullyRefunded, order.id]
   );
-  if (fullyRefunded && order.fulfillment_status === "paid") {
+  if (fullyRefunded && order.shipped_at === null) {
     await client.query(
       `UPDATE shop_variants v SET stock = v.stock + i.quantity
        FROM shop_order_items i

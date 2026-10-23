@@ -92,7 +92,9 @@ CREATE TABLE public.shop_orders (
     amount_refunded integer DEFAULT 0 NOT NULL,
     refunded_at timestamp with time zone,
     terms_version text,
-    confirmation_sent_at timestamp with time zone
+    confirmation_sent_at timestamp with time zone,
+    shipped_at timestamp with time zone,
+    CONSTRAINT shop_orders_status_check CHECK ((fulfillment_status = ANY (ARRAY['paid'::text, 'shipped'::text, 'refunded'::text, 'cancelled'::text])))
 );
 
 

@@ -261,7 +261,6 @@ export default async function StoreOrdersPage({
                           {order.fulfillment_status === "paid" && (
                             <form action={markShipped}>
                               <input type="hidden" name="orderId" value={order.id} />
-                              <input type="hidden" name="status" value="shipped" />
                               <Button type="submit" variant="secondary" size="sm" className="whitespace-nowrap">
                                 MARK SHIPPED
                               </Button>
