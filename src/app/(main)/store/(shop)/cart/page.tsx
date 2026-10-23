@@ -9,6 +9,7 @@ import { STORE_CURRENCY } from "@/lib/shop-info";
 import { updateQuantity, removeFromCart } from "./actions";
 import { CheckoutPanel } from "./checkout-panel";
 import { ProductImage } from "@/components/store/ProductImage";
+import { WithdrawLink } from "@/components/store/withdraw-link";
 
 export const metadata: Metadata = {
   title: "KANSLIET (CART)",
@@ -186,6 +187,8 @@ export default async function CartPage({ searchParams }: CartPageProps) {
               <CheckoutPanel subtotalCents={Math.round(total * 100)} />
             </>
           )}
+
+          <WithdrawLink className="mt-20" />
         </div>
       </section>
     </div>

@@ -67,13 +67,13 @@ Taken from `src/app/globals.css`. The owner's direction: simple, curated, "dossi
 
 ## 4. Task cards (for implementation)
 
-### E-01 · Withdrawal link always visible · legal · S
-- **Files:** the site footer component (find it via `src/components`), `docs/store/README.md`.
+### E-01 · Withdrawal link on every store page · legal · S
+- **Files:** `src/components/store/withdraw-link.tsx` (new), the four store pages under `src/app/(main)/store/(shop)/`, `docs/store/README.md`. The site has no footer (the frame is the AxisNav tabs), so the link is a small line at the end of the page content, in the store only.
 - **Change:**
-  1. Add a permanent footer link with the label **"Withdraw from contract here"** pointing to `WITHDRAW_PATH`.
-  2. Show it on every page while the store is open, including when a customer has no account (we have no accounts).
+  1. A line **"WITHDRAW FROM CONTRACT HERE →"** (small caps, 1 px top rule) linking to `WITHDRAW_PATH`, at the end of `/store`, every product page, `/store/cart` and `/store/success`.
+  2. Not on portfolio pages, not in the INDEX panel, no fixed element, no new footer. (Owner's decision 2026-10-23.)
   3. Keep the existing `/terms` link.
-- **Accept:** the link is visible on `/`, `/store`, a product page, the cart and `/terms`. Typecheck, lint and tests pass.
+- **Accept:** the link is visible at the end of `/store`, a product page, the cart and the success page, and `/terms` still links to the form. Typecheck, lint and tests pass.
 
 ### E-02 · Shared email renderer (HTML + text) · M
 - **Files:** new `src/lib/email-layout.ts` + test; `src/lib/mail.ts` (pass `html` alongside `text` to Resend for customer emails). No image assets: the wordmark is a text chip.

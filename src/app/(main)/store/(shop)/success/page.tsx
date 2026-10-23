@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { WithdrawLink } from "@/components/store/withdraw-link";
 import type { Metadata } from "next";
 import type Stripe from "stripe";
 import { pool } from "@/lib/db";
@@ -129,6 +130,8 @@ export default async function StoreSuccessPage({ searchParams }: SuccessPageProp
           >
             ← BACK TO STORE
           </Link>
+
+          <WithdrawLink className="mt-20" />
         </div>
       </section>
     </div>
