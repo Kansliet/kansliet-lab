@@ -92,7 +92,9 @@ CREATE TABLE public.shop_orders (
     amount_refunded integer DEFAULT 0 NOT NULL,
     refunded_at timestamp with time zone,
     terms_version text,
-    confirmation_sent_at timestamp with time zone
+    confirmation_sent_at timestamp with time zone,
+    shipped_at timestamp with time zone,
+    CONSTRAINT shop_orders_status_check CHECK ((fulfillment_status = ANY (ARRAY['paid'::text, 'shipped'::text, 'refunded'::text, 'cancelled'::text])))
 );
 
 
@@ -159,6 +161,39 @@ CREATE SEQUENCE public.shop_products_id_seq
 --
 
 ALTER SEQUENCE public.shop_products_id_seq OWNED BY public.shop_products.id;
+
+
+--
+-- Name: shop_refunds; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.shop_refunds (
+    id integer NOT NULL,
+    shop_order_id integer NOT NULL,
+    stripe_refund_id text NOT NULL,
+    amount integer NOT NULL,
+    created_at timestamp with time zone NOT NULL
+);
+
+
+--
+-- Name: shop_refunds_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.shop_refunds_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: shop_refunds_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.shop_refunds_id_seq OWNED BY public.shop_refunds.id;
 
 
 --
@@ -299,6 +334,13 @@ ALTER TABLE ONLY public.shop_products ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: shop_refunds id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shop_refunds ALTER COLUMN id SET DEFAULT nextval('public.shop_refunds_id_seq'::regclass);
+
+
+--
 -- Name: shop_variants id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -368,6 +410,22 @@ ALTER TABLE ONLY public.shop_products
 
 
 --
+-- Name: shop_refunds shop_refunds_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shop_refunds
+    ADD CONSTRAINT shop_refunds_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: shop_refunds shop_refunds_stripe_refund_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shop_refunds
+    ADD CONSTRAINT shop_refunds_stripe_refund_id_key UNIQUE (stripe_refund_id);
+
+
+--
 -- Name: shop_variants shop_variants_options_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -431,6 +489,13 @@ CREATE UNIQUE INDEX shop_orders_payment_intent_key ON public.shop_orders USING b
 
 
 --
+-- Name: shop_refunds_order_key; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX shop_refunds_order_key ON public.shop_refunds USING btree (shop_order_id);
+
+
+--
 -- Name: shop_variants_product_key; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -490,6 +555,14 @@ ALTER TABLE ONLY public.shop_orders
 
 ALTER TABLE ONLY public.shop_orders
     ADD CONSTRAINT shop_orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: shop_refunds shop_refunds_shop_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shop_refunds
+    ADD CONSTRAINT shop_refunds_shop_order_id_fkey FOREIGN KEY (shop_order_id) REFERENCES public.shop_orders(id);
 
 
 --

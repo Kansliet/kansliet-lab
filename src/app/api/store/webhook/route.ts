@@ -8,8 +8,10 @@ import { NEWSLETTER_SEGMENT_ID } from "@/lib/newsletter";
 import { variantLabel } from "@/lib/variants";
 import { CATALOG_TAG } from "@/lib/products";
 import { buildOrderEmail, orderRef, type OrderEmailInput } from "@/lib/order-email";
+import { orderEmailFromSession } from "@/lib/order-confirmation";
 import { matchVariant, stripeProductId } from "@/lib/order-lines";
-import { refundedInOrderCurrency } from "@/lib/refunds";
+import { refundUpdate } from "@/lib/checkout-rules";
+import { refundedInOrderCurrency, refundLedgerRows } from "@/lib/refunds";
 import { STORE_CURRENCY } from "@/lib/shop-info";
 
 // shop_order_items (one row per paid line) is the source of truth for what was bought.
@@ -134,44 +136,20 @@ async function recordOrder(
     }
   }
 
-  const email = session.customer_details?.email;
-  if (!email) return { orderId, orderRef: orderRef(orderId), oversold, confirmation: null };
   return {
     orderId,
     orderRef: orderRef(orderId),
     oversold,
-    confirmation: {
-      to: email,
-      orderRef: orderRef(orderId),
-      date: new Date(session.created * 1000),
-      lines: lineItems.data.map((line) => ({
-        name: line.description ?? "Item",
-        quantity: line.quantity ?? 0,
-        amountCents: line.amount_total,
-      })),
-      shippingCents: session.shipping_cost?.amount_total ?? 0,
-      totalCents: session.amount_total ?? 0,
-      // Adaptive Pricing: amount_total stays in SEK; what the customer actually
-      // paid in their own currency is in presentment_details.
-      charged:
-        session.presentment_details &&
-        session.presentment_details.presentment_currency !== session.currency
-          ? {
-              amountCents: session.presentment_details.presentment_amount,
-              currency: session.presentment_details.presentment_currency,
-            }
-          : null,
-      shippingName: shippingDetails?.name ?? null,
-      shippingAddress: shippingDetails?.address ?? null,
-    },
+    confirmation: orderEmailFromSession(session, lineItems.data, orderId),
   };
 }
 
 /**
- * A refund made in the Stripe dashboard (charge.refunded). Records the
- * cumulative refunded amount and when, so the moms report books it in the
- * right month. A full refund marks the order "refunded", and if nothing had
- * shipped yet puts the stock back; for a shipped order the goods are still out
+ * A refund made in the Stripe dashboard (charge.refunded). Records each Stripe
+ * refund in the shop_refunds ledger (the moms report books it in the month it
+ * happened) and the cumulative refunded amount on the order. A full refund
+ * marks the order "refunded", and if nothing had shipped yet (shipped_at is
+ * NULL) puts the stock back; for a shipped order the goods are still out
  * there, so stock is left for the admin to restore when they come back.
  * Idempotent: the refunded amount only ever moves forward, so a redelivered
  * or out-of-order event changes nothing.
@@ -184,12 +162,13 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
   type Row = {
     id: number;
     fulfillment_status: string;
+    shipped_at: Date | null;
     amount_refunded: number;
     amount_total: number;
     currency: string;
   };
   let { rows } = await client.query<Row>(
-    "SELECT id, fulfillment_status, amount_refunded, amount_total, currency FROM shop_orders WHERE stripe_payment_intent_id = $1 FOR UPDATE",
+    "SELECT id, fulfillment_status, shipped_at, amount_refunded, amount_total, currency FROM shop_orders WHERE stripe_payment_intent_id = $1 FOR UPDATE",
     [paymentIntent]
   );
   if (rows.length === 0) {
@@ -202,7 +181,7 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
     ({ rows } = await client.query<Row>(
       `UPDATE shop_orders SET stripe_payment_intent_id = $1
        WHERE stripe_checkout_session_id = $2
-       RETURNING id, fulfillment_status, amount_refunded, amount_total, currency`,
+       RETURNING id, fulfillment_status, shipped_at, amount_refunded, amount_total, currency`,
       [paymentIntent, storeSession.id]
     ));
     if (rows.length === 0) {
@@ -214,18 +193,35 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
 
   const order = rows[0];
   const refunded = refundedInOrderCurrency(order, charge);
-  if (refunded <= order.amount_refunded) return; // already recorded
+  const update = refundUpdate(order, refunded, charge.refunded);
+  if (update.skip) return; // already recorded
 
-  const fullyRefunded = charge.refunded;
+  // The ledger: one row per Stripe refund, so the moms report books each in its
+  // own month. The real refunds replace the migration's 'legacy-<id>' placeholder.
+  const refundList = await stripe.refunds.list({ charge: charge.id, limit: 100 });
+  if (refundList.has_more) throw new Error(`Charge ${charge.id}: more than 100 refunds`);
+  const ledger = refundLedgerRows(order, charge, refundList.data);
+  if (ledger.length) {
+    await client.query("DELETE FROM shop_refunds WHERE shop_order_id = $1 AND stripe_refund_id LIKE 'legacy-%'", [order.id]);
+  }
+  for (const row of ledger) {
+    await client.query(
+      `INSERT INTO shop_refunds (shop_order_id, stripe_refund_id, amount, created_at)
+       VALUES ($1, $2, $3, to_timestamp($4))
+       ON CONFLICT (stripe_refund_id) DO NOTHING`,
+      [order.id, row.stripeRefundId, row.amount, row.created]
+    );
+  }
+
   await client.query(
     `UPDATE shop_orders
      SET amount_refunded = $1,
          refunded_at = to_timestamp($2),
-         fulfillment_status = CASE WHEN $3 THEN 'refunded' ELSE fulfillment_status END
+         fulfillment_status = $3
      WHERE id = $4`,
-    [refunded, refundedAt, fullyRefunded, order.id]
+    [refunded, refundedAt, update.status, order.id]
   );
-  if (fullyRefunded && order.fulfillment_status === "paid") {
+  if (update.restock) {
     await client.query(
       `UPDATE shop_variants v SET stock = v.stock + i.quantity
        FROM shop_order_items i

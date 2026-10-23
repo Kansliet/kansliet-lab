@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { pool } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
 import { formatPrice } from "@/lib/stripe";
-import { markShipped } from "./actions";
+import { markShipped, resendConfirmation } from "./actions";
 import { AdminNav } from "../admin-nav";
 import Link from "next/link";
 import { orderRef } from "@/lib/order-email";
@@ -46,15 +46,44 @@ type Withdrawal = {
   acknowledged_at: Date | null;
 };
 
-async function getOrders(): Promise<Order[]> {
+type OrderItem = { shop_order_id: number; quantity: number; name: string };
+
+// Unshipped orders always show, however old; shipped ones only for the last 90 days
+// (?all=1 for everything), so the list stays short after years of orders.
+async function getOrders(all: boolean): Promise<Order[]> {
   const { rows } = await pool.query<Order>(
     `SELECT o.id, o.stripe_checkout_session_id, o.customer_email, o.shipping_name, o.shipping_address,
             o.amount_total, o.amount_refunded, o.currency, o.fulfillment_status, o.created_at,
             o.confirmation_sent_at,
             (SELECT min(w.created_at) FROM shop_withdrawals w WHERE w.shop_order_id = o.id) AS withdrawn_at
-     FROM shop_orders o ORDER BY o.created_at DESC`
+     FROM shop_orders o
+     ${all ? "" : "WHERE o.fulfillment_status = 'paid' OR o.created_at > now() - interval '90 days'"}
+     ORDER BY o.created_at DESC`
   );
   return rows;
+}
+
+async function countOrders(): Promise<number> {
+  const { rows } = await pool.query<{ count: string }>("SELECT count(*) FROM shop_orders");
+  return Number(rows[0].count);
+}
+
+/** The listed orders' lines, by order id, named as on the packing slip. */
+async function getItems(orderIds: number[]): Promise<Map<number, OrderItem[]>> {
+  const byOrder = new Map<number, OrderItem[]>();
+  if (orderIds.length === 0) return byOrder;
+  const { rows } = await pool.query<OrderItem>(
+    `SELECT i.shop_order_id, i.quantity,
+            COALESCE(i.item_name, p.name || COALESCE(' — ' || i.variant_label, ''), 'Item no longer in catalog') AS name
+     FROM shop_order_items i
+     LEFT JOIN shop_products p ON p.id = i.shop_product_id
+     WHERE i.shop_order_id = ANY($1) ORDER BY i.shop_order_id, i.id`,
+    [orderIds]
+  );
+  for (const item of rows) {
+    byOrder.set(item.shop_order_id, [...(byOrder.get(item.shop_order_id) ?? []), item]);
+  }
+  return byOrder;
 }
 
 async function getWithdrawals(): Promise<Withdrawal[]> {
@@ -78,9 +107,15 @@ function formatDate(value: string): string {
 // Plain uppercase, not .text-caps: its display: inline-block breaks table cell layout.
 const TH = "px-4 py-3 text-sm font-light uppercase tracking-wider opacity-60";
 
-export default async function StoreOrdersPage() {
+export default async function StoreOrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ all?: string }>;
+}) {
   await requireSession();
-  const [orders, withdrawals] = await Promise.all([getOrders(), getWithdrawals()]);
+  const all = (await searchParams).all === "1";
+  const [orders, withdrawals, total] = await Promise.all([getOrders(all), getWithdrawals(), countOrders()]);
+  const items = await getItems(orders.map((o) => o.id));
 
   return (
     <div className="min-h-screen bg-background">
@@ -133,10 +168,21 @@ export default async function StoreOrdersPage() {
             </div>
           )}
 
+          {total > 0 && (
+            <div className="mb-4 text-right">
+              <Link
+                href={all ? "/admin/orders" : "/admin/orders?all=1"}
+                className="text-caps text-sm font-light tracking-wider transition-opacity hover:opacity-60"
+              >
+                {all ? "SHOW RECENT" : `SHOW ALL ORDERS (${total})`}
+              </Link>
+            </div>
+          )}
+
           {orders.length === 0 ? (
             <div className="border-brutal p-10 text-center">
               <p className="text-caps text-sm font-light tracking-wider opacity-60">
-                NO ORDERS YET.
+                {total === 0 ? "NO ORDERS YET." : "NO RECENT ORDERS."}
               </p>
             </div>
           ) : (
@@ -166,6 +212,11 @@ export default async function StoreOrdersPage() {
                         <div className="font-light opacity-60">
                           {order.customer_email ?? "—"}
                         </div>
+                        {items.get(order.id)?.map((item, n) => (
+                          <div key={n} className="mt-1 text-xs font-light">
+                            {item.quantity} × {item.name}
+                          </div>
+                        ))}
                       </td>
                       <td className="px-4 py-3 font-light">
                         {formatAddress(order.shipping_address)}
@@ -183,8 +234,14 @@ export default async function StoreOrdersPage() {
                           {order.fulfillment_status.toUpperCase()}
                         </Badge>
                         {order.customer_email && !order.confirmation_sent_at && (
-                          <div className="mt-1">
+                          <div className="mt-1 flex items-center gap-2">
                             <Badge variant="solid">EMAIL NOT SENT</Badge>
+                            <form action={resendConfirmation}>
+                              <input type="hidden" name="orderId" value={order.id} />
+                              <Button type="submit" variant="secondary" size="sm" className="whitespace-nowrap">
+                                RESEND CONFIRMATION
+                              </Button>
+                            </form>
                           </div>
                         )}
                         {order.withdrawn_at && (
@@ -204,7 +261,6 @@ export default async function StoreOrdersPage() {
                           {order.fulfillment_status === "paid" && (
                             <form action={markShipped}>
                               <input type="hidden" name="orderId" value={order.id} />
-                              <input type="hidden" name="status" value="shipped" />
                               <Button type="submit" variant="secondary" size="sm" className="whitespace-nowrap">
                                 MARK SHIPPED
                               </Button>
