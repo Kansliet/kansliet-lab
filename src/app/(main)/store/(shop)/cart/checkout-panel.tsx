@@ -109,7 +109,7 @@ export function CheckoutPanel({ subtotalCents }: { subtotalCents: number }) {
       <label className="flex cursor-pointer items-start gap-4 px-4 text-sm">
         <input type="checkbox" name="newsletter" className="mt-0.5 size-[18px] shrink-0 cursor-pointer accent-foreground" />
         <span className="text-normal-case font-light">
-          Send me the Kansliet newsletter (optional; unsubscribe any time).
+          Send me the KANSLIET newsletter (optional; unsubscribe any time).
         </span>
       </label>
 

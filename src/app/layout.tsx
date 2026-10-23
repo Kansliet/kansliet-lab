@@ -28,8 +28,8 @@ export const metadata: Metadata = {
     "Swedish design",
     "brutalist design",
   ],
-  authors: [{ name: "Kansliet" }],
-  creator: "Kansliet",
+  authors: [{ name: "KANSLIET" }],
+  creator: "KANSLIET",
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -37,13 +37,13 @@ export const metadata: Metadata = {
     title: "KANSLIET (DESIGN COMPANY)",
     description:
       "Swedish design company specializing in industrial, spatial, and identity design",
-    siteName: "Kansliet",
+    siteName: "KANSLIET",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Kansliet Design Company",
+        alt: "KANSLIET (DESIGN COMPANY)",
       },
     ],
   },
@@ -72,8 +72,8 @@ export const metadata: Metadata = {
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "Kansliet",
-  alternateName: "Kansliet Design Company",
+  name: "KANSLIET",
+  alternateName: "KANSLIET (DESIGN COMPANY)",
   legalName: "KANSLIET STUDIO AB",
   url: SITE_URL,
   logo: `${SITE_URL}/kansliet-logo-navbar-web.svg`,

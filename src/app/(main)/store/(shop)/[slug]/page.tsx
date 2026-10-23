@@ -101,7 +101,7 @@ export default async function ProductPage({
     name: product.name,
     description: product.tagline ?? paragraphs(product.description)[0],
     category: product.category,
-    brand: { "@type": "Brand", name: "Kansliet" },
+    brand: { "@type": "Brand", name: "KANSLIET" },
   };
   const jsonLd =
     product.options.length === 0

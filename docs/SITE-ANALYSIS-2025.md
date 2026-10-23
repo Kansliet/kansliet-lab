@@ -1,4 +1,4 @@
-# Kansliet site — full analysis & production checklist (2025)
+# KANSLIET site — full analysis & production checklist (2025)
 
 **Date:** February 2025  
 **Scope:** Entire site — performance, redundancy, latest best practices, files safe to remove.

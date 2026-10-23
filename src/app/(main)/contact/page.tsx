@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "KANSLIET (CONTACT)",
   description:
-    "Get in touch with Kansliet. Send a message for project inquiries, collaborations, or general questions. We respond within 24 hours.",
+    "Get in touch with KANSLIET. Send a message for project inquiries, collaborations, or general questions. We respond within 24 hours.",
   alternates: { canonical: "/contact" },
 };
 

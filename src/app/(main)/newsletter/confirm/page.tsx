@@ -54,7 +54,7 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
               <input type="hidden" name="t" value={params.t} />
               <input type="hidden" name="s" value={params.s} />
               <p className="text-normal-case text-base font-light leading-relaxed">
-                Subscribe <span className="font-normal">{email}</span> to the Kansliet newsletter?
+                Subscribe <span className="font-normal">{email}</span> to the KANSLIET newsletter?
               </p>
               <Button type="submit">CONFIRM SUBSCRIPTION</Button>
             </form>

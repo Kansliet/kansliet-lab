@@ -129,7 +129,7 @@ export function AxisNav() {
       {/* Left end of the axis: home + where you are. */}
       <Link
         href="/"
-        aria-label="Kansliet, home"
+        aria-label="KANSLIET, home"
         className={`${TAB} fixed left-0 z-201 max-lg:bottom-3 lg:top-1/2 lg:-translate-y-1/2`}
       >
         <span>K(DC)</span>

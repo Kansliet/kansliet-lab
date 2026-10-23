@@ -55,7 +55,7 @@ export async function submitContact(
     // on RESEND_API_KEY — the Resend constructor throws on a missing key.
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL ?? "Kansliet Form <onboarding@resend.dev>",
+      from: process.env.RESEND_FROM_EMAIL ?? "KANSLIET (FORM) <onboarding@resend.dev>",
       to: "desk@kansliet.co",
       replyTo: email,
       subject: `New Inquiry: ${name.slice(0, 100)}`,

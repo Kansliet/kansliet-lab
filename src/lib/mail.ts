@@ -10,7 +10,7 @@ const STORE_ADDRESS = "store@kansliet.co";
 // Quoted: unquoted parentheses in an address header are a comment, which
 // mail clients may drop, leaving just "KANSLIET".
 const CUSTOMER_SENDER = `"KANSLIET (STORE)" <${STORE_ADDRESS}>`;
-const STORE_SENDER = `Kansliet Store <${STORE_ADDRESS}>`;
+const STORE_SENDER = `KANSLIET (STORE) <${STORE_ADDRESS}>`;
 
 export type InternalTag = "NEW ORDER" | "WITHDRAWAL" | "REFUND" | "SHIPPED";
 

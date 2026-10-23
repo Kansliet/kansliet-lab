@@ -48,7 +48,7 @@ const products = [
     category: "stationery",
     amount: 20000,
     soldOut: false,
-    tagline: "The notebook every Kansliet project starts in.",
+    tagline: "The notebook every KANSLIET project starts in.",
     description: [
       "160 pages of 100 g paper printed with a 5 mm dot grid, fine enough to disappear under a sketch and firm enough to hold a layout. Section-sewn so it opens flat on the desk.",
       "Grey board covers, blind-debossed K(DC) mark, rounded corners. Numbered pages and a blank index at the front, because references matter.",
@@ -163,7 +163,7 @@ const products = [
     soldOut: false,
     tagline: "The studio's reference sheet, in full.",
     description: [
-      "Every mark, typeface, grid and colour value in the Kansliet system, laid out on one sheet the way we pin it above the desk.",
+      "Every mark, typeface, grid and colour value in the KANSLIET system, laid out on one sheet the way we pin it above the desk.",
       "Offset-printed in two Pantone colours on uncoated 170 g stock. Shipped rolled.",
     ],
     specs: [

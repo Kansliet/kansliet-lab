@@ -16,7 +16,7 @@ export function HomeView() {
     // Phones: main already pads 3rem below for the axis tabs, so one screen
     // minus that; otherwise the page scrolls by 3rem for nothing.
     <div className="flex min-h-[calc(100svh-3rem)] flex-col bg-background lg:min-h-screen">
-      <h1 className="sr-only">Kansliet — objects, spaces, systems</h1>
+      <h1 className="sr-only">KANSLIET — objects, spaces, systems</h1>
 
       {/* The ball lives in its own fixed layer over the whole window; this
           just keeps the caption at the foot of the page. */}

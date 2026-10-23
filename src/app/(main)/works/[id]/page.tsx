@@ -72,7 +72,7 @@ export default async function ProjectPage({
     dateCreated: project.year,
     dateModified: project.updatedAt,
     image: project.images.map((img) => new URL(img.src, SITE_URL).href),
-    creator: { "@type": "Organization", name: "Kansliet", url: SITE_URL },
+    creator: { "@type": "Organization", name: "KANSLIET", url: SITE_URL },
     keywords: project.tags.join(", "),
   };
 

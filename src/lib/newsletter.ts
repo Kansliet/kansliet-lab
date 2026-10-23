@@ -58,7 +58,7 @@ export function buildConfirmationEmail(link: string): { subject: string; text: s
   return {
     subject: `Confirm your newsletter signup — ${COMPANY.tradingName}`,
     text: [
-      "Confirm that you want the Kansliet newsletter: new objects in the store, and the occasional note from the studio.",
+      "Confirm that you want the KANSLIET newsletter: new objects in the store, and the occasional note from the studio.",
       "",
       link,
       "",

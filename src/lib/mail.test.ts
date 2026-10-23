@@ -55,7 +55,7 @@ describe("sendCustomerEmail", () => {
     expect(sendMock).toHaveBeenCalledTimes(2);
     const copy = sendMock.mock.calls[1][0];
     expect(copy).toMatchObject({
-      from: "Kansliet Store <store@kansliet.co>",
+      from: "KANSLIET (STORE) <store@kansliet.co>",
       to: "desk@kansliet.co",
       replyTo: "anna@example.com",
       subject: "[NEW ORDER] KDC-00042",
@@ -92,7 +92,7 @@ describe("sendInternalAlert", () => {
     await sendInternalAlert("[OVERSOLD] KDC-00042", "Details");
     expect(sendMock).toHaveBeenCalledTimes(1);
     expect(sendMock.mock.calls[0][0]).toMatchObject({
-      from: "Kansliet Store <store@kansliet.co>",
+      from: "KANSLIET (STORE) <store@kansliet.co>",
       to: "desk@kansliet.co",
       subject: "[OVERSOLD] KDC-00042",
       text: "Details",

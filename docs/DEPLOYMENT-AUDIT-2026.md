@@ -1,4 +1,4 @@
-# Next.js Production Deployment Audit — Kansliet Lab
+# Next.js Production Deployment Audit — KANSLIET Lab
 
 **Audit date:** February 2026  
 **Next.js:** 16.1.6 | **React:** 19.2.3  
