@@ -39,13 +39,19 @@ export function ArchiveColumn({
 }) {
   const router = useRouter();
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(0);
+  // -1 until mounted: the starting plate is picked in the browser, so the
+  // server render shows no figure rather than one that then jumps.
+  const [active, setActive] = useState(-1);
   const copyHeight = plates.length * STEP;
 
-  // Start in the middle copy, first plate on the centre line.
+  // Start in the middle copy on a random plate, so each visit to WORKS opens
+  // somewhere new in the archive.
   useEffect(() => {
-    if (scrollerRef.current) scrollerRef.current.scrollTop = copyHeight + PLATE_H / 2;
-  }, [copyHeight]);
+    if (!scrollerRef.current || plates.length === 0) return;
+    const start = Math.floor(Math.random() * plates.length);
+    scrollerRef.current.scrollTop = copyHeight + start * STEP + PLATE_H / 2;
+    setActive(start);
+  }, [copyHeight, plates.length]);
 
   const current = plates[active];
   // Warm the selected project's page so the click opens it instantly.
