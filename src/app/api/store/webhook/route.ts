@@ -8,6 +8,7 @@ import { NEWSLETTER_SEGMENT_ID } from "@/lib/newsletter";
 import { variantLabel } from "@/lib/variants";
 import { CATALOG_TAG } from "@/lib/products";
 import { buildOrderEmail, orderRef, type OrderEmailInput } from "@/lib/order-email";
+import { buildRefundEmail, refundEmailForOrder, type RefundEmailInput } from "@/lib/refund-email";
 import { orderEmailFromSession } from "@/lib/order-confirmation";
 import { matchVariant, stripeProductId } from "@/lib/order-lines";
 import { refundUpdate } from "@/lib/checkout-rules";
@@ -153,11 +154,16 @@ async function recordOrder(
  * there, so stock is left for the admin to restore when they come back.
  * Idempotent: the refunded amount only ever moves forward, so a redelivered
  * or out-of-order event changes nothing.
+ * Returns the refund email to send after COMMIT, or null when nothing changed.
  */
-async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedAt: number) {
+async function recordRefund(
+  client: PoolClient,
+  charge: Stripe.Charge,
+  refundedAt: number,
+): Promise<(RefundEmailInput & { to: string }) | null> {
   const paymentIntent =
     typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
-  if (!paymentIntent) return;
+  if (!paymentIntent) return null;
 
   type Row = {
     id: number;
@@ -166,9 +172,10 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
     amount_refunded: number;
     amount_total: number;
     currency: string;
+    customer_email: string | null;
   };
   let { rows } = await client.query<Row>(
-    "SELECT id, fulfillment_status, shipped_at, amount_refunded, amount_total, currency FROM shop_orders WHERE stripe_payment_intent_id = $1 FOR UPDATE",
+    "SELECT id, fulfillment_status, shipped_at, amount_refunded, amount_total, currency, customer_email FROM shop_orders WHERE stripe_payment_intent_id = $1 FOR UPDATE",
     [paymentIntent]
   );
   if (rows.length === 0) {
@@ -177,11 +184,11 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
     const sessions = await stripe.checkout.sessions.list({ payment_intent: paymentIntent, limit: 1 });
     const storeSession = sessions.data[0];
     // Our checkout always sets terms_version; anything else is not a store payment.
-    if (!storeSession?.metadata?.terms_version) return;
+    if (!storeSession?.metadata?.terms_version) return null;
     ({ rows } = await client.query<Row>(
       `UPDATE shop_orders SET stripe_payment_intent_id = $1
        WHERE stripe_checkout_session_id = $2
-       RETURNING id, fulfillment_status, shipped_at, amount_refunded, amount_total, currency`,
+       RETURNING id, fulfillment_status, shipped_at, amount_refunded, amount_total, currency, customer_email`,
       [paymentIntent, storeSession.id]
     ));
     if (rows.length === 0) {
@@ -194,7 +201,7 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
   const order = rows[0];
   const refunded = refundedInOrderCurrency(order, charge);
   const update = refundUpdate(order, refunded, charge.refunded);
-  if (update.skip) return; // already recorded
+  if (update.skip) return null; // already recorded
 
   // The ledger: one row per Stripe refund, so the moms report books each in its
   // own month. The real refunds replace the migration's 'legacy-<id>' placeholder.
@@ -229,6 +236,8 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
       [order.id]
     );
   }
+
+  return refundEmailForOrder(order, refunded, charge.refunded, new Date(refundedAt * 1000));
 }
 
 /**
@@ -247,6 +256,18 @@ async function sendOrderConfirmation(orderId: number, order: OrderEmailInput & {
     await pool.query("UPDATE shop_orders SET confirmation_sent_at = now() WHERE id = $1", [orderId]);
   } catch (err) {
     console.error(`Order ${order.orderRef}: confirmation email failed`, err);
+  }
+}
+
+/** After COMMIT; a failure is logged and never fails the webhook. desk@'s [REFUND] copy says NOT SENT. */
+async function sendRefundConfirmation(refund: RefundEmailInput & { to: string }) {
+  try {
+    await sendCustomerEmail(
+      { to: refund.to, ...buildRefundEmail(refund) },
+      { tag: "REFUND", orderRef: refund.orderRef },
+    );
+  } catch (err) {
+    console.error(`Order ${refund.orderRef}: refund email failed`, err);
   }
 }
 
@@ -289,6 +310,7 @@ export async function POST(req: Request) {
   // between "mark seen" and "do the work" would silently drop the order,
   // since Stripe never redelivers an event we've already returned 200 for.
   let recorded: Awaited<ReturnType<typeof recordOrder>> = null;
+  let refundEmail: Awaited<ReturnType<typeof recordRefund>> = null;
   // Orders take stock and full refunds can put it back, so the cached catalog
   // (sold-out state on the grid and product pages) must be refreshed.
   let stockMayHaveChanged = false;
@@ -326,7 +348,7 @@ export async function POST(req: Request) {
         newsletterEmail = newsletterOptIn(event.data.object as Stripe.Checkout.Session);
       }
       if (event.type === "charge.refunded") {
-        await recordRefund(client, event.data.object as Stripe.Charge, event.created);
+        refundEmail = await recordRefund(client, event.data.object as Stripe.Charge, event.created);
         stockMayHaveChanged = true;
       }
     }
@@ -365,6 +387,7 @@ export async function POST(req: Request) {
     );
   }
   if (recorded?.confirmation) await sendOrderConfirmation(recorded.orderId, recorded.confirmation);
+  if (refundEmail) await sendRefundConfirmation(refundEmail);
   if (newsletterEmail) {
     // Never fails the webhook: the order is recorded; a missed signup is only logged.
     try {
