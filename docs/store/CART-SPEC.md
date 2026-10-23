@@ -1,3 +1,5 @@
+> Historical design note from before launch. Routes, buyNow and sold_out described here no longer exist; README.md is current. Do not implement from this file.
+
 # Shopping cart — multiple items, quantities, before checkout
 
 ## Context

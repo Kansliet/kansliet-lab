@@ -190,6 +190,8 @@ export async function checkoutCart(formData: FormData) {
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      // Stock is checked now, not reserved: keep the window to pay short (Stripe's minimum).
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
       line_items: cart.map((item) => ({
         price: variants.get(item.variantId)!.variant.stripe_price_id,
         quantity: item.quantity,

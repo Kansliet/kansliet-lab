@@ -1,3 +1,5 @@
+> Historical design note from before launch. Routes, buyNow and sold_out described here no longer exist; README.md is current. Do not implement from this file.
+
 # Admin authentication for /shop/orders
 
 ## Context

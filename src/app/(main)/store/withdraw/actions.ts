@@ -11,6 +11,8 @@ import { WITHDRAW_PATH } from "@/lib/shop-info";
 const MAX_NAME = 200;
 const MAX_EMAIL = 254;
 const MAX_ORDER_REF = 40;
+// Far above any real week's withdrawals; stops the form being used to send mail.
+const MAX_ACKNOWLEDGEMENTS_PER_HOUR = 20;
 
 /** On an error, what was typed comes back: React resets a form after its action runs. */
 export type WithdrawState = { error?: string; values?: { name: string; order: string; email: string } };
@@ -64,6 +66,15 @@ export async function submitWithdrawal(
     [orderId, email, ref, name],
   );
   const withdrawal = rows[0];
+
+  const { rows: [recent] } = await pool.query<{ count: string }>(
+    "SELECT count(*) FROM shop_withdrawals WHERE created_at > now() - interval '1 hour'"
+  );
+  if (Number(recent.count) > MAX_ACKNOWLEDGEMENTS_PER_HOUR) {
+    // Recorded, but no email: /admin/orders shows NOT SENT, to answer by hand.
+    console.error(`Withdrawal ${withdrawal.id}: over ${MAX_ACKNOWLEDGEMENTS_PER_HOUR}/hour, acknowledgement not sent`);
+    redirect(`${WITHDRAW_PATH}?received=${orderId}`);
+  }
 
   try {
     await sendCustomerEmail(

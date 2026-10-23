@@ -33,6 +33,7 @@ type Order = {
   fulfillment_status: string;
   created_at: string;
   withdrawn_at: string | null;
+  confirmation_sent_at: string | null;
 };
 
 type Withdrawal = {
@@ -49,6 +50,7 @@ async function getOrders(): Promise<Order[]> {
   const { rows } = await pool.query<Order>(
     `SELECT o.id, o.stripe_checkout_session_id, o.customer_email, o.shipping_name, o.shipping_address,
             o.amount_total, o.amount_refunded, o.currency, o.fulfillment_status, o.created_at,
+            o.confirmation_sent_at,
             (SELECT min(w.created_at) FROM shop_withdrawals w WHERE w.shop_order_id = o.id) AS withdrawn_at
      FROM shop_orders o ORDER BY o.created_at DESC`
   );
@@ -180,6 +182,11 @@ export default async function StoreOrdersPage() {
                         <Badge variant={order.fulfillment_status === "paid" ? "solid" : "default"}>
                           {order.fulfillment_status.toUpperCase()}
                         </Badge>
+                        {order.customer_email && !order.confirmation_sent_at && (
+                          <div className="mt-1">
+                            <Badge variant="solid">EMAIL NOT SENT</Badge>
+                          </div>
+                        )}
                         {order.withdrawn_at && (
                           <div className="mt-1 font-light whitespace-nowrap opacity-60">
                             WITHDRAWN {formatDate(order.withdrawn_at)}

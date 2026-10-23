@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import type Stripe from "stripe";
 import { stripe, formatPrice } from "@/lib/stripe";
+import { STORE_CURRENCY } from "@/lib/shop-info";
 import { ClearCartOnMount } from "./clear-cart-on-mount";
 
 export const metadata: Metadata = {
@@ -47,7 +48,7 @@ export default async function StoreSuccessPage({ searchParams }: SuccessPageProp
   }
 
   const isPaid = session.payment_status === "paid";
-  const currency = (session.currency ?? "eur").toUpperCase();
+  const currency = (session.currency ?? STORE_CURRENCY).toUpperCase();
   const lines = session.line_items?.data ?? [];
 
   return (
