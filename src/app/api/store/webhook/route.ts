@@ -8,11 +8,10 @@ import { NEWSLETTER_SEGMENT_ID } from "@/lib/newsletter";
 import { variantLabel } from "@/lib/variants";
 import { CATALOG_TAG } from "@/lib/products";
 import { buildOrderEmail, orderRef, type OrderEmailInput } from "@/lib/order-email";
+import { matchVariant, stripeProductId } from "@/lib/order-lines";
+import { STORE_CURRENCY } from "@/lib/shop-info";
 
-// shop_orders.shop_product_id is no longer set — it assumed one product per
-// order, which a multi-item cart breaks. shop_order_items (one row per
-// purchased line) is now the source of truth for what was bought, for both
-// buyNow's single-item sessions and cart checkouts alike.
+// shop_order_items (one row per paid line) is the source of truth for what was bought.
 /** Returns what the confirmation email needs, or null for an already-recorded session. */
 async function recordOrder(
   client: PoolClient,
@@ -38,7 +37,7 @@ async function recordOrder(
       shippingDetails?.name ?? null,
       shippingDetails?.address ? JSON.stringify(shippingDetails.address) : null,
       session.amount_total ?? 0,
-      session.currency ?? "usd",
+      session.currency ?? STORE_CURRENCY,
       // Refund events (charge.refunded) refer to the PaymentIntent, not the session.
       typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent?.id ?? null),
     ]
@@ -53,25 +52,39 @@ async function recordOrder(
 
   const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
     expand: ["data.price"],
+    limit: 100,
   });
+  // Checkout allows at most 100 lines, so this is all of them; if not, fail so Stripe retries.
+  if (lineItems.has_more) throw new Error(`Session ${session.id}: more than 100 line items`);
 
   const priceIds = lineItems.data
     .map((line) => line.price?.id)
     .filter((id): id is string => Boolean(id));
+  const productIds = lineItems.data
+    .map((line) => stripeProductId(line.price?.product))
+    .filter((id): id is string => Boolean(id));
 
-  // Every variant has its own Stripe price, so a paid price is one variant.
-  type VariantRow = { id: number; product_id: number; option1: string | null; option2: string | null; stripe_price_id: string };
-  const { rows: variants } = priceIds.length
-    ? await client.query<VariantRow>(
-        "SELECT id, product_id, option1, option2, stripe_price_id FROM shop_variants WHERE stripe_price_id = ANY($1)",
-        [priceIds]
-      )
-    : { rows: [] as VariantRow[] };
-  const variantByPriceId = new Map(variants.map((v) => [v.stripe_price_id, v]));
+  // Every variant has its own Stripe price and product. A paid price is one
+  // variant; if the price was edited mid-checkout, its product still is.
+  type VariantRow = {
+    id: number;
+    product_id: number;
+    option1: string | null;
+    option2: string | null;
+    stripe_price_id: string;
+    stripe_product_id: string;
+  };
+  const { rows: variants } =
+    priceIds.length || productIds.length
+      ? await client.query<VariantRow>(
+          `SELECT id, product_id, option1, option2, stripe_price_id, stripe_product_id
+           FROM shop_variants WHERE stripe_price_id = ANY($1) OR stripe_product_id = ANY($2)`,
+          [priceIds, productIds]
+        )
+      : { rows: [] as VariantRow[] };
 
   for (const line of lineItems.data) {
-    const priceId = line.price?.id;
-    const variant = priceId ? (variantByPriceId.get(priceId) ?? null) : null;
+    const variant = matchVariant(variants, line.price?.id ?? null, stripeProductId(line.price?.product));
     await client.query(
       `INSERT INTO shop_order_items
          (shop_order_id, shop_product_id, shop_variant_id, variant_label, quantity, unit_amount, currency)
@@ -83,7 +96,7 @@ async function recordOrder(
         variant ? variantLabel(variant) : null,
         line.quantity ?? 0,
         line.price?.unit_amount ?? 0,
-        session.currency ?? "usd",
+        session.currency ?? STORE_CURRENCY,
       ]
     );
 
