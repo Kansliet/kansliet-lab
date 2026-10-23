@@ -29,7 +29,7 @@ describe("formatStockholmTime", () => {
 });
 
 describe("buildWithdrawalEmail", () => {
-  const { subject, text } = buildWithdrawalEmail({
+  const { subject, text, html } = buildWithdrawalEmail({
     orderRef: "KDC-00042",
     name: "Anna Andersson",
     email: "anna@example.com",
@@ -47,5 +47,30 @@ describe("buildWithdrawalEmail", () => {
     expect(text).toContain(COMPANY.address.join(", "));
     expect(text).toContain("within 14 days");
     expect(text).toContain(COMPANY.orgNr);
+  });
+
+  it("shows what was received and when in the html too", () => {
+    expect(html).toContain("Withdrawal received");
+    expect(html).toContain("KDC-00042");
+    expect(html).toContain("Anna Andersson");
+    expect(html).toContain("anna@example.com");
+    expect(html).toContain("2026-09-27 10:31 (Swedish time)");
+    expect(html).toContain(COMPANY.legalName);
+    expect(html).toContain(COMPANY.orgNr);
+    expect(html).toContain(COMPANY.address.join(", "));
+    expect(html).toContain("within 14 days");
+    expect(html).toContain("reply to this email");
+  });
+
+  it("escapes what the customer typed in the html but not in the text", () => {
+    const email = buildWithdrawalEmail({
+      orderRef: "KDC-00042",
+      name: "<b>Anna</b> & Co",
+      email: "anna@example.com",
+      receivedAt: new Date("2026-09-27T08:31:00Z"),
+    });
+    expect(email.html).not.toContain("<b>Anna</b>");
+    expect(email.html).toContain("&lt;b&gt;Anna&lt;/b&gt; &amp; Co");
+    expect(email.text).toContain("Name: <b>Anna</b> & Co");
   });
 });

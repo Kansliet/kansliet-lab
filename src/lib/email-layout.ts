@@ -90,7 +90,7 @@ function rowText(row: BoxRow): string {
         ? `${row.label}: ${row.value} (${row.href})`
         : `${row.label}: ${row.value}`;
     case "total":
-      return `${row.label}  ${row.amount}`;
+      return `${row.label.toUpperCase()}  ${row.amount}`;
   }
 }
 

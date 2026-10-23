@@ -85,7 +85,7 @@ describe("renderEmail", () => {
 
   it("writes the text rows the way the plain-text emails always did", () => {
     expect(text).toContain("2 × Canvas Tote  780 kr");
-    expect(text).toContain("Total paid  839 kr");
+    expect(text).toContain("TOTAL PAID  839 kr");
     expect(text).toContain("Tracking: JJD0001 (https://example.com/track?id=JJD0001)");
     expect(text.startsWith("KANSLIET (STORE) · KDC-00042\n\nORDER CONFIRMED")).toBe(true);
     expect(text).toContain("Withdraw from contract here: https://kansliet.co/store/withdraw");

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { buildOrderEmail, includedVat, orderRef, type OrderEmailInput } from "./order-email";
-import { COMPANY } from "./shop-info";
+import { COMPANY, TERMS_VERSION } from "./shop-info";
+import { COMPLAINT_SUMMARY, MODEL_WITHDRAWAL_FORM, WITHDRAWAL_PARAGRAPHS } from "./legal-text";
 
 const order: OrderEmailInput = {
   orderRef: orderRef(42),
@@ -39,6 +40,55 @@ describe("buildOrderEmail", () => {
     expect(text).toContain("MODEL WITHDRAWAL FORM");
     expect(text).toContain("3 years");
     expect(text).toContain("ARN");
+  });
+
+  it("carries the same legal content in the html part", () => {
+    const { html } = buildOrderEmail(order);
+    expect(html).toContain("Your right of withdrawal");
+    expect(html).toContain("You have the right to withdraw from your purchase within 14 days");
+    expect(html).toContain("Model withdrawal form");
+    expect(html).toContain("Signature of consumer(s) (only if this form is sent on paper):");
+    expect(html).toContain(COMPANY.legalName);
+    expect(html).toContain(COMPANY.orgNr);
+    expect(html).toContain(COMPANY.vatNr);
+    expect(html).toContain("3 years");
+    expect(html).toContain("ARN");
+    expect(html).toContain("Anna Andersson");
+    expect(html).toContain("Storgatan 1");
+    expect(html).toContain("We dispatch within 2 business days.");
+    expect(html).toContain("Including 25% Swedish VAT: 207,80");
+    expect(html).toContain(`https://${COMPANY.website}/store/withdraw`);
+    expect(html).toContain(`(version ${TERMS_VERSION})`);
+    expect(html).toContain("2 × Canvas Tote");
+  });
+
+  it("has every legal element of the html in the text part too", () => {
+    const { text } = buildOrderEmail(order);
+    for (const part of [
+      ...WITHDRAWAL_PARAGRAPHS,
+      ...MODEL_WITHDRAWAL_FORM,
+      COMPLAINT_SUMMARY,
+      COMPANY.legalName,
+      COMPANY.orgNr,
+      COMPANY.vatNr,
+      ...COMPANY.address,
+      COMPANY.email,
+      COMPANY.phone.display,
+      "We dispatch within 2 business days.",
+      "Shipping to Sweden",
+      `Full terms of sale (version ${TERMS_VERSION}): https://${COMPANY.website}/terms`,
+      `Privacy policy: https://${COMPANY.website}/privacy`,
+      `https://${COMPANY.website}/store/withdraw`,
+    ]) {
+      expect(text).toContain(part);
+    }
+  });
+
+  it("escapes the customer's name and address in the html", () => {
+    const { html, text } = buildOrderEmail({ ...order, shippingName: "<script>x()</script>" });
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&lt;script&gt;x()&lt;/script&gt;");
+    expect(text).toContain("<script>x()</script>");
   });
 
   it("adds what Adaptive Pricing charged in the customer's currency", () => {
