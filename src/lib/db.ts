@@ -4,6 +4,14 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set");
 }
 
+// pg currently treats sslmode=prefer/require/verify-ca as verify-full, warns on
+// every cold start, and will switch them to the weaker libpq meaning (no
+// certificate check) in its next major. Neon's URLs say "require", so pin the
+// strict mode explicitly: same behaviour today, no warning, no silent downgrade.
+export function withStrictSsl(url: string): string {
+  return url.replace(/([?&]sslmode=)(prefer|require|verify-ca)(?=&|$)/, "$1verify-full");
+}
+
 // Reuse the pool across hot reloads in dev so we don't exhaust Postgres connections.
 const globalForPg = globalThis as unknown as { pgPool?: Pool };
 
@@ -15,7 +23,7 @@ const globalForPg = globalThis as unknown as { pgPool?: Pool };
 export const pool =
   globalForPg.pgPool ??
   new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: withStrictSsl(process.env.DATABASE_URL),
     ...(process.env.VERCEL ? { max: 5, idleTimeoutMillis: 5_000 } : {}),
   });
 
