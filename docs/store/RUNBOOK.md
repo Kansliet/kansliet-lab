@@ -28,7 +28,7 @@ Two customers paid for the last unit.
 ## Backups
 
 1. **Neon history:** the Free plan keeps **6 hours**. A mistake noticed within 6 hours can be undone from Neon itself (restore the branch to a point in time). Anything older needs a backup.
-2. **Weekly backup (automatic):** `.github/workflows/db-backup.yml` dumps Neon `main` every Sunday at 03:00 UTC. It encrypts the dump with GPG (AES-256) and keeps it for 90 days as an artifact of the "Database backup" workflow. The repo is public, so the file is only stored encrypted.
+2. **Backup workflow (ready, switched off):** on 2026-10-23 the owner chose not to set it up yet, so it runs **only when started by hand** and the secrets below are not set. Turn it on once real orders come in: add the secrets, then restore the `schedule:` block in the workflow file. Once on, `.github/workflows/db-backup.yml` dumps Neon `main` every Sunday at 03:00 UTC. It encrypts the dump with GPG (AES-256) and keeps it for 90 days as an artifact of the "Database backup" workflow. The repo is public, so the file is only stored encrypted.
    - **Secrets:** `BACKUP_DATABASE_URL` (Neon `main`, direct connection) and `BACKUP_PASSPHRASE`. **Keep the passphrase in your password manager: without it the backups can't be opened.**
    - **Run one now:** GitHub → Actions → Database backup → Run workflow.
    - **Rotating the database password:** update `BACKUP_DATABASE_URL` too, or the next backup fails. A failed run sends GitHub's failure email to the repo owner.
