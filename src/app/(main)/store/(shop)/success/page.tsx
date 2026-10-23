@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import type Stripe from "stripe";
+import { pool } from "@/lib/db";
+import { orderRef } from "@/lib/order-email";
 import { stripe, formatPrice } from "@/lib/stripe";
 import { STORE_CURRENCY } from "@/lib/shop-info";
 import { ClearCartOnMount } from "./clear-cart-on-mount";
@@ -41,12 +43,31 @@ async function getPaidSession(
   }
 }
 
+/**
+ * The KDC- number the customer needs for a withdrawal. Null until the webhook
+ * has recorded the order (it can land a moment after the redirect).
+ */
+async function getOrderRef(sessionId: string): Promise<string | null> {
+  try {
+    const { rows } = await pool.query<{ id: number }>(
+      "SELECT id FROM shop_orders WHERE stripe_checkout_session_id = $1",
+      [sessionId]
+    );
+    return rows[0] ? orderRef(rows[0].id) : null;
+  } catch (err) {
+    // The payment went through; a failed lookup must not break the page.
+    console.error("Success page: order lookup failed", err);
+    return null;
+  }
+}
+
 export default async function StoreSuccessPage({ searchParams }: SuccessPageProps) {
   const session = await getPaidSession((await searchParams).session_id);
   if (!session) {
     redirect("/store");
   }
 
+  const ref = await getOrderRef(session.id);
   const isPaid = session.payment_status === "paid";
   const currency = (session.currency ?? STORE_CURRENCY).toUpperCase();
   const lines = session.line_items?.data ?? [];
@@ -92,9 +113,13 @@ export default async function StoreSuccessPage({ searchParams }: SuccessPageProp
             </div>
             <div className="flex items-baseline gap-4 border-t border-foreground py-4">
               <span className="dossier-label shrink-0">REF</span>
-              <span className="text-dossier font-light tracking-wider tabular-nums">
-                {session.id.slice(-10).toUpperCase()}
-              </span>
+              {ref ? (
+                <span className="text-dossier font-light tracking-wider tabular-nums">{ref}</span>
+              ) : (
+                <span className="text-normal-case text-sm font-light">
+                  Your order number is in the confirmation email.
+                </span>
+              )}
             </div>
           </div>
 
