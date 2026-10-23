@@ -27,9 +27,18 @@ Two customers paid for the last unit.
 
 ## Backups
 
-1. Note the Neon plan's point-in-time restore window here: ______ days. (Open question Q5; fill it in.)
-2. On the 1st of each month, run `pg_dump "$DATABASE_URL_UNPOOLED" --no-owner -Fc -f kansliet-YYYY-MM.dump` from a local machine and store the file encrypted off-site.
-3. Restore = a new Neon branch from a point in time, or `pg_restore` into a new branch, then swap `DATABASE_URL` in Vercel.
+1. **Neon history:** the Free plan keeps **6 hours**. A mistake noticed within 6 hours can be undone from Neon itself (restore the branch to a point in time). Anything older needs a backup.
+2. **Weekly backup (automatic):** `.github/workflows/db-backup.yml` dumps Neon `main` every Sunday at 03:00 UTC. It encrypts the dump with GPG (AES-256) and keeps it for 90 days as an artifact of the "Database backup" workflow. The repo is public, so the file is only stored encrypted.
+   - **Secrets:** `BACKUP_DATABASE_URL` (Neon `main`, direct connection) and `BACKUP_PASSPHRASE`. **Keep the passphrase in your password manager: without it the backups can't be opened.**
+   - **Run one now:** GitHub → Actions → Database backup → Run workflow.
+   - **Rotating the database password:** update `BACKUP_DATABASE_URL` too, or the next backup fails. A failed run sends GitHub's failure email to the repo owner.
+   - **Inactivity:** GitHub pauses scheduled workflows in a repo with no commits for 60 days. A push, or "Enable workflow" in the Actions tab, turns it back on.
+3. **Restore:**
+   1. Download the artifact (a `.zip` containing `kansliet-YYYY-MM-DD.dump.gpg`).
+   2. Decrypt it: `gpg -d kansliet-YYYY-MM-DD.dump.gpg > kansliet.dump` (asks for the passphrase).
+   3. Create a new empty Neon branch, or a new project.
+   4. Load the dump: `pg_restore --no-owner --no-privileges -d "<new branch's direct URL>" kansliet.dump`. Use pg_restore 18 or newer, e.g. `docker run --rm -i -v "$PWD:/b" postgres:18-alpine pg_restore --no-owner --no-privileges -d "<url>" /b/kansliet.dump`.
+   5. Point Vercel's Production `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED` at the new branch, and redeploy.
 4. Keep the original product photos outside Stripe. The site only has the Stripe Files links.
 
 ## Rotating keys
