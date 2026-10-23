@@ -278,8 +278,9 @@ export async function POST(req: Request) {
   let stockMayHaveChanged = false;
   // Ticked the (unticked-by-default) newsletter box in the cart.
   let newsletterEmail: string | null = null;
-  const client = await pool.connect();
+  let client: PoolClient | null = null;
   try {
+    client = await pool.connect();
     await client.query("BEGIN");
 
     const { rowCount } = await client.query(
@@ -316,10 +317,22 @@ export async function POST(req: Request) {
 
     await client.query("COMMIT");
   } catch (err) {
-    await client.query("ROLLBACK");
+    await client?.query("ROLLBACK").catch(() => {});
+    console.error(`store webhook: ${event.type} ${event.id} failed`, err);
+    await sendInternalAlert(
+      `[WEBHOOK FAILED] ${event.type}`,
+      [
+        `Stripe event ${event.id} (${event.type}) could not be recorded:`,
+        err instanceof Error ? err.message : String(err),
+        "",
+        "Stripe retries automatically for up to 3 days. If this keeps arriving, fix the cause,",
+        "then resend the event: Stripe dashboard → Developers → Webhooks → kansliet.co endpoint → the event → Resend.",
+        "See docs/store/RUNBOOK.md (Missed order).",
+      ].join("\n")
+    );
     throw err;
   } finally {
-    client.release();
+    client?.release();
   }
 
   // After COMMIT, so the refetch can't read the pre-order stock.
