@@ -12,7 +12,7 @@ const STORE_ADDRESS = "store@kansliet.co";
 const CUSTOMER_SENDER = `"KANSLIET (STORE)" <${STORE_ADDRESS}>`;
 const STORE_SENDER = `Kansliet Store <${STORE_ADDRESS}>`;
 
-export type InternalTag = "NEW ORDER" | "WITHDRAWAL" | "REFUND";
+export type InternalTag = "NEW ORDER" | "WITHDRAWAL" | "REFUND" | "SHIPPED";
 
 function resendClient(): Resend {
   if (!process.env.RESEND_API_KEY?.trim()) {

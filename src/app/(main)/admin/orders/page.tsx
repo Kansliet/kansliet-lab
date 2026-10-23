@@ -9,6 +9,7 @@ import { orderRef } from "@/lib/order-email";
 import { formatStockholmTime } from "@/lib/withdrawal-email";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CARRIERS } from "@/lib/shipped-email";
 
 export const metadata: Metadata = {
   title: "KANSLIET (ORDERS)",
@@ -110,10 +111,14 @@ const TH = "px-4 py-3 text-sm font-light uppercase tracking-wider opacity-60";
 export default async function StoreOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ all?: string }>;
+  searchParams: Promise<{ all?: string; shipEmail?: string; order?: string }>;
 }) {
   await requireSession();
-  const all = (await searchParams).all === "1";
+  const params = await searchParams;
+  const all = params.all === "1";
+  // Set by markShipped when the order was marked shipped but its email failed.
+  const shipEmailFailed =
+    params.shipEmail === "failed" && /^KDC-\d{5,9}$/.test(params.order ?? "") ? params.order : null;
   const [orders, withdrawals, total] = await Promise.all([getOrders(all), getWithdrawals(), countOrders()]);
   const items = await getItems(orders.map((o) => o.id));
 
@@ -122,6 +127,17 @@ export default async function StoreOrdersPage({
       <section className="py-20">
         <div className="container-kansliet">
           <AdminNav active="ORDERS" />
+
+          {shipEmailFailed && (
+            <div role="alert" className="mb-8 border border-red-500 bg-red-500/5 p-4 text-red-600">
+              <p className="text-caps text-sm font-bold tracking-wide">
+                {shipEmailFailed} IS MARKED SHIPPED, BUT THE SHIPPING EMAIL FAILED.
+              </p>
+              <p className="mt-1 text-sm font-light">
+                The customer has not been told. desk@ got a [SHIPPED] copy marked NOT SENT; write to them by hand.
+              </p>
+            </div>
+          )}
 
           {withdrawals.length > 0 && (
             <div className="mb-12">
@@ -259,8 +275,30 @@ export default async function StoreOrdersPage({
                             SLIP
                           </Link>
                           {order.fulfillment_status === "paid" && (
-                            <form action={markShipped}>
+                            <form action={markShipped} className="flex items-center gap-2">
                               <input type="hidden" name="orderId" value={order.id} />
+                              <select
+                                name="carrier"
+                                aria-label="Carrier (optional)"
+                                defaultValue=""
+                                className="border border-foreground bg-transparent px-2 py-1 text-sm uppercase tracking-wider"
+                              >
+                                <option value="">CARRIER</option>
+                                {CARRIERS.map((carrier) => (
+                                  <option key={carrier} value={carrier}>
+                                    {carrier}
+                                  </option>
+                                ))}
+                              </select>
+                              <input
+                                type="text"
+                                name="trackingNumber"
+                                aria-label="Tracking number (optional)"
+                                placeholder="TRACKING NO."
+                                maxLength={64}
+                                autoComplete="off"
+                                className="w-36 border border-foreground bg-transparent px-2 py-1 text-sm uppercase tracking-wider placeholder:opacity-40"
+                              />
                               <Button type="submit" variant="secondary" size="sm" className="whitespace-nowrap">
                                 MARK SHIPPED
                               </Button>
