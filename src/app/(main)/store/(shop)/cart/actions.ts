@@ -15,6 +15,7 @@ import {
   regionForCountry,
   shippingCost,
 } from "@/lib/shop-info";
+import { cartProblem, subtotalCents } from "@/lib/checkout-rules";
 import { getAppBaseUrl } from "@/lib/site";
 import { withError } from "@/lib/error-codes";
 import { getProductById, getVariantsByIds } from "@/lib/products";
@@ -157,14 +158,9 @@ export async function checkoutCart(formData: FormData) {
   // create a Checkout Session for a partial order — bounce back so the
   // customer can fix their cart first, rather than silently charging for
   // fewer items than they saw.
-  for (const item of cart) {
-    const found = variants.get(item.variantId);
-    if (!found || found.product.sold_out || found.variant.stock <= 0) {
-      redirect(withError("/store/cart", "unavailable"));
-    }
-    if (item.quantity > found.variant.stock) {
-      redirect(withError("/store/cart", "insufficient_stock"));
-    }
+  const problem = cartProblem(cart, variants);
+  if (problem) {
+    redirect(withError("/store/cart", problem));
   }
 
   // Free shipping is decided here from Stripe's prices (the same cached map the
@@ -178,11 +174,8 @@ export async function checkoutCart(formData: FormData) {
   if (prices.some((price) => price === null)) {
     redirect(withError("/store/cart", "unavailable"));
   }
-  const subtotalCents = cart.reduce(
-    (sum, item, i) => sum + Math.round(prices[i]!.amount * 100) * item.quantity,
-    0
-  );
-  const shipping = shippingCost(region, subtotalCents);
+  const subtotal = subtotalCents(cart, prices.map((price) => price!.amount));
+  const shipping = shippingCost(region, subtotal);
 
   // Unticked by default; buyers who tick it are added to the list by the
   // webhook once the payment goes through (see lib/newsletter).
