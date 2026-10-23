@@ -45,8 +45,13 @@ describe("refundLedgerRows", () => {
     ]);
   });
 
-  it("skips refunds that are pending or failed", () => {
-    const rows = refundLedgerRows(sekOrder, { amount: 52000 }, [refund("re_1", 10000, "pending"), refund("re_2", 5000, "failed")]);
+  it("counts pending refunds (Klarna), like charge.amount_refunded does", () => {
+    const rows = refundLedgerRows(sekOrder, { amount: 52000 }, [refund("re_1", 10000, "pending")]);
+    expect(rows).toEqual([{ stripeRefundId: "re_1", amount: 10000, created: 1_790_000_000 }]);
+  });
+
+  it("skips refunds that failed or were canceled", () => {
+    const rows = refundLedgerRows(sekOrder, { amount: 52000 }, [refund("re_1", 10000, "failed"), refund("re_2", 5000, "canceled")]);
     expect(rows).toEqual([]);
   });
 
