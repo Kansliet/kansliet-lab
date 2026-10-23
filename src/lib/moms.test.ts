@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { includedVat } from "./order-email";
 import {
   kronor,
   momsCsv,
@@ -18,8 +19,7 @@ const order = (o: Partial<MomsOrder>): MomsOrder => ({
   country: "SE",
   amountTotal: 10900,
   itemsTotal: 5000,
-  amountRefunded: 0,
-  refundedAt: null,
+  refunds: [],
   ...o,
 });
 
@@ -40,7 +40,7 @@ describe("moms", () => {
 
   it("books a refund in the month it happens, reversing its own VAT", () => {
     const rows = momsRows([
-      order({ createdAt: new Date("2026-09-30T10:00:00Z"), amountRefunded: 10900, refundedAt: new Date("2026-10-02T09:00:00Z") }),
+      order({ createdAt: new Date("2026-09-30T10:00:00Z"), refunds: [{ amount: 10900, at: new Date("2026-10-02T09:00:00Z") }] }),
     ]);
     expect(rows.map((r) => [r.date, r.kind, r.gross, r.vat])).toEqual([
       ["2026-09-30", "sale", 10900, 2180],
@@ -55,8 +55,58 @@ describe("moms", () => {
   });
 
   it("reverses only the refunded share on a partial refund", () => {
-    const rows = momsRows([order({ amountRefunded: 5000, refundedAt: new Date("2026-09-27T10:00:00Z") })]);
+    const rows = momsRows([order({ refunds: [{ amount: 5000, at: new Date("2026-09-27T10:00:00Z") }] })]);
     expect(summarize(rows).vat25).toEqual({ gross: 5900, vat: 2180 - 1000, net: 5900 - 1180 });
+  });
+
+  it("books two partial refunds in different months each in its own month", () => {
+    const rows = momsRows([
+      order({
+        createdAt: new Date("2026-09-20T10:00:00Z"),
+        refunds: [
+          { amount: 2500, at: new Date("2026-09-29T10:00:00Z") },
+          { amount: 5000, at: new Date("2026-10-05T10:00:00Z") },
+        ],
+      }),
+    ]);
+    expect(rows.map((r) => [r.date, r.kind, r.gross, r.vat])).toEqual([
+      ["2026-09-20", "sale", 10900, 2180],
+      ["2026-09-29", "refund", -2500, -500],
+      ["2026-10-05", "refund", -5000, -1000],
+    ]);
+    expect(summarize(rowsIn(rows, parsePeriod("2026-09")!)).vat25).toEqual({ gross: 8400, vat: 1680, net: 6720 });
+    expect(summarize(rowsIn(rows, parsePeriod("2026-10")!)).vat25).toEqual({ gross: -5000, vat: -1000, net: -4000 });
+  });
+
+  it("gives the same rows as the old cumulative model for an order with a single refund", () => {
+    // The pre-ledger behaviour: one refund row from amount_refunded / refunded_at (else created_at).
+    const oldRows = (o: MomsOrder, amountRefunded: number, refundedAt: Date | null) => {
+      const treatment = vatTreatment(o.country);
+      const vat = treatment === "vat25" ? includedVat(amountRefunded) : 0;
+      return {
+        date: swedishDate(refundedAt ?? o.createdAt),
+        ref: o.ref,
+        kind: "refund",
+        country: o.country?.toUpperCase() ?? "",
+        treatment,
+        gross: -amountRefunded,
+        shipping: 0,
+        vat: -vat,
+        net: -(amountRefunded - vat),
+      };
+    };
+    const cases: [Partial<MomsOrder>, number, Date | null][] = [
+      [{}, 10900, new Date("2026-10-02T09:00:00Z")],
+      [{}, 5000, new Date("2026-09-30T22:30:00Z")],
+      [{ country: "DE" }, 3333, new Date("2026-11-01T00:30:00Z")],
+      [{ country: "NO" }, 10900, new Date("2026-10-15T12:00:00Z")],
+      [{ country: null }, 1, null],
+    ];
+    for (const [overrides, amount, at] of cases) {
+      const base = order(overrides);
+      const [, newRefund] = momsRows([order({ ...overrides, refunds: [{ amount, at: at ?? base.createdAt }] })]);
+      expect(newRefund).toEqual(oldRows(base, amount, at));
+    }
   });
 
   it("puts Norway in ruta 36 with no VAT", () => {

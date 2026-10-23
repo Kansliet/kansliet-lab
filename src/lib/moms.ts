@@ -33,9 +33,8 @@ export type MomsOrder = {
   amountTotal: number;
   /** Öre: the goods lines (sum of unit × quantity); the rest of amountTotal is shipping. */
   itemsTotal: number;
-  /** Öre, cumulative. */
-  amountRefunded: number;
-  refundedAt: Date | null;
+  /** One entry per Stripe refund: öre in the order's currency, and when it happened. */
+  refunds: { amount: number; at: Date }[];
 };
 
 export type MomsRow = {
@@ -110,24 +109,25 @@ export function momsRows(orders: MomsOrder[]): MomsRow[] {
       shipping: Math.max(0, o.amountTotal - o.itemsTotal),
       ...split(o.amountTotal, treatment),
     });
-    if (o.amountRefunded > 0) {
+    for (const r of o.refunds) {
+      if (r.amount <= 0) continue;
       // VAT on a refund is the refund's own included VAT, so a partial refund
       // reverses exactly its share (the email's VAT figure works the same way).
-      const refund = split(o.amountRefunded, treatment);
+      const refund = split(r.amount, treatment);
       rows.push({
-        date: swedishDate(o.refundedAt ?? o.createdAt),
+        date: swedishDate(r.at),
         ref: o.ref,
         kind: "refund",
         country,
         treatment,
-        gross: -o.amountRefunded,
+        gross: -r.amount,
         shipping: 0,
         vat: -refund.vat,
         net: -refund.net,
       });
     }
   }
-  return rows.sort((a, b) => a.date.localeCompare(b.date) || a.ref.localeCompare(b.ref) || (a.kind === "sale" ? -1 : 1));
+  return rows.sort((a, b) => a.date.localeCompare(b.date) || a.ref.localeCompare(b.ref) || (a.kind === b.kind ? 0 : a.kind === "sale" ? -1 : 1));
 }
 
 export function rowsIn(rows: MomsRow[], period: Period): MomsRow[] {

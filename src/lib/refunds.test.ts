@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { refundedInOrderCurrency } from "./refunds";
+import { refundedInOrderCurrency, refundLedgerRows } from "./refunds";
 
 describe("refundedInOrderCurrency", () => {
   it("returns the charge's refunded amount unchanged when the currencies match", () => {
@@ -24,5 +24,39 @@ describe("refundedInOrderCurrency", () => {
     const order = { amount_total: 52000, currency: "sek" };
     const charge = { amount: 0, amount_refunded: 0, currency: "eur", refunded: false };
     expect(refundedInOrderCurrency(order, charge)).toBe(0);
+  });
+});
+
+describe("refundLedgerRows", () => {
+  const sekOrder = { amount_total: 52000, currency: "sek" };
+  const refund = (id: string, amount: number, status = "succeeded", currency = "sek") => ({
+    id,
+    amount,
+    currency,
+    created: 1_790_000_000,
+    status,
+  });
+
+  it("makes one row per succeeded refund, in the order's currency", () => {
+    const rows = refundLedgerRows(sekOrder, { amount: 52000 }, [refund("re_1", 10000), refund("re_2", 5000)]);
+    expect(rows).toEqual([
+      { stripeRefundId: "re_1", amount: 10000, created: 1_790_000_000 },
+      { stripeRefundId: "re_2", amount: 5000, created: 1_790_000_000 },
+    ]);
+  });
+
+  it("skips refunds that are pending or failed", () => {
+    const rows = refundLedgerRows(sekOrder, { amount: 52000 }, [refund("re_1", 10000, "pending"), refund("re_2", 5000, "failed")]);
+    expect(rows).toEqual([]);
+  });
+
+  it("converts each refund in proportion when the charge is in another currency", () => {
+    const rows = refundLedgerRows(sekOrder, { amount: 4720 }, [refund("re_1", 2360, "succeeded", "eur")]);
+    expect(rows[0].amount).toBe(26000);
+  });
+
+  it("counts a refund of the whole charge as the whole order", () => {
+    const rows = refundLedgerRows(sekOrder, { amount: 4720 }, [refund("re_1", 4720, "succeeded", "eur")]);
+    expect(rows[0].amount).toBe(52000);
   });
 });

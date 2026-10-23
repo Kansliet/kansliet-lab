@@ -13,3 +13,26 @@ export function refundedInOrderCurrency(
   if (charge.amount <= 0) return 0;
   return Math.round((order.amount_total * charge.amount_refunded) / charge.amount);
 }
+
+/**
+ * One ledger row per succeeded Stripe refund, with the amount in the order's
+ * own currency. A refund that covers the whole charge counts as the whole order.
+ */
+export function refundLedgerRows(
+  order: { amount_total: number; currency: string },
+  charge: { amount: number },
+  refunds: { id: string; amount: number; currency: string; created: number; status: string | null }[],
+): { stripeRefundId: string; amount: number; created: number }[] {
+  return refunds
+    .filter((refund) => refund.status === "succeeded")
+    .map((refund) => ({
+      stripeRefundId: refund.id,
+      amount: refundedInOrderCurrency(order, {
+        amount: charge.amount,
+        amount_refunded: refund.amount,
+        currency: refund.currency,
+        refunded: refund.amount >= charge.amount,
+      }),
+      created: refund.created,
+    }));
+}

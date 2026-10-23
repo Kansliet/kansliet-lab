@@ -9,7 +9,7 @@ import { variantLabel } from "@/lib/variants";
 import { CATALOG_TAG } from "@/lib/products";
 import { buildOrderEmail, orderRef, type OrderEmailInput } from "@/lib/order-email";
 import { matchVariant, stripeProductId } from "@/lib/order-lines";
-import { refundedInOrderCurrency } from "@/lib/refunds";
+import { refundedInOrderCurrency, refundLedgerRows } from "@/lib/refunds";
 import { STORE_CURRENCY } from "@/lib/shop-info";
 
 // shop_order_items (one row per paid line) is the source of truth for what was bought.
@@ -168,9 +168,9 @@ async function recordOrder(
 }
 
 /**
- * A refund made in the Stripe dashboard (charge.refunded). Records the
- * cumulative refunded amount and when, so the moms report books it in the
- * right month. A full refund marks the order "refunded", and if nothing had
+ * A refund made in the Stripe dashboard (charge.refunded). Records each Stripe
+ * refund in the shop_refunds ledger (the moms report books it in the month it
+ * happened) and the cumulative refunded amount on the order. A full refund marks the order "refunded", and if nothing had
  * shipped yet puts the stock back; for a shipped order the goods are still out
  * there, so stock is left for the admin to restore when they come back.
  * Idempotent: the refunded amount only ever moves forward, so a redelivered
@@ -215,6 +215,23 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
   const order = rows[0];
   const refunded = refundedInOrderCurrency(order, charge);
   if (refunded <= order.amount_refunded) return; // already recorded
+
+  // The ledger: one row per Stripe refund, so the moms report books each in its
+  // own month. The real refunds replace the migration's 'legacy-<id>' placeholder.
+  const refundList = await stripe.refunds.list({ charge: charge.id, limit: 100 });
+  if (refundList.has_more) throw new Error(`Charge ${charge.id}: more than 100 refunds`);
+  const ledger = refundLedgerRows(order, charge, refundList.data);
+  if (ledger.length) {
+    await client.query("DELETE FROM shop_refunds WHERE shop_order_id = $1 AND stripe_refund_id LIKE 'legacy-%'", [order.id]);
+  }
+  for (const row of ledger) {
+    await client.query(
+      `INSERT INTO shop_refunds (shop_order_id, stripe_refund_id, amount, created_at)
+       VALUES ($1, $2, $3, to_timestamp($4))
+       ON CONFLICT (stripe_refund_id) DO NOTHING`,
+      [order.id, row.stripeRefundId, row.amount, row.created]
+    );
+  }
 
   const fullyRefunded = charge.refunded;
   await client.query(
