@@ -21,6 +21,7 @@ async function recordOrder(
   client: PoolClient,
   session: Stripe.Checkout.Session
 ): Promise<{
+  orderId: number;
   orderRef: string;
   oversold: string[];
   confirmation: (OrderEmailInput & { to: string }) | null;
@@ -35,8 +36,9 @@ async function recordOrder(
       shipping_address,
       amount_total,
       currency,
-      stripe_payment_intent_id
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      stripe_payment_intent_id,
+      terms_version
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     ON CONFLICT (stripe_checkout_session_id) DO NOTHING
     RETURNING id`,
     [
@@ -48,6 +50,7 @@ async function recordOrder(
       session.currency ?? STORE_CURRENCY,
       // Refund events (charge.refunded) refer to the PaymentIntent, not the session.
       typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent?.id ?? null),
+      session.metadata?.terms_version ?? null,
     ]
   );
 
@@ -96,8 +99,8 @@ async function recordOrder(
     const variant = matchVariant(variants, line.price?.id ?? null, stripeProductId(line.price?.product));
     await client.query(
       `INSERT INTO shop_order_items
-         (shop_order_id, shop_product_id, shop_variant_id, variant_label, quantity, unit_amount, currency)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+         (shop_order_id, shop_product_id, shop_variant_id, variant_label, quantity, unit_amount, currency, item_name)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
         orderId,
         variant?.product_id ?? null,
@@ -106,6 +109,7 @@ async function recordOrder(
         line.quantity ?? 0,
         line.price?.unit_amount ?? 0,
         session.currency ?? STORE_CURRENCY,
+        line.description ?? null,
       ]
     );
 
@@ -131,8 +135,9 @@ async function recordOrder(
   }
 
   const email = session.customer_details?.email;
-  if (!email) return { orderRef: orderRef(orderId), oversold, confirmation: null };
+  if (!email) return { orderId, orderRef: orderRef(orderId), oversold, confirmation: null };
   return {
+    orderId,
     orderRef: orderRef(orderId),
     oversold,
     confirmation: {
@@ -236,12 +241,14 @@ async function recordRefund(client: PoolClient, charge: Stripe.Charge, refundedA
  * it anyway. A failure is logged, and desk@'s [NEW ORDER] copy, sent either
  * way, says NOT SENT: the signal to resend by hand.
  */
-async function sendOrderConfirmation(order: OrderEmailInput & { to: string }) {
+async function sendOrderConfirmation(orderId: number, order: OrderEmailInput & { to: string }) {
   try {
     await sendCustomerEmail(
       { to: order.to, ...buildOrderEmail(order) },
       { tag: "NEW ORDER", orderRef: order.orderRef },
     );
+    // NULL confirmation_sent_at is what /admin/orders shows as EMAIL NOT SENT.
+    await pool.query("UPDATE shop_orders SET confirmation_sent_at = now() WHERE id = $1", [orderId]);
   } catch (err) {
     console.error(`Order ${order.orderRef}: confirmation email failed`, err);
   }
@@ -361,7 +368,7 @@ export async function POST(req: Request) {
       ].join("\n")
     );
   }
-  if (recorded?.confirmation) await sendOrderConfirmation(recorded.confirmation);
+  if (recorded?.confirmation) await sendOrderConfirmation(recorded.orderId, recorded.confirmation);
   if (newsletterEmail) {
     // Never fails the webhook: the order is recorded; a missed signup is only logged.
     try {

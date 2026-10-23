@@ -47,7 +47,8 @@ CREATE TABLE public.shop_order_items (
     currency text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     shop_variant_id integer,
-    variant_label text
+    variant_label text,
+    item_name text
 );
 
 
@@ -89,7 +90,9 @@ CREATE TABLE public.shop_orders (
     user_id integer,
     stripe_payment_intent_id text,
     amount_refunded integer DEFAULT 0 NOT NULL,
-    refunded_at timestamp with time zone
+    refunded_at timestamp with time zone,
+    terms_version text,
+    confirmation_sent_at timestamp with time zone
 );
 
 
