@@ -20,11 +20,16 @@ type StorePageProps = {
 
 async function getProductsWithPrices(category?: string) {
   const products = await getProducts(category);
-  return Promise.all(
+  const priced = await Promise.all(
     products.map(async (product) => ({
       ...product,
       displayPrice: await getDisplayPrice(product.stripe_price_id),
     }))
+  );
+  // A product whose Stripe price was archived or deleted isn't for sale: leave
+  // it out rather than fail the whole grid.
+  return priced.filter(
+    (product): product is typeof product & { displayPrice: string } => product.displayPrice !== null
   );
 }
 

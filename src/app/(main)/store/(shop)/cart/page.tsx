@@ -5,6 +5,7 @@ import { getVariantsByIds } from "@/lib/products";
 import { selectionQuery, variantCover, variantLabel } from "@/lib/variants";
 import { getPrice, formatPrice } from "@/lib/stripe";
 import { errorMessage } from "@/lib/error-codes";
+import { STORE_CURRENCY } from "@/lib/shop-info";
 import { updateQuantity, removeFromCart } from "./actions";
 import { CheckoutPanel } from "./checkout-panel";
 import { ProductImage } from "@/components/store/ProductImage";
@@ -58,9 +59,11 @@ export default async function CartPage({ searchParams }: CartPageProps) {
       .filter((item) => variants.has(item.variantId))
       .map(async (item) => {
         const { variant, product } = variants.get(item.variantId)!;
-        const { amount, currency } = await getPrice(variant.stripe_price_id);
-        const soldOut = product.sold_out || variant.stock <= 0;
-        return { item, product, variant, soldOut, amount, currency };
+        // No price (archived or deleted in Stripe): shown as sold out, counted as 0,
+        // and checkoutCart refuses it.
+        const price = await getPrice(variant.stripe_price_id);
+        const soldOut = !price || product.sold_out || variant.stock <= 0;
+        return { item, product, variant, soldOut, amount: price?.amount ?? 0, currency: price?.currency ?? STORE_CURRENCY };
       })
   );
 

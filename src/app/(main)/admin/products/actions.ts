@@ -169,7 +169,10 @@ async function saveCatalogProduct(
   let priceChanged = false;
   if (existing.length > 0) {
     const currentPrice = await getPrice(existing[0].stripe_price_id);
+    // No usable price (archived or deleted in Stripe): saving makes a new one,
+    // even at the same amount, which is how the admin repairs it.
     priceChanged =
+      !currentPrice ||
       Math.round(currentPrice.amount * 100) !== product.priceCents ||
       currentPrice.currency.toLowerCase() !== STORE_CURRENCY;
   }

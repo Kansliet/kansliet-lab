@@ -70,6 +70,10 @@ export default async function ProductPage({
     getPrice(product.stripe_price_id),
     getProducts(),
   ]);
+  // Archived or deleted in Stripe: not for sale, same as missing from the grid.
+  if (!price) {
+    notFound();
+  }
   const displayPrice = formatPrice(price.amount, price.currency);
 
   const selection = resolveSelection(product, query);
