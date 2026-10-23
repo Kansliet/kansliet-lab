@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { pool } from "@/lib/db";
 import { MAX_QUANTITY } from "@/lib/cart-limits";
 
 export { MAX_QUANTITY, maxLineQuantity } from "@/lib/cart-limits";
@@ -24,20 +23,17 @@ function toItems(record: unknown): CartItem[] {
 }
 
 /**
- * The cookie is {"v": {variantId: qty}}. Carts from before variants were
- * {productId: qty}; those come back as `legacy` (ids are product ids) for
- * getCart to convert. Pure, for tests.
+ * The cookie is {"v": {variantId: qty}}. Anything else (a malformed cookie, or
+ * a cart saved before variants, all expired since 2026-10-27) reads as an
+ * empty cart. Pure, for tests.
  */
-export function parseCartCookie(raw: string | undefined): { items: CartItem[]; legacy: CartItem[] } {
-  if (!raw) return { items: [], legacy: [] };
+export function parseCartCookie(raw: string | undefined): CartItem[] {
+  if (!raw) return [];
   try {
     const parsed = JSON.parse(raw) as unknown;
-    if (parsed && typeof parsed === "object" && "v" in parsed) {
-      return { items: toItems((parsed as { v: unknown }).v), legacy: [] };
-    }
-    return { items: [], legacy: toItems(parsed) };
+    return parsed && typeof parsed === "object" && "v" in parsed ? toItems((parsed as { v: unknown }).v) : [];
   } catch {
-    return { items: [], legacy: [] };
+    return [];
   }
 }
 
@@ -47,21 +43,7 @@ export function parseCartCookie(raw: string | undefined): { items: CartItem[]; l
 // never produce an incorrect charge — at worst it names a variant id that
 // gets filtered out server-side.
 export async function getCart(): Promise<CartItem[]> {
-  const { items, legacy } = parseCartCookie((await cookies()).get(CART_COOKIE)?.value);
-  if (legacy.length === 0) return items;
-
-  // A cart saved before variants: each product id becomes that product's only
-  // variant. Products that have several by now are dropped (no way to know
-  // which colour was meant). Written back in the new shape on the next change.
-  const { rows } = await pool.query<{ product_id: number; variant_id: number }>(
-    `SELECT product_id, min(id) AS variant_id FROM shop_variants
-     WHERE product_id = ANY($1) GROUP BY product_id HAVING count(*) = 1`,
-    [legacy.map((item) => item.variantId)]
-  );
-  const variantByProduct = new Map(rows.map((row) => [row.product_id, row.variant_id]));
-  return legacy
-    .filter((item) => variantByProduct.has(item.variantId))
-    .map((item) => ({ variantId: variantByProduct.get(item.variantId)!, quantity: item.quantity }));
+  return parseCartCookie((await cookies()).get(CART_COOKIE)?.value);
 }
 
 export function cartToCookieValue(cart: CartItem[]): string {
