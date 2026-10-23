@@ -174,8 +174,12 @@ export async function checkoutCart(formData: FormData) {
   const prices = await Promise.all(
     cart.map((item) => getPrice(variants.get(item.variantId)!.variant.stripe_price_id))
   );
+  // Archived or deleted in Stripe since the cart rendered: not for sale.
+  if (prices.some((price) => price === null)) {
+    redirect(withError("/store/cart", "unavailable"));
+  }
   const subtotalCents = cart.reduce(
-    (sum, item, i) => sum + Math.round(prices[i].amount * 100) * item.quantity,
+    (sum, item, i) => sum + Math.round(prices[i]!.amount * 100) * item.quantity,
     0
   );
   const shipping = shippingCost(region, subtotalCents);

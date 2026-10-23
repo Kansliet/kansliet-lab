@@ -42,6 +42,14 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
               </Link>
             )}
           </div>
+          {!price && (
+            <div role="alert" className="mb-6 border border-red-500 bg-red-500/5 p-4 text-red-600">
+              <p className="text-caps text-sm font-bold tracking-wide">
+                NO PRICE: ITS STRIPE PRICE WAS ARCHIVED OR DELETED, SO THE PRODUCT IS HIDDEN FROM THE STORE.
+                ENTER THE PRICE AND SAVE TO MAKE A NEW ONE.
+              </p>
+            </div>
+          )}
           <ProductForm
             productId={product.id}
             images={product.images}
@@ -52,7 +60,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
               name: product.name,
               slug: product.slug,
               category: product.category,
-              price: price.amount.toFixed(2),
+              // Empty when the Stripe price is archived or deleted: enter one and save.
+              price: price ? price.amount.toFixed(2) : "",
               stock: String(product.stock),
               tagline: product.tagline ?? "",
               description: product.description ?? "",

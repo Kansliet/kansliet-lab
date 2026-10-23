@@ -43,18 +43,32 @@ const getPriceMap = cache(unstable_cache(
   { revalidate: 300, tags: ["stripe-prices"] }
 ));
 
-export async function getPrice(stripePriceId: string): Promise<Price> {
+/**
+ * The price a variant sells at, or null when it can't be charged: archived or
+ * deleted in the Stripe dashboard. Callers treat null as "not for sale" (hidden
+ * in the store, a cart line that blocks checkout, an empty price in the admin)
+ * so one broken price can't take a whole page down. Saving the product in the
+ * admin creates a fresh price and fixes it.
+ */
+export async function getPrice(stripePriceId: string): Promise<Price | null> {
   const cached = (await getPriceMap())[stripePriceId];
   if (cached) return cached;
-  // Not in the map: archived price, or created within the cache window.
-  return toPrice(await stripe.prices.retrieve(stripePriceId));
+  // Not in the map: created within the cache window, archived, or deleted.
+  try {
+    const price = await stripe.prices.retrieve(stripePriceId);
+    if (price.active) return toPrice(price);
+  } catch (err) {
+    if (!(err instanceof Stripe.errors.StripeInvalidRequestError && err.code === "resource_missing")) throw err;
+  }
+  console.error(`Stripe price ${stripePriceId} is archived or deleted; its product is not for sale until saved in the admin`);
+  return null;
 }
 
 export function formatPrice(amount: number, currency: string): string {
   return formatMoney(Math.round(amount * 100), currency);
 }
 
-export async function getDisplayPrice(stripePriceId: string): Promise<string> {
-  const { amount, currency } = await getPrice(stripePriceId);
-  return formatPrice(amount, currency);
+export async function getDisplayPrice(stripePriceId: string): Promise<string | null> {
+  const price = await getPrice(stripePriceId);
+  return price && formatPrice(price.amount, price.currency);
 }

@@ -80,7 +80,10 @@ export default async function AdminProductsPage() {
                       </td>
                       <td className="px-4 py-3 font-light uppercase">{product.category}</td>
                       <td className="px-4 py-3 tabular-nums whitespace-nowrap">
-                        {prices[index]}
+                        {prices[index] ?? (
+                          // Archived or deleted in Stripe; hidden from the store until saved.
+                          <span className="text-red-600">NO PRICE: OPEN AND SAVE</span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         {/* One stepper per variant (a single one without
