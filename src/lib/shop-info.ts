@@ -4,7 +4,7 @@
 // Pure data, no server imports: client components may use it.
 
 export const COMPANY = {
-  tradingName: "Kansliet",
+  tradingName: "KANSLIET",
   /** Always written in capitals. */
   legalName: "KANSLIET STUDIO AB",
   orgNr: "559581-6033",

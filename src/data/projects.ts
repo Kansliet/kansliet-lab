@@ -102,7 +102,7 @@ export const projects: Project[] = [
     tagline: "Interior and visualization work for a local housing development.",
     description: [
       "Källstorp is a contemporary housing series developed by a local carpenter with a focus on sustainable construction, circular materials, and wood as the primary design element, both for environmental and contextual reasons.",
-      "Kansliet contributed to the interior design and visual direction in close collaboration with the builder and architect. The aim was to support the architecture's low-impact ethos with interiors that feel warm, durable, and quietly modern.",
+      "KANSLIET contributed to the interior design and visual direction in close collaboration with the builder and architect. The aim was to support the architecture's low-impact ethos with interiors that feel warm, durable, and quietly modern.",
       "The visualizations were produced to align with both technical planning and atmospheric intent, a tool for communicating design decisions before they existed physically.",
     ],
     tags: ["INTERIOR", "VISUALIZATION", "RESIDENTIAL", "SUSTAINABLE"],
@@ -144,7 +144,7 @@ export const projects: Project[] = [
       "A visual and functional exercise in restraint, merging SMEG's retro-futurist DNA with Nespresso's compact, system-based logic.",
     description: [
       "This collaborative effort involved developing concept directions and product visualization for a proposed partnership between SMEG and Nespresso.",
-      "Kansliet's role was to support the industrial design process with early-stage concept refinement, material studies, and visual narratives. The goal was to help both brands explore how their identities might co-exist in a shared product expression, one that felt intuitive, premium, and unmistakably designed.",
+      "KANSLIET'S role was to support the industrial design process with early-stage concept refinement, material studies, and visual narratives. The goal was to help both brands explore how their identities might co-exist in a shared product expression, one that felt intuitive, premium, and unmistakably designed.",
       "Renderings were produced for internal alignment and external pitching, balancing technical realism with emotional tone. The design work emphasized tactile surfaces, minimal interfaces, and an object language that could live comfortably in both brands' ecosystems.",
     ],
     tags: ["INDUSTRIAL", "PRODUCT", "COLLABORATION", "CONCEPT"],
@@ -225,7 +225,7 @@ export const projects: Project[] = [
     tagline:
       "A mechanically articulated lighting system focused on precision, adjustability, and light control.",
     description: [
-      "Roppongi is a lighting and spatial design project. Kansliet developed the visual and product direction, from concept to final execution.",
+      "Roppongi is a lighting and spatial design project. KANSLIET developed the visual and product direction, from concept to final execution.",
       "The work explores material, form, and light in a restrained system that can scale across contexts.",
     ],
     tags: ["INDUSTRIAL", "LIGHTING", "PRODUCT", "SPATIAL"],
@@ -294,9 +294,9 @@ export const projects: Project[] = [
     year: "2024",
     tagline: "A study in transparency, form, and visual logic.",
     description: [
-      "As part of the Nothing Community Edition challenge, Kansliet submitted a visual and conceptual interpretation of Nothing's design language, exploring how core principles like clarity, transparency, and precision could evolve across product formats.",
+      "As part of the Nothing Community Edition challenge, KANSLIET submitted a visual and conceptual interpretation of Nothing's design language, exploring how core principles like clarity, transparency, and precision could evolve across product formats.",
       "Working within the constraints of their established language, the design pushed for slightly softer transitions, simpler construction, and a clearer relationship between internal and external elements. Rendered in-house using custom 3D workflows.",
-      "This project served as both a technical benchmark and a lens into Kansliet's approach to design: minimalist, expressive, and systems-oriented, even in speculative form.",
+      "This project served as both a technical benchmark and a lens into KANSLIET'S approach to design: minimalist, expressive, and systems-oriented, even in speculative form.",
     ],
     tags: ["INDUSTRIAL", "CONCEPT", "TECH", "TRANSPARENCY"],
     images: [
@@ -332,7 +332,7 @@ export const projects: Project[] = [
     tagline:
       "A studio-grade render of the Aimé Leon Dore and Technohull speedboat.",
     description: [
-      "Aimé Leon Dore partnered with Technohull to release a limited-edition speedboat. Kansliet was brought in via Studio Joa to produce a single, high-detail render of the boat, intended to match a studio-grade product photo.",
+      "Aimé Leon Dore partnered with Technohull to release a limited-edition speedboat. KANSLIET was brought in via Studio Joa to produce a single, high-detail render of the boat, intended to match a studio-grade product photo.",
       "The actual boat was unavailable for controlled photography, so the image needed to stand on its own in digital environments. The rendering was modeled and built entirely from scratch, including geometry, lighting, and materials.",
     ],
     tags: ["3D", "VISUALIZATION", "MARINE", "FASHION"],

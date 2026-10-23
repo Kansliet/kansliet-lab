@@ -53,7 +53,7 @@ describe("buildShippedEmail", () => {
       expect(part).toContain("00123456789");
       expect(part).toContain("https://tracking.postnord.com/tracking?id=00123456789");
     }
-    expect(withTracking.subject).toBe("Shipped KDC-00042 — Kansliet");
+    expect(withTracking.subject).toBe("Shipped KDC-00042 — KANSLIET");
   });
 
   it("reminds of the withdrawal right with the link, in both parts", () => {

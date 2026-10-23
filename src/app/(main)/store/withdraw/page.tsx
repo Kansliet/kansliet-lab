@@ -7,7 +7,7 @@ import { WithdrawForm } from "./withdraw-form";
 
 export const metadata: Metadata = {
   title: "KANSLIET (WITHDRAW FROM CONTRACT)",
-  description: `Withdraw from a purchase in the Kansliet store within ${WITHDRAWAL_DAYS} days of delivery.`,
+  description: `Withdraw from a purchase in the KANSLIET store within ${WITHDRAWAL_DAYS} days of delivery.`,
   alternates: { canonical: "/store/withdraw" },
 };
 

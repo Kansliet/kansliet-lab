@@ -4,7 +4,7 @@ import { LegalDoc, LegalList, LegalSection, MailLink, TextLink } from "@/compone
 
 export const metadata: Metadata = {
   title: "KANSLIET (PRIVACY)",
-  description: "How Kansliet handles personal data: what we collect, why, who we share it with and your rights.",
+  description: "How KANSLIET handles personal data: what we collect, why, who we share it with and your rights.",
   alternates: { canonical: "/privacy" },
 };
 

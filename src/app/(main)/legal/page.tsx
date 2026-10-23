@@ -5,7 +5,7 @@ import { CookieSettings } from "@/components/legal/CookieSettings";
 
 export const metadata: Metadata = {
   title: "KANSLIET (LEGAL)",
-  description: "Company information and cookie policy for Kansliet.",
+  description: "Company information and cookie policy for KANSLIET.",
   alternates: { canonical: "/legal" },
 };
 

@@ -17,7 +17,7 @@ import { LegalDoc, LegalSection, MailLink, PhoneLink, TextLink } from "@/compone
 
 export const metadata: Metadata = {
   title: "KANSLIET (TERMS OF SALE)",
-  description: "Terms of sale for the Kansliet store: prices, delivery, returns and your consumer rights.",
+  description: "Terms of sale for the KANSLIET store: prices, delivery, returns and your consumer rights.",
   alternates: { canonical: "/terms" },
 };
 
@@ -45,7 +45,7 @@ export default function TermsPage() {
       updated={TERMS_VERSION}
       intro={
         <p>
-          These terms apply when you buy from the Kansliet store at {COMPANY.website} as a
+          These terms apply when you buy from the KANSLIET store at {COMPANY.website} as a
           consumer. They don&apos;t limit the rights you have under the consumer law of your
           country of residence. The terms in force on the day you place your order apply to that
           order.

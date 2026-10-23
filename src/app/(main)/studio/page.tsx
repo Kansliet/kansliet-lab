@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "KANSLIET (STUDIO)",
   description:
-    "Kansliet is a Swedish design company working in industrial, spatial, and identity design. Our services include product design, spatial design, and brand identity. Based in Sweden.",
+    "KANSLIET is a Swedish design company working in industrial, spatial, and identity design. Our services include product design, spatial design, and brand identity. Based in Sweden.",
   alternates: { canonical: "/studio" },
 };
 
@@ -39,7 +39,7 @@ export default function StudioPage() {
             <h2 className="dossier-label mb-6">ABOUT KANSLIET</h2>
             <div className="text-normal-case space-y-4 text-base font-light leading-relaxed">
               <p>
-                Kansliet is a Swedish design company working across industrial,
+                KANSLIET is a Swedish design company working across industrial,
                 spatial, and identity design.
               </p>
               <p>
