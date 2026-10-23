@@ -1,5 +1,7 @@
 # Store
 
+When something goes wrong, see [RUNBOOK.md](RUNBOOK.md).
+
 Webstore at `/store`, with the orders admin at `/admin/orders` (login at `/login`). The Stripe webhook is `/api/store/webhook`. It was built as a standalone app (`kansliet-app`) and moved in here. `SPEC.md` and `CART-SPEC.md` in this folder are the original design notes.
 
 - Stripe (test mode), pure server-redirect Checkout Sessions. There's no `@stripe/stripe-js` (see `src/lib/stripe.ts`).
@@ -37,7 +39,7 @@ One simple loop; `main` is the live site.
 - [x] **VAT.** Prices include 25% Swedish VAT (said on product page, cart, email). Exports (Norway) at the same price without VAT. Past €10,000/yr of sales to other EU countries, switch to OSS (Stripe Tax).
 - [x] **Shipping costs.** Flat rate per region, chosen in the cart; the Checkout Session gets that country and rate only. UK and US are paused in `shop-info.ts` (UK VAT registration; US duties prepaid by sender).
 - [x] **Sizes and colours.** Products can have up to two options (Colour × Size), each combination a variant with its own stock and Stripe price; see Options below.
-- [ ] **Stock.** `sold_out` is manual; two buyers can pay for the last item.
+- [x] **Stock.** Real stock per variant; not reserved during checkout (30-minute sessions, oversells emailed to desk@).
 
 **Infrastructure (Vercel):**
 1. Hosted Postgres (e.g. Neon via Vercel Marketplace). Load `db/schema.sql`, run `node seed-store-products.mjs` and `node seed-admin.mjs <email>` against it (prompts for a 16+ char password).
@@ -63,7 +65,7 @@ One simple loop; `main` is the live site.
 **Known gaps (fine for launch):** stock isn't reserved during Checkout (two buyers can race for the last unit; refund one by hand); scripts CSP still allows `'unsafe-inline'` (a nonce-based CSP is the next hardening step).
 
 ## Schema
-There's no migrations system. `db/schema.sql` is a `pg_dump --schema-only` of the store tables, so re-dump it whenever the schema changes.
+Migrations are plain re-runnable SQL files in `db/migrations/`, applied by hand on production (see How we ship). `db/schema.sql` is a `pg_dump --schema-only` of the store tables, so re-dump it whenever the schema changes.
 
 - `shop_products`: catalog rows. `slug` is UNIQUE. `category` is plain TEXT (the catalog is too small to justify a categories table) and drives the grid's category nav and `?category=` filter. Since 2026-09-27 (`db/migrations/2026-09-27-product-variants.sql`) stock and the Stripe ids live on `shop_variants`; the product's own `stock`, `stripe_product_id` and `stripe_price_id` columns are unused (nullable now), kept until a cleanup drops them. `src/lib/products.ts` derives a product's `stock` (sum of its variants), `stripe_price_id` (the first variant's; a product has one price) and `sold_out` (no variant in stock, or hidden). `options` (JSONB, default `[]`) holds up to two options with their values, e.g. Colour values with their own photos, then Size. `images` (JSONB array of URLs, first = cover) holds the product photos; `image_url` as selected is `images->>0`, and the stored `image_url` column is unused (added 2026-09-24, `db/migrations/2026-09-24-product-images.sql`). `hidden` (BOOL) takes a product out of the store without deleting it. The old stored `sold_out` column is unused, kept until a cleanup drops it (added 2026-09-24, `db/migrations/2026-09-24-product-stock.sql`). `tagline` (TEXT, nullable) is the large one-liner on the product page and the Stripe product description; `description` holds paragraphs separated by a blank line; `specs` (JSONB, default `[]`) is an array of `{label, value}` shown as labelled rows (added 2026-09-24: `ALTER TABLE shop_products ADD COLUMN tagline TEXT, ADD COLUMN specs JSONB NOT NULL DEFAULT '[]'`).
 - `shop_orders`: one row per completed Checkout Session, written by the webhook on `checkout.session.completed` (payment_status "paid") or `checkout.session.async_payment_succeeded`. `stripe_checkout_session_id` is UNIQUE (`ON CONFLICT DO NOTHING`), as a backstop alongside `stripe_webhook_events`. `fulfillment_status` is a plain TEXT enum (`paid` | `shipped` | `cancelled`). `shop_product_id` is vestigial, kept for pre-cart rows (see `shop_order_items`). `user_id` is a nullable FK to `users` kept for forward-compatibility; nothing sets it. `terms_version` is the terms version the customer accepted at checkout (from the session metadata). `confirmation_sent_at` is when the confirmation email went out; NULL with a customer email means it failed (shown as EMAIL NOT SENT) (added 2026-10-24, `db/migrations/2026-10-24-order-snapshots.sql`).
