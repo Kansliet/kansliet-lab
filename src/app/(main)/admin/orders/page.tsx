@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { pool } from "@/lib/db";
 import { requireSession } from "@/lib/auth";
 import { formatPrice } from "@/lib/stripe";
-import { markShipped } from "./actions";
+import { markShipped, resendConfirmation } from "./actions";
 import { AdminNav } from "../admin-nav";
 import Link from "next/link";
 import { orderRef } from "@/lib/order-email";
@@ -234,8 +234,14 @@ export default async function StoreOrdersPage({
                           {order.fulfillment_status.toUpperCase()}
                         </Badge>
                         {order.customer_email && !order.confirmation_sent_at && (
-                          <div className="mt-1">
+                          <div className="mt-1 flex items-center gap-2">
                             <Badge variant="solid">EMAIL NOT SENT</Badge>
+                            <form action={resendConfirmation}>
+                              <input type="hidden" name="orderId" value={order.id} />
+                              <Button type="submit" variant="secondary" size="sm" className="whitespace-nowrap">
+                                RESEND CONFIRMATION
+                              </Button>
+                            </form>
                           </div>
                         )}
                         {order.withdrawn_at && (

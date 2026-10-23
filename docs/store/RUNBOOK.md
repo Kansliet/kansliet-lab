@@ -14,8 +14,9 @@ Use this after a `[WEBHOOK FAILED]` email, or when Stripe shows a payment with n
 
 The order is recorded, but the customer's confirmation did not go out.
 
-1. Send the confirmation from desk@. Use the `[NEW ORDER]` copy in the desk@ inbox, or Stripe's payment page, as the source.
-2. Include the order number (`KDC-…`).
+1. Fix the cause if there is one (Resend key, domain).
+2. In `/admin/orders`, press RESEND CONFIRMATION beside the badge. The badge goes away when it is sent.
+3. If the button fails again, send the confirmation from desk@ by hand, using the `[NEW ORDER]` copy in the desk@ inbox or Stripe's payment page as the source. Include the order number (`KDC-…`).
 
 ## [OVERSOLD]
 

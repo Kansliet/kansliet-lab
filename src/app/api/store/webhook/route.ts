@@ -8,6 +8,7 @@ import { NEWSLETTER_SEGMENT_ID } from "@/lib/newsletter";
 import { variantLabel } from "@/lib/variants";
 import { CATALOG_TAG } from "@/lib/products";
 import { buildOrderEmail, orderRef, type OrderEmailInput } from "@/lib/order-email";
+import { orderEmailFromSession } from "@/lib/order-confirmation";
 import { matchVariant, stripeProductId } from "@/lib/order-lines";
 import { refundedInOrderCurrency, refundLedgerRows } from "@/lib/refunds";
 import { STORE_CURRENCY } from "@/lib/shop-info";
@@ -134,36 +135,11 @@ async function recordOrder(
     }
   }
 
-  const email = session.customer_details?.email;
-  if (!email) return { orderId, orderRef: orderRef(orderId), oversold, confirmation: null };
   return {
     orderId,
     orderRef: orderRef(orderId),
     oversold,
-    confirmation: {
-      to: email,
-      orderRef: orderRef(orderId),
-      date: new Date(session.created * 1000),
-      lines: lineItems.data.map((line) => ({
-        name: line.description ?? "Item",
-        quantity: line.quantity ?? 0,
-        amountCents: line.amount_total,
-      })),
-      shippingCents: session.shipping_cost?.amount_total ?? 0,
-      totalCents: session.amount_total ?? 0,
-      // Adaptive Pricing: amount_total stays in SEK; what the customer actually
-      // paid in their own currency is in presentment_details.
-      charged:
-        session.presentment_details &&
-        session.presentment_details.presentment_currency !== session.currency
-          ? {
-              amountCents: session.presentment_details.presentment_amount,
-              currency: session.presentment_details.presentment_currency,
-            }
-          : null,
-      shippingName: shippingDetails?.name ?? null,
-      shippingAddress: shippingDetails?.address ?? null,
-    },
+    confirmation: orderEmailFromSession(session, lineItems.data, orderId),
   };
 }
 
