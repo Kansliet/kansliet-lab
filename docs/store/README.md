@@ -15,10 +15,12 @@ Webstore at `/store`, with the orders admin at `/admin/orders` (login at `/login
 One simple loop; `main` is the live site.
 
 1. **One branch per change, from the latest `main`.** Never build a branch on top of another unmerged branch: when the first merges, the second's PR ends up merging into nowhere (that's how #10 went missing).
-2. **One PR into `main`.** Vercel builds a preview for it (test Stripe keys, the shared `preview` database, never `main`).
+2. **One PR into `main`.** Vercel preview builds are switched off (Project Settings → Build and Deployment → Ignored Build Step: "Only build production"), so a PR gets no preview and no failing preview check. Verify instead with `npm run typecheck`, `npm run lint`, `npm test`, then step 5 on the live site. The `preview` Neon branch and `prepare-preview-db.mjs` stay in place in case previews are turned back on.
 3. **If the PR says "needs migration"**, run that migration on production *before* merging. The old code keeps working with the new schema, so the order is always migrate, then merge.
 4. **Merge** (squash only: one PR = one commit on `main`; the branch is deleted automatically). Vercel deploys production.
-5. **Check the live site**: `/store`, a product page, the cart; for store changes, one real order (then refund it).
+5. **Check the live site**: `/store`, a product page, the cart; for store changes, one real order (then refund it **before** marking it shipped, so the stock comes back on its own).
+
+**Prices** are changed only in `/admin/products`. Editing, archiving or deleting a price in the Stripe dashboard leaves the site pointing at a price it can't charge: the product then disappears from the store and shows NO PRICE in the admin until it is saved there.
 
 **Migrations** live in `db/migrations/`, named by date, and every one must be **safe to re-run** (`IF NOT EXISTS`, `ON CONFLICT DO NOTHING`, backfills that skip rows already done): the preview auto-setup (`prepare-preview-db.mjs`) applies all of them on every preview build.
 
