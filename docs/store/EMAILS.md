@@ -61,21 +61,23 @@ Taken from `src/app/globals.css`. The owner's direction: simple, curated, "dossi
   - 600 px max width.
   - **No tracking pixels.**
 - **Approved by the owner on 2026-10-23 for all customer emails** (order confirmation, withdrawal acknowledgement, shipped, refund).
-- Reference preview: [`email-previews/order-confirmation.html`](email-previews/order-confirmation.html), a static mockup made on 2026-10-23. Recreate it from the blocks in E-02; don't copy the hard-coded file into the code.
+- Previews: [`email-previews/`](email-previews/) holds `order-confirmation`, `withdrawal-received`, `shipped` and `refund`, rendered by the real builders from fixed test data. Regenerate them with `WRITE_EMAIL_PREVIEWS=1 npx vitest run src/lib/email-previews.test.ts` (`src/lib/email-previews.test.ts`). The 2026-10-23 hard-coded mockup of the order confirmation was the design reference; the generated file replaces it.
 - One shared `renderEmail({ preheader, sections })` that builds **both** HTML and text from the same content, so the two can never disagree. The legal text keeps coming from `legal-text.ts` / `shop-info.ts`, as today.
 - Test in Gmail (web and app), Apple Mail, Outlook web and dark mode before switching on.
 
 ## 4. Task cards (for implementation)
 
-### E-01 · Withdrawal link always visible · legal · S
-- **Files:** the site footer component (find it via `src/components`), `docs/store/README.md`.
+### E-01 · Withdrawal link on every store page · legal · S
+- **Status: done on branch `store/emails`, not merged.**
+- **Files:** `src/components/store/withdraw-link.tsx` (new), the four store pages under `src/app/(main)/store/(shop)/`, `docs/store/README.md`. The site has no footer (the frame is the AxisNav tabs), so the link is a small line at the end of the page content, in the store only.
 - **Change:**
-  1. Add a permanent footer link with the label **"Withdraw from contract here"** pointing to `WITHDRAW_PATH`.
-  2. Show it on every page while the store is open, including when a customer has no account (we have no accounts).
+  1. A line **"WITHDRAW FROM CONTRACT HERE →"** (small caps, 1 px top rule) linking to `WITHDRAW_PATH`, at the end of `/store`, every product page, `/store/cart` and `/store/success`.
+  2. Not on portfolio pages, not in the INDEX panel, no fixed element, no new footer. (Owner's decision 2026-10-23.)
   3. Keep the existing `/terms` link.
-- **Accept:** the link is visible on `/`, `/store`, a product page, the cart and `/terms`. Typecheck, lint and tests pass.
+- **Accept:** the link is visible at the end of `/store`, a product page, the cart and the success page, and `/terms` still links to the form. Typecheck, lint and tests pass.
 
 ### E-02 · Shared email renderer (HTML + text) · M
+- **Status: done on branch `store/emails`, not merged.**
 - **Files:** new `src/lib/email-layout.ts` + test; `src/lib/mail.ts` (pass `html` alongside `text` to Resend for customer emails). No image assets: the wordmark is a text chip.
 - **Change:**
   1. `renderEmail({ subject, preheader, blocks })` returns `{ subject, html, text }`. Blocks are headings, key/value rows, paragraphs and order lines.
@@ -84,6 +86,7 @@ Taken from `src/app/globals.css`. The owner's direction: simple, curated, "dossi
 - **Accept:** unit tests show that every block appears in both html and text, that HTML escaping works (`<script>` in a name), and that no external resources load except the Google Fonts stylesheet.
 
 ### E-03 · Order confirmation and withdrawal acknowledgement use the renderer · M
+- **Status: done on branch `store/emails`, not merged.**
 - **Files:** `src/lib/order-email.ts`, `src/lib/withdrawal-email.ts`, their tests.
 - **Change:**
   1. Rebuild both from blocks.
@@ -92,6 +95,7 @@ Taken from `src/app/globals.css`. The owner's direction: simple, curated, "dossi
 - **Accept:** existing tests pass, plus a test that the HTML contains the withdrawal section, the model form, the seller's org.nr and the received date/time.
 
 ### E-04 · Shipped email with optional tracking · M (migration)
+- **Status: done on branch `store/emails`, not merged.**
 - **Files:**
   - new migration `ALTER TABLE shop_orders ADD COLUMN IF NOT EXISTS carrier text, ADD COLUMN IF NOT EXISTS tracking_number text` (`shipped_at` already exists from P2-04, migration `2026-10-26-order-status.sql`)
   - `db/schema.sql`
@@ -104,9 +108,10 @@ Taken from `src/app/globals.css`. The owner's direction: simple, curated, "dossi
   3. A failure to send is logged and shown, but never undoes the shipped mark.
   4. Build on P2-04's `markShipped`, which only moves `paid` to `shipped` and sets `shipped_at`. Send the email only when that UPDATE changed a row, so a double click doesn't send twice.
 - **Accept:** tests for the email builder. Marking shipped without tracking still works.
-- **Owner actions:** run the migration on Neon `main` before merging.
+- **Owner actions:** run `db/migrations/2026-10-27-shipping-tracking.sql` on Neon `main` before merging.
 
 ### E-05 · Refund email · S–M
+- **Status: done on branch `store/emails`, not merged.**
 - **Files:** `src/app/api/store/webhook/route.ts` (`recordRefund`), new `src/lib/refund-email.ts` + test.
 - **Change:**
   1. After COMMIT, when `recordRefund` recorded a new refund amount, send: order ref, the amount refunded **this time** and the total refunded, full or partial, the payment method ("to the card you paid with"), and "5–10 business days".

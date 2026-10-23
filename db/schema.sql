@@ -94,6 +94,8 @@ CREATE TABLE public.shop_orders (
     terms_version text,
     confirmation_sent_at timestamp with time zone,
     shipped_at timestamp with time zone,
+    carrier text,
+    tracking_number text,
     CONSTRAINT shop_orders_status_check CHECK ((fulfillment_status = ANY (ARRAY['paid'::text, 'shipped'::text, 'refunded'::text, 'cancelled'::text])))
 );
 

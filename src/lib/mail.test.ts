@@ -35,6 +35,21 @@ describe("sendCustomerEmail", () => {
     expect(customer.bcc).toBeUndefined();
   });
 
+  it("sends the html part too when given, but keeps desk@'s copy plain text", async () => {
+    await sendCustomerEmail({ ...message, html: "<p>Body</p>" }, internal);
+    const customer = sendMock.mock.calls[0][0];
+    expect(customer.html).toBe("<p>Body</p>");
+    expect(customer.text).toBe("Body");
+    const copy = sendMock.mock.calls[1][0];
+    expect(copy.html).toBeUndefined();
+    expect(copy.text).toContain("Body");
+  });
+
+  it("sends no html key for a text-only message", async () => {
+    await sendCustomerEmail(message, internal);
+    expect("html" in sendMock.mock.calls[0][0]).toBe(false);
+  });
+
   it("sends desk@ a separate copy from store@, tagged, replying to the customer", async () => {
     await sendCustomerEmail(message, internal);
     expect(sendMock).toHaveBeenCalledTimes(2);

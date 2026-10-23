@@ -12,7 +12,7 @@ const STORE_ADDRESS = "store@kansliet.co";
 const CUSTOMER_SENDER = `"KANSLIET (STORE)" <${STORE_ADDRESS}>`;
 const STORE_SENDER = `Kansliet Store <${STORE_ADDRESS}>`;
 
-export type InternalTag = "NEW ORDER" | "WITHDRAWAL";
+export type InternalTag = "NEW ORDER" | "WITHDRAWAL" | "REFUND" | "SHIPPED";
 
 function resendClient(): Resend {
   if (!process.env.RESEND_API_KEY?.trim()) {
@@ -73,14 +73,15 @@ export async function addNewsletterContact(email: string, segmentId: string) {
 }
 
 /**
- * A plain-text email to a customer (from and replying to store@),
+ * An email to a customer (from and replying to store@), HTML plus the plain
+ * text part when `html` is given,
  * then a separate copy to desk@ from store@, subject "[NEW ORDER] KDC-00042",
  * so every order and withdrawal lands in the inbox. The copy goes out even if
  * the customer's email fails, and says so, since that's when desk@ needs to
  * act. Throws when the customer's email wasn't sent; a failed copy is only logged.
  */
 export async function sendCustomerEmail(
-  message: { to: string; subject: string; text: string },
+  message: { to: string; subject: string; text: string; html?: string },
   internal: { tag: InternalTag; orderRef: string },
 ) {
   const resend = resendClient();
@@ -93,6 +94,7 @@ export async function sendCustomerEmail(
       replyTo: STORE_ADDRESS,
       subject: message.subject,
       text: message.text,
+      ...(message.html ? { html: message.html } : {}),
     });
     if (error) throw new Error(error.message);
   } catch (err) {
