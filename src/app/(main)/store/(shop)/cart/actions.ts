@@ -18,7 +18,7 @@ import {
 import { cartProblem, subtotalCents } from "@/lib/checkout-rules";
 import { getAppBaseUrl } from "@/lib/site";
 import { withError } from "@/lib/error-codes";
-import { getProductById, getVariantsByIds } from "@/lib/products";
+import { getVariantsByIds } from "@/lib/products";
 import { getSession } from "@/lib/auth";
 import { STORE_ENABLED } from "@/lib/store-flag";
 import {
@@ -45,20 +45,14 @@ async function writeCart(cart: CartItem[]) {
   }
 }
 
-/**
- * The variant a form means: `variantId`, or for a product with a single
- * variant, `productId` (the grid's quick add, and pages rendered before
- * variants existed).
- */
-async function variantFromForm(formData: FormData): Promise<number | null> {
+/** The variant a form means: every add-to-cart form posts `variantId`. */
+function variantFromForm(formData: FormData): number | null {
   const variantId = Number(formData.get("variantId"));
-  if (formData.has("variantId") && Number.isInteger(variantId)) return variantId;
-  const product = await getProductById(Number(formData.get("productId")));
-  return product && product.variants.length === 1 ? product.variants[0].id : null;
+  return formData.has("variantId") && Number.isInteger(variantId) ? variantId : null;
 }
 
 async function addItemToCart(formData: FormData): Promise<void> {
-  const variantId = await variantFromForm(formData);
+  const variantId = variantFromForm(formData);
   const requestedQuantity = Number(formData.get("quantity"));
   const quantity =
     Number.isInteger(requestedQuantity) && requestedQuantity > 0 ? requestedQuantity : 1;
@@ -153,8 +147,7 @@ export async function checkoutCart(formData: FormData) {
 
   const variants = await getVariantsByIds(cart.map((item) => item.variantId));
 
-  // Defense in depth, same principle as buyNow re-checking sold_out
-  // server-side: if anything in the cart is no longer purchasable, don't
+  // Defense in depth, re-checked server-side: if anything in the cart is no longer purchasable, don't
   // create a Checkout Session for a partial order — bounce back so the
   // customer can fix their cart first, rather than silently charging for
   // fewer items than they saw.

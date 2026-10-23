@@ -79,7 +79,6 @@ ALTER SEQUENCE public.shop_order_items_id_seq OWNED BY public.shop_order_items.i
 CREATE TABLE public.shop_orders (
     id integer NOT NULL,
     stripe_checkout_session_id text NOT NULL,
-    shop_product_id integer,
     customer_email text,
     shipping_name text,
     shipping_address jsonb,
@@ -87,7 +86,6 @@ CREATE TABLE public.shop_orders (
     currency text NOT NULL,
     fulfillment_status text DEFAULT 'paid'::text NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    user_id integer,
     stripe_payment_intent_id text,
     amount_refunded integer DEFAULT 0 NOT NULL,
     refunded_at timestamp with time zone,
@@ -129,19 +127,13 @@ CREATE TABLE public.shop_products (
     slug text NOT NULL,
     name text NOT NULL,
     description text,
-    image_url text,
-    stripe_product_id text,
-    stripe_price_id text,
-    sold_out boolean DEFAULT false NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     category text DEFAULT 'misc'::text NOT NULL,
     tagline text,
     specs jsonb DEFAULT '[]'::jsonb NOT NULL,
-    stock integer DEFAULT 0 NOT NULL,
     hidden boolean DEFAULT false NOT NULL,
     images jsonb DEFAULT '[]'::jsonb NOT NULL,
-    options jsonb DEFAULT '[]'::jsonb NOT NULL,
-    CONSTRAINT shop_products_stock_check CHECK ((stock >= 0))
+    options jsonb DEFAULT '[]'::jsonb NOT NULL
 );
 
 
@@ -541,22 +533,6 @@ ALTER TABLE ONLY public.shop_order_items
 
 ALTER TABLE ONLY public.shop_order_items
     ADD CONSTRAINT shop_order_items_shop_variant_id_fkey FOREIGN KEY (shop_variant_id) REFERENCES public.shop_variants(id) ON DELETE SET NULL;
-
-
---
--- Name: shop_orders shop_orders_shop_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shop_orders
-    ADD CONSTRAINT shop_orders_shop_product_id_fkey FOREIGN KEY (shop_product_id) REFERENCES public.shop_products(id);
-
-
---
--- Name: shop_orders shop_orders_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.shop_orders
-    ADD CONSTRAINT shop_orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --

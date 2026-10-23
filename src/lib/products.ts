@@ -77,7 +77,7 @@ const COLUMNS =
   "p.id, p.slug, p.name, p.tagline, p.description, p.specs, p.images, p.images->>0 AS image_url, p.options, v.variants, v.stripe_price_id, v.stock, p.hidden, (v.stock <= 0 OR p.hidden) AS sold_out, p.category";
 
 // Each product with its variants in one row: the list, their total stock and
-// the first one's price. Old shop_products.stock / stripe_price_id are unused.
+// the first one's price.
 const FROM_PRODUCTS = `shop_products p CROSS JOIN LATERAL (
   SELECT
     COALESCE(json_agg(json_build_object(
