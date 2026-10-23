@@ -8,7 +8,11 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("STRIPE_SECRET_KEY is not set");
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// Pinned: payload shapes (e.g. session.collected_information) depend on it.
+// When upgrading the `stripe` package, TypeScript flags this line: read
+// Stripe's changelog for the new version, check the webhook, then bump it here
+// and on the webhook endpoint (Stripe dashboard) together.
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: "2026-08-26.dahlia" });
 
 type Price = { amount: number; currency: string };
 
